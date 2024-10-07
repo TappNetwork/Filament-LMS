@@ -1,0 +1,27 @@
+{
+    "name": "tapp/filament-lms",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Tapp\\FilamentLms\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Tapp Network"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "filament/support": "^3.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Tapp\\FilamentLms\\FilamentLmsServiceProvider",
+                "Tapp\\FilamentLms\\LmsPanelProvider"
+            ]
+        }
+    }
+}

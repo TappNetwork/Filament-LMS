@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('step_id')->references('id')->on('lms_steps')->onDelete('cascade');
             $userTable = 'users'; // TODO get from config
-            $table->foreignId('user')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('user')->references('id')->on($userTable)->onDelete('cascade');
             $table->unsignedInteger('seconds'); // used to save video position
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();

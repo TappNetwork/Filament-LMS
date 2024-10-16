@@ -3,15 +3,12 @@
 namespace Tapp\FilamentLms\Resources;
 
 use Tapp\FilamentLms\Resources\AwardResource\Pages;
-use Tapp\FilamentLms\Resources\AwardResource\RelationManagers;
 use Tapp\FilamentLms\Models\Award;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AwardResource extends Resource
 {
@@ -25,7 +22,14 @@ class AwardResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('name')
+                    ->label('Name')
+                    ->required(),
+                /*
+                     * TODO: layout will be a select that maps to a view component
+                     * view component also defines form fields for customization
+                     * TODO: content will be several dynamically loaded from the layout form
+                     */
             ]);
     }
 
@@ -33,7 +37,9 @@ class AwardResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 //

@@ -13,6 +13,10 @@ class Award extends Model
 
     protected $table = 'lms_awards';
 
+    protected $casts = [
+        'content' => 'array',
+    ];
+
     public function course()
     {
         return $this->hasOne(Course::class);

@@ -4,7 +4,8 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Tapp\\FilamentLms\\": "src/"
+            "Tapp\\FilamentLms\\": "src/",
+            "Tapp\\FilamentLms\\Database\\Seeders": "database/seeders/"
         }
     },
     "authors": [

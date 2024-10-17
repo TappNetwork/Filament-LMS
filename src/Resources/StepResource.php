@@ -25,7 +25,15 @@ class StepResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('name')
+                    ->label('Name')
+                    ->required(),
+                Forms\Components\TextInput::make('slug')
+                    ->helperText('Used for urls.')
+                    ->required(),
+                Forms\Components\Select::make('lesson_id')
+                    ->relationship(name: 'lesson', titleAttribute: 'name')
+                    ->required(),
             ]);
     }
 
@@ -33,7 +41,18 @@ class StepResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('slug')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('lesson.course.name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('lesson.name')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 //

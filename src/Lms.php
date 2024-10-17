@@ -2,7 +2,6 @@
 
 namespace Tapp\FilamentLms;
 
-use Tapp\FilamentLms\Resources\AwardResource;
 use Tapp\FilamentLms\Resources\CourseResource;
 use Tapp\FilamentLms\Resources\LessonResource;
 use Tapp\FilamentLms\Resources\StepResource;
@@ -21,7 +20,6 @@ class Lms implements Plugin
     public function register(Panel $panel): void
     {
         $panel->resources([
-            AwardResource::class,
             CourseResource::class,
             LessonResource::class,
             StepResource::class,

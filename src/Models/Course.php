@@ -13,13 +13,12 @@ class Course extends Model
 
     protected $table = 'lms_courses';
 
+    protected $casts = [
+        'award_content' => 'array',
+    ];
+
     public function lessons()
     {
         return $this->hasMany(Lesson::class);
-    }
-
-    public function award()
-    {
-        return $this->belongsTo(Award::class);
     }
 }

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('lesson_id')->references('id')->on('lms_lessons')->onDelete('cascade');
             $table->unsignedInteger('order');
             $table->string('name');
+            $table->string('slug');
             $table->morphs('material');
             $table->timestamps();
             $table->softDeletes();

@@ -25,7 +25,14 @@ class LessonResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('name')
+                    ->required(),
+                Forms\Components\TextInput::make('slug')
+                    ->helperText('Used for urls.')
+                    ->required(),
+                Forms\Components\Select::make('course_id')
+                    ->relationship(name: 'course', titleAttribute: 'name')
+                    ->required(),
             ]);
     }
 
@@ -33,7 +40,15 @@ class LessonResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('slug')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('course.name')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 //

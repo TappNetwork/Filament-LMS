@@ -17,6 +17,9 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Tapp\FilamentLms\Pages\CourseCompleted;
+use Tapp\FilamentLms\Pages\Step;
+use Tapp\FilamentLms\Pages\Dashboard;
 
 class LmsPanelProvider extends PanelProvider
 {
@@ -31,10 +34,13 @@ class LmsPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Lms/Resources'), for: 'App\\Filament\\Lms\\Resources')
             ->discoverPages(in: app_path('Filament/Lms/Pages'), for: 'App\\Filament\\Lms\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                Dashboard::class,
+                Step::class,
+                CourseCompleted::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Lms/Widgets'), for: 'App\\Filament\\Lms\\Widgets')
             ->widgets([
+                Widgets\AccountWidget::class,
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])

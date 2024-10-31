@@ -12,6 +12,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('filament-lms')
+            ->hasViews()
             ->hasMigrations([
                 'create_lms_courses_table',
                 'create_lms_lessons_table',

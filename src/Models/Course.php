@@ -4,6 +4,10 @@ namespace Tapp\FilamentLms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\Lesson;
+use Tapp\FilamentLms\Pages\Step as StepPage;
 
 class Course extends Model
 {
@@ -20,5 +24,35 @@ class Course extends Model
     public function lessons()
     {
         return $this->hasMany(Lesson::class);
+    }
+
+    public function linkToCurrentStep(): string
+    {
+        $step = $this->currentStep();
+
+        return StepPage::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]);
+    }
+
+    public function currentStep(?User $user = null): Step
+    {
+        $user = $user ?: auth()->user();
+
+        $userStep = StepUser::whereIn('lms_step_user.step_id', $this->steps()->pluck('lms_steps.id'))
+            ->orderBy('lms_step_user.created_at', 'desc')
+            ->first();
+
+        return $userStep ? $userStep->step : $this->firstStep();
+    }
+
+    public function firstStep(): ?Step
+    {
+        $firstLesson = $this->lessons()->first();
+
+        return $firstLesson?->steps()->with('lesson')->first();
+    }
+
+    public function steps(): HasManyThrough
+    {
+        return $this->hasManyThrough(Step::class, Lesson::class)->orderBy('lms_steps.order');
     }
 }

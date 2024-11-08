@@ -1,4 +1,4 @@
-<x-filament-panels::page>
+<x-filament-lms::course-layout>
     {!!  $step !!}
     <button wire:click="complete">Next</button>
-</x-filament-panels::page>
+</x-filament-lms::course-layout>

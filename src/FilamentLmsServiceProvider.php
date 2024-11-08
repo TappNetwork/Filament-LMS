@@ -5,6 +5,8 @@ namespace Tapp\FilamentLms;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+                use Filament\Support\Assets\Css;
+use Filament\Support\Facades\FilamentAsset;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider
 {
@@ -13,6 +15,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         $package
             ->name('filament-lms')
             ->hasViews()
+            ->hasAssets()
             ->hasMigrations([
                 'create_lms_courses_table',
                 'create_lms_lessons_table',
@@ -20,10 +23,17 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'create_lms_step_user_table',
                 'create_lms_videos_table',
             ])
-            ->hasInstallCommand(function(InstallCommand $command) {
+            ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishMigrations()
                     ->askToRunMigrations();
             });
+    }
+
+    public function packageBooted()
+    {
+        FilamentAsset::register([
+            Css::make('filament-lms', __DIR__ . '/../resources/dist/filament-lms.css'),
+        ], package: 'tapp/filament-lms');
     }
 }

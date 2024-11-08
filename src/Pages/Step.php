@@ -5,6 +5,7 @@ namespace Tapp\FilamentLms\Pages;
 use Filament\Pages\Page;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Step as StepModel;
+use Filament\Support\Enums\MaxWidth;
 
 class Step extends Page
 {
@@ -43,4 +44,9 @@ class Step extends Page
     {
         return static::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]);
     }
+
+public function getMaxContentWidth(): MaxWidth
+{
+    return MaxWidth::Full;
+}
 }

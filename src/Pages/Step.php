@@ -24,8 +24,9 @@ class Step extends Page
     public function mount($courseSlug, $lessonSlug, $stepSlug)
     {
         $this->course = Course::where('slug', $courseSlug)->firstOrFail();
-        $this->lesson = $this->course->lessons()->where('slug', $lessonSlug)->firstOrFail();
-        $this->step = $this->lesson->steps()->where('slug', $stepSlug)->firstOrFail();
+        $this->course->loadProgress();
+        $this->lesson = $this->course->lessons->where('slug', $lessonSlug)->firstOrFail();
+        $this->step = $this->lesson->steps->where('slug', $stepSlug)->firstOrFail();
         $this->heading = $this->step->name;
     }
 

@@ -55,4 +55,33 @@ class Course extends Model
     {
         return $this->hasManyThrough(Step::class, Lesson::class)->orderBy('lms_steps.order');
     }
+
+    public function getCompletedAtAttribute()
+    {
+        if (! auth()->check()) {
+            return null;
+        }
+
+        return $this->steps->pluck('completed_at')->max();
+    }
+
+    /**
+     * TODO check if progress is already loaded
+     * load progress for course and steps
+     * make sure steps are in order
+     **/
+    public function loadProgress()
+    {
+        $this->load([
+            'lessons' => function ($query) {
+                $query->orderBy('order');
+            },
+            'lessons.steps' => function ($query) {
+                $query->orderBy('order');
+            },
+            'lessons.steps.progress',
+            // TODO is loading material here necessary?
+            // 'lessons.steps.material',
+        ]);
+    }
 }

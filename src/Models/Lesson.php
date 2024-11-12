@@ -22,4 +22,35 @@ class Lesson extends Model
     {
         return $this->hasMany(Step::class);
     }
+
+    public function isActive()
+    {
+        return request()->is('*' . $this->slug . '*');
+    }
+
+    public function getCompletedAtAttribute()
+    {
+        $this->loadProgress();
+
+        if ($this->steps->every->completed_at) {
+            return $this->steps->pluck('completed_at')->max();
+        }
+
+        return null;
+    }
+
+    /**
+     * TODO check if already loaded
+     * load progress for course and steps
+     * make sure steps are in order
+     **/
+    public function loadProgress()
+    {
+        $this->load([
+            'steps' => function ($query) {
+                $query->orderBy('order');
+            },
+            'steps.progress',
+        ]);
+    }
 }

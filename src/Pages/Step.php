@@ -28,6 +28,10 @@ class Step extends Page
         $this->lesson = $this->course->lessons->where('slug', $lessonSlug)->firstOrFail();
         $this->step = $this->lesson->steps->where('slug', $stepSlug)->firstOrFail();
         $this->heading = $this->step->name;
+
+        if (! $this->step->available) {
+            return redirect()->to($this->course->linkToCurrentStep());
+        }
     }
 
     public function complete()

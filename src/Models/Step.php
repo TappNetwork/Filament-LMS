@@ -126,4 +126,13 @@ class Step extends Model
     {
         return $this->progress?->completed_at;
     }
+
+    public function getAvailableAttribute()
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        return $this->completed_at || $this->lesson->course->currentStep()->order >= $this->order;
+    }
 }

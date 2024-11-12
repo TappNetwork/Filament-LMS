@@ -22,5 +22,9 @@ class CourseCompleted extends Page
     public function mount($courseSlug)
     {
         $this->course = Course::where('slug', $courseSlug)->firstOrFail();
+
+        if (! $this->course->completed_at) {
+            return redirect()->to($this->course->linkToCurrentStep());
+        }
     }
 }

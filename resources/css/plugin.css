@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* course layout */
-main.fi-main {
+.course-layout main.fi-main {
     padding: 0 !important;
 }
 

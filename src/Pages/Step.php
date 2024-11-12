@@ -17,6 +17,8 @@ class Step extends Page
 
     protected static ?string $slug = '{courseSlug}/{lessonSlug}/{stepSlug}';
 
+    protected array $extraBodyAttributes = ['class' => 'course-layout'];
+
     public $course;
     public $lesson;
     public $step;

@@ -39,7 +39,8 @@ class Course extends Model
         $user = $user ?: auth()->user();
 
         $userStep = StepUser::whereIn('lms_step_user.step_id', $this->steps()->pluck('lms_steps.id'))
-            ->orderBy('lms_step_user.created_at', 'desc')
+            ->join('lms_steps', 'lms_step_user.step_id', '=', 'lms_steps.id')
+            ->orderBy('lms_steps.order', 'desc')
             ->first();
 
         return $userStep ? $userStep->step : $this->firstStep();
@@ -63,7 +64,11 @@ class Course extends Model
             return null;
         }
 
-        return $this->steps->pluck('completed_at')->max();
+        if ($this->steps->every->completed_at) {
+            return $this->steps->pluck('completed_at')->max();
+        }
+
+        return null;
     }
 
     /**

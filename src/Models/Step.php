@@ -56,10 +56,9 @@ class Step extends Model
         }
 
         if ($nextStep) {
-            StepUser::create([
+            StepUser::firstOrCreate([
                 'user_id' => $user->id,
                 'step_id' => $nextStep->id,
-                'completed_at' => now(),
             ]);
 
             return $nextStep;

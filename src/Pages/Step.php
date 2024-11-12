@@ -50,8 +50,8 @@ class Step extends Page
         return static::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]);
     }
 
-public function getMaxContentWidth(): MaxWidth
-{
-    return MaxWidth::Full;
-}
+    public function getMaxContentWidth(): MaxWidth
+    {
+        return MaxWidth::Full;
+    }
 }

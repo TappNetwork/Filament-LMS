@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Pages\Step as StepPage;
+use Tapp\FilamentLms\Pages\CourseCompleted;
 
 class Course extends Model
 {
@@ -83,5 +84,19 @@ class Course extends Model
             // TODO is loading material here necessary?
             // 'lessons.steps.material',
         ]);
+    }
+
+    public function getCompletionPercentageAttribute()
+    {
+        $this->loadProgress();
+
+        $completedSteps = $this->steps->filter->completed_at;
+
+        return $completedSteps->count() / $this->steps->count() * 100;
+    }
+
+    public function certificateUrl(): string
+    {
+        return CourseCompleted::getUrl([$this->slug]);
     }
 }

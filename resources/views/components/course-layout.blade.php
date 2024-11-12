@@ -189,13 +189,28 @@
             </div>
             </li>
             @endforeach
-            <li class="-mx-6 mt-auto px-2">
-                <div class="overflow-hidden rounded-full bg-gray-200">
+            <li class="-mx-6 mt-auto px-2 py-5">
+                <div class="overflow-hidden rounded-full bg-gray-200 my-2">
                     <div class="h-2 rounded-full bg-primary-600" style="width: {{$course->completion_percentage}}%"></div>
                 </div>
-                <a href="#" class="flex items-center justify-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-gray-900 hover:bg-gray-50">
-                    <span aria-hidden="true">Course Completed!</span>
-                </a>
+                <span class="text-center block rounded-md py-2 text-md/6 font-semibold text-gray-700">
+                    @if($course->completed_at)
+                        Course Completed!
+                    @else
+                        Course Progress
+                    @endif
+                </span>
+                @if($course->completed_at)
+                    <div class="text-center">
+                        <a href="{{$course->certificateUrl()}}" type="button" class="inline-flex items-center gap-x-1.5 rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                <path fill-rule="evenodd" d="M9 1.5H5.625c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5Zm6.61 10.936a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 14.47a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+                                <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+                            </svg>
+                            Certificate of Completion
+                        </a>
+                    </div>
+                @endif
             </li>
         </ul>
       </nav>

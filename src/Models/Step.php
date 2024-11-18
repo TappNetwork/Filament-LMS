@@ -106,6 +106,27 @@ class Step extends Model
         return StepPage::getUrlForStep($this);
     }
 
+    public function videoProgress(int $seconds): void
+    {
+        $user = auth()->user();
+
+        $userStep = StepUser::where('user_id', $user->id)
+            ->where('step_id', $this->id)
+            ->first();
+
+        if (!$userStep) {
+            StepUser::create([
+                'user_id' => $user->id,
+                'step_id' => $this->id,
+                'seconds' => $seconds,
+            ]);
+        } else {
+            $userStep->update([
+                'seconds' => $seconds,
+            ]);
+        }
+    }
+
     /**
      * The progress for current user
      */
@@ -133,5 +154,10 @@ class Step extends Model
         }
 
         return $this->completed_at || $this->lesson->course->currentStep()->order >= $this->order;
+    }
+
+    public function getSecondsAttribute()
+    {
+        return $this->progress?->seconds ?? 0;
     }
 }

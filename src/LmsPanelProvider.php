@@ -22,7 +22,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step;
 use Tapp\FilamentLms\Pages\Dashboard;
-use Tapp\FilamentLms\Components\CourseLayout;
+use Tapp\FilamentLms\Livewire\VideoStep;
 
 class LmsPanelProvider extends PanelProvider
 {
@@ -59,7 +59,7 @@ class LmsPanelProvider extends PanelProvider
                 Widgets\FilamentInfoWidget::class,
             ])
             ->livewireComponents([
-                CourseLayout::class,
+                VideoStep::class,
             ])
             ->middleware([
                 EncryptCookies::class,

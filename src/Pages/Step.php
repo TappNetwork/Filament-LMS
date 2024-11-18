@@ -6,6 +6,7 @@ use Filament\Pages\Page;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Step as StepModel;
 use Filament\Support\Enums\MaxWidth;
+use Livewire\Attributes\On;
 
 class Step extends Page
 {
@@ -36,6 +37,7 @@ class Step extends Page
         }
     }
 
+    #[On('complete-step')]
     public function complete()
     {
         $nextStep = $this->step->complete();

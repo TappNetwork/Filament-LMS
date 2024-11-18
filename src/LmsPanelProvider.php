@@ -5,6 +5,8 @@ namespace Tapp\FilamentLms;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationBuilder;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -20,6 +22,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step;
 use Tapp\FilamentLms\Pages\Dashboard;
+use Tapp\FilamentLms\Livewire\VideoStep;
 
 class LmsPanelProvider extends PanelProvider
 {
@@ -28,6 +31,17 @@ class LmsPanelProvider extends PanelProvider
         return $panel
             ->id('lms')
             ->path('lms')
+            ->topNavigation()
+            ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
+                return $builder->items([
+                    NavigationItem::make('Home')
+                        ->icon('heroicon-o-home')
+                        ->url(fn (): string => '/'),
+                    NavigationItem::make('Courses')
+                        ->icon('heroicon-o-academic-cap')
+                        ->url(fn (): string => '/lms'),
+                    ]);
+                })
             ->colors([
                 'primary' => Color::Emerald,
             ])
@@ -43,6 +57,9 @@ class LmsPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+            ])
+            ->livewireComponents([
+                VideoStep::class,
             ])
             ->middleware([
                 EncryptCookies::class,

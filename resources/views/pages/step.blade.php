@@ -1,4 +1,5 @@
-<x-filament-panels::page>
-    {!!  $step !!}
-    <button wire:click="complete">Next</button>
-</x-filament-panels::page>
+<x-filament-lms::course-layout :course="$course">
+    @if ($step->material_type == 'video')
+        <livewire:video-step :step="$step"/>
+    @endif
+</x-filament-lms::course-layout>

@@ -17,4 +17,10 @@ class Video extends Model
     {
         return $this->morphTo(Step::class);
     }
+
+    public function getProviderAttribute()
+    {
+        // TODO determine provider from url
+        return 'vimeo';
+    }
 }

@@ -17,10 +17,16 @@ class CourseCompleted extends Page
 
     protected static ?string $title = 'Course Completed';
 
+    protected array $extraBodyAttributes = ['class' => 'course-layout'];
+
     public $course;
 
     public function mount($courseSlug)
     {
         $this->course = Course::where('slug', $courseSlug)->firstOrFail();
+
+        if (! $this->course->completed_at) {
+            return redirect()->to($this->course->linkToCurrentStep());
+        }
     }
 }

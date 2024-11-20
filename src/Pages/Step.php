@@ -10,15 +10,11 @@ use Livewire\Attributes\On;
 
 class Step extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static string $view = 'filament-lms::pages.step';
 
-    protected static bool $shouldRegisterNavigation = false;
-
     protected static ?string $slug = '{courseSlug}/{lessonSlug}/{stepSlug}';
-
-    protected array $extraBodyAttributes = ['class' => 'course-layout'];
 
     public $course;
     public $lesson;

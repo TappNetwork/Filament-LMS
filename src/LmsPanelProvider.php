@@ -23,6 +23,11 @@ use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Livewire\VideoStep;
+use Illuminate\Support\Facades\Route;
+use Tapp\FilamentLms\Models\Course;
+use Filament\Facades\Filament;
+use Filament\Navigation\NavigationGroup;
+use Illuminate\Support\HtmlString;
 
 class LmsPanelProvider extends PanelProvider
 {
@@ -31,17 +36,9 @@ class LmsPanelProvider extends PanelProvider
         return $panel
             ->id('lms')
             ->path('lms')
-            ->topNavigation()
             ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
-                return $builder->items([
-                    NavigationItem::make('Home')
-                        ->icon('heroicon-o-home')
-                        ->url(fn (): string => '/'),
-                    NavigationItem::make('Courses')
-                        ->icon('heroicon-o-academic-cap')
-                        ->url(fn (): string => '/lms'),
-                    ]);
-                })
+                return $this->navigationItems($builder);
+            })
             ->colors([
                 'primary' => Color::Emerald,
             ])
@@ -75,5 +72,47 @@ class LmsPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    public function navigationItems(NavigationBuilder $builder): NavigationBuilder
+    {
+        if (Route::current()->parameter('courseSlug')) {
+            $course = Course::where('slug', Route::current()->parameter('courseSlug'))->firstOrFail();
+
+            $navigationGroups = $course->lessons->map(function ($lesson) {
+                return NavigationGroup::make($lesson->name)
+                    // TODO collapsed is not working
+                    // ->collapsed(fn (): bool => ! $lesson->isActive())
+                    // ->collapsible(true)
+                    ->items($lesson->steps->map(function ($step) {
+                        return NavigationItem::make($step->name)
+                            ->icon(fn (): string => $step->completed_at ? 'heroicon-o-check-circle' : '')
+                            ->isActiveWhen(fn (): bool => $step->isActive())
+                            ->url(fn (): string => $step->url);
+                    })->toArray());
+                })->toArray();
+
+
+            $navigationGroups []= NavigationGroup::make('Course Completed')->items([
+                NavigationItem::make('Certificate')
+                    ->icon('heroicon-o-trophy')
+                    ->url(fn (): string => CourseCompleted::getUrl([$course->slug]))
+                    ->isActiveWhen(fn (): bool => request()->routeIs(CourseCompleted::getRouteName()))
+            ]);
+
+            $builder->groups($navigationGroups);
+
+            return $builder;
+        }
+
+        return $builder->items([
+            NavigationItem::make('Home')
+                    ->icon('heroicon-o-home')
+                    ->url(fn (): string => '/'),
+            NavigationItem::make('Courses')
+                    ->icon('heroicon-o-academic-cap')
+                    ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
+                    ->url(fn (): string => Dashboard::getUrl()),
+        ]);
     }
 }

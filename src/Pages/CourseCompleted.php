@@ -17,8 +17,6 @@ class CourseCompleted extends Page
 
     protected static ?string $title = 'Course Completed';
 
-    protected array $extraBodyAttributes = ['class' => 'course-layout'];
-
     public $course;
 
     public function mount($courseSlug)

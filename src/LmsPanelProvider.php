@@ -76,20 +76,33 @@ class LmsPanelProvider extends PanelProvider
 
     public function navigationItems(NavigationBuilder $builder): NavigationBuilder
     {
-        if (Route::currentRouteName() === Step::getRouteName()) {
+        if (Route::current()->parameter('courseSlug')) {
             $course = Course::where('slug', Route::current()->parameter('courseSlug'))->firstOrFail();
 
             $navigationGroups = $course->lessons->map(function ($lesson) {
                 return NavigationGroup::make($lesson->name)
+                    // TODO collapsed is not working
+                    // ->collapsed(fn (): bool => ! $lesson->isActive())
+                    // ->collapsible(true)
                     ->items($lesson->steps->map(function ($step) {
                         return NavigationItem::make($step->name)
                             ->icon(fn (): string => $step->completed_at ? 'heroicon-o-check-circle' : '')
-                            ->isActiveWhen(fn (): bool => request()->route('stepSlug') === $step->slug)
+                            ->isActiveWhen(fn (): bool => $step->isActive())
                             ->url(fn (): string => $step->url);
                     })->toArray());
                 })->toArray();
 
-            return $builder->groups($navigationGroups);
+
+            $navigationGroups []= NavigationGroup::make('Course Completed')->items([
+                NavigationItem::make('Certificate')
+                    ->icon('heroicon-o-trophy')
+                    ->url(fn (): string => CourseCompleted::getUrl([$course->slug]))
+                    ->isActiveWhen(fn (): bool => request()->routeIs(CourseCompleted::getRouteName()))
+            ]);
+
+            $builder->groups($navigationGroups);
+
+            return $builder;
         }
 
         return $builder->items([

@@ -7,9 +7,12 @@ use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Step as StepModel;
 use Filament\Support\Enums\MaxWidth;
 use Livewire\Attributes\On;
+use Tapp\FilamentLms\Concerns\CourseLayout;
 
 class Step extends Page
 {
+    use CourseLayout;
+
     protected static bool $shouldRegisterNavigation = false;
 
     protected static string $view = 'filament-lms::pages.step';
@@ -31,6 +34,8 @@ class Step extends Page
         if (! $this->step->available) {
             return redirect()->to($this->course->linkToCurrentStep());
         }
+
+        $this->registerCourseLayout();
     }
 
     #[On('complete-step')]
@@ -54,4 +59,9 @@ class Step extends Page
     {
         return MaxWidth::Full;
     }
+
+    public function viewAllCourses()
+        {
+            return redirect()->to(Dashboard::getUrl());
+        }
 }

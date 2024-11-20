@@ -4,9 +4,12 @@ namespace Tapp\FilamentLms\Pages;
 
 use Filament\Pages\Page;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Concerns\CourseLayout;
 
 class CourseCompleted extends Page
 {
+    use CourseLayout;
+
     protected static ?string $navigationIcon = 'heroicon-o-trophy';
 
     protected static string $view = 'filament-lms::pages.course-completed';
@@ -26,5 +29,7 @@ class CourseCompleted extends Page
         if (! $this->course->completed_at) {
             return redirect()->to($this->course->linkToCurrentStep());
         }
+
+        $this->registerCourseLayout();
     }
 }

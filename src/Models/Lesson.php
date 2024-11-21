@@ -4,6 +4,7 @@ namespace Tapp\FilamentLms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Tapp\FilamentLms\Database\Factories\LessonFactory;
 
 class Lesson extends Model
 {
@@ -12,6 +13,11 @@ class Lesson extends Model
     protected $guarded = [];
 
     protected $table = 'lms_lessons';
+
+    protected static function newFactory()
+    {
+        return LessonFactory::new();
+    }
 
     public function course()
     {

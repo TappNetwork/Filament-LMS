@@ -5,7 +5,7 @@
     "autoload": {
         "psr-4": {
             "Tapp\\FilamentLms\\": "src/",
-            "Tapp\\FilamentLms\\Database\\Seeders": "database/seeders/"
+            "Tapp\\FilamentLms\\Database\\Factories\\": "database/factories/"
         }
     },
     "authors": [

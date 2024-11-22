@@ -1,0 +1,2 @@
+<!-- TODO style -->
+{{ $course->name }}

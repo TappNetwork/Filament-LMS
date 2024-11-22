@@ -14,8 +14,6 @@ class Dashboard extends \Filament\Pages\Dashboard
 
     protected static ?string $title = 'Courses';
 
-    // protected static string $layout = 'filament-lms::components.layout.lms';
-
     public $courses;
 
     public function mount()

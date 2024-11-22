@@ -37,10 +37,10 @@ class Course extends Model
     {
         $step = $this->currentStep();
 
-        return StepPage::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]);
+        return $step ? StepPage::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]) : '';
     }
 
-    public function currentStep(?User $user = null): Step
+    public function currentStep(?User $user = null): ?Step
     {
         $user = $user ?: auth()->user();
 
@@ -99,6 +99,10 @@ class Course extends Model
 
     public function getCompletionPercentageAttribute()
     {
+        if ($this->steps->isEmpty()) {
+            return 0;
+        }
+
         $this->loadProgress();
 
         $completedSteps = $this->steps->filter->completed_at;
@@ -109,5 +113,10 @@ class Course extends Model
     public function certificateUrl(): string
     {
         return CourseCompleted::getUrl([$this->slug]);
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? url($this->image) : 'https://picsum.photos/200';
     }
 }

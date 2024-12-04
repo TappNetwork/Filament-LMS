@@ -31,10 +31,10 @@ class Course extends Model
     {
         $step = $this->currentStep();
 
-        return StepPage::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]);
+        return $step ? StepPage::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]) : '';
     }
 
-    public function currentStep(?User $user = null): Step
+    public function currentStep(?User $user = null): ?Step
     {
         $user = $user ?: auth()->user();
 

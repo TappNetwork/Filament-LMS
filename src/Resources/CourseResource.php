@@ -3,6 +3,7 @@
 namespace Tapp\FilamentLms\Resources;
 
 use Tapp\FilamentLms\Resources\CourseResource\Pages;
+use Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
 use Tapp\FilamentLms\Models\Course;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -81,7 +82,7 @@ class CourseResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\StepsRelationManager::make(),
         ];
     }
 

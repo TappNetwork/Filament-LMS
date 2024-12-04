@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Lms\Resources\CourseResource\RelationManagers;
+namespace Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
 
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -19,8 +19,21 @@ class StepsRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                    ->required()
+                ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('slug')
+                ->helperText('Used for urls.')
+                ->required(),
+                Forms\Components\Select::make('lesson_id')
+                ->relationship(name: 'lesson', titleAttribute: 'name')
+                ->required()
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('name')
+                        ->required(),
+                        Forms\Components\TextInput::make('slug')
+                        ->helperText('Used for urls.')
+                        ->required(),
+                    ])
             ]);
     }
 
@@ -35,10 +48,12 @@ class StepsRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->slideOver(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->slideOver(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

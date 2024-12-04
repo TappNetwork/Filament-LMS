@@ -8,6 +8,7 @@ use Tapp\FilamentLms\Events\CourseCompleted;
 use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Tapp\FilamentLms\Database\Factories\StepFactory;
 
 class Step extends Model
 {
@@ -16,6 +17,11 @@ class Step extends Model
     protected $guarded = [];
 
     protected $table = 'lms_steps';
+
+    protected static function newFactory()
+    {
+        return StepFactory::new();
+    }
 
     public function lesson()
     {

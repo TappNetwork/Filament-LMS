@@ -5,6 +5,7 @@ namespace Tapp\FilamentLms\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Pages\Step as StepPage;
@@ -21,6 +22,11 @@ class Course extends Model
     protected $casts = [
         'award_content' => 'array',
     ];
+
+    protected static function newFactory()
+    {
+        return CourseFactory::new();
+    }
 
     public function lessons()
     {
@@ -93,6 +99,10 @@ class Course extends Model
 
     public function getCompletionPercentageAttribute()
     {
+        if ($this->steps->isEmpty()) {
+            return 0;
+        }
+
         $this->loadProgress();
 
         $completedSteps = $this->steps->filter->completed_at;
@@ -103,5 +113,10 @@ class Course extends Model
     public function certificateUrl(): string
     {
         return CourseCompleted::getUrl([$this->slug]);
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? url($this->image) : 'https://picsum.photos/200';
     }
 }

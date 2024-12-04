@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Set;
 use Illuminate\Support\Str;
+use Filament\Forms\Components\FileUpload;
 
 class CourseResource extends Resource
 {
@@ -40,6 +41,13 @@ class CourseResource extends Resource
                 Forms\Components\TextInput::make('slug')
                     ->helperText('Used for urls.')
                     ->required(),
+                FileUpload::make('image')
+                    ->helperText('Image will be automatically cropped to a square.')
+                    ->image()
+                    ->imageResizeMode('cover')
+                    ->imageResizeTargetWidth('1080')
+                    ->imageResizeTargetHeight('1080')
+                    ->imageCropAspectRatio('1:1'),
                 Forms\Components\TextArea::make('description'),
 
                     /*

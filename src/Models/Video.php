@@ -4,6 +4,7 @@ namespace Tapp\FilamentLms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Tapp\FilamentLms\Database\Factories\VideoFactory;
 
 class Video extends Model
 {
@@ -12,6 +13,11 @@ class Video extends Model
     protected $guarded = [];
 
     protected $table = 'lms_videos';
+
+    protected static function newFactory()
+    {
+        return VideoFactory::new();
+            }
 
     public function step()
     {

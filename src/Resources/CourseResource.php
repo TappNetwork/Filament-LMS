@@ -90,7 +90,7 @@ class CourseResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\StepsRelationManager::make(),
+            RelationManagers\LessonsRelationManager::make(),
         ];
     }
 

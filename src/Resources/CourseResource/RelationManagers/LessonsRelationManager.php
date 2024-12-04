@@ -9,10 +9,11 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Tapp\FilamentLms\Resources\LessonResource\Pages\EditLesson;
 
-class StepsRelationManager extends RelationManager
+class LessonsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'steps';
+    protected static string $relationship = 'lessons';
 
     public function form(Form $form): Form
     {
@@ -24,24 +25,20 @@ class StepsRelationManager extends RelationManager
                 Forms\Components\TextInput::make('slug')
                 ->helperText('Used for urls.')
                 ->required(),
-                Forms\Components\Select::make('lesson_id')
-                ->relationship(name: 'lesson', titleAttribute: 'name')
-                ->required()
-                    ->createOptionForm([
-                        Forms\Components\TextInput::make('name')
-                        ->required(),
-                        Forms\Components\TextInput::make('slug')
-                        ->helperText('Used for urls.')
-                        ->required(),
-                    ])
+                Forms\Components\Select::make('course_id')
+                ->relationship(name: 'course', titleAttribute: 'name')
+                ->required(),
             ]);
     }
 
     public function table(Table $table): Table
     {
         return $table
+            ->defaultSort('order')
+            ->reorderable('order')
             ->recordTitleAttribute('name')
             ->columns([
+                Tables\Columns\TextColumn::make('order'),
                 Tables\Columns\TextColumn::make('name'),
             ])
             ->filters([
@@ -49,11 +46,11 @@ class StepsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->slideOver(),
+                    // ->slideOver(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->slideOver(),
+                    ->url(fn ($record) => EditLesson::getUrl([$record])),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

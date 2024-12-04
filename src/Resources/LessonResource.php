@@ -26,7 +26,8 @@ class LessonResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                    ->required(),
+                    ->required()
+                ->maxLength(255),
                 Forms\Components\TextInput::make('slug')
                     ->helperText('Used for urls.')
                     ->required(),
@@ -66,7 +67,7 @@ class LessonResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\StepsRelationManager::make(),
         ];
     }
 

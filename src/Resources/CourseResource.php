@@ -29,7 +29,7 @@ class CourseResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Set $set, ?string $state) {
-                        $set('alternative_id', Str::snake($state));
+                        $set('external_id', Str::snake($state));
                         $set('slug', Str::slug($state));
                     })
                     ->required(),

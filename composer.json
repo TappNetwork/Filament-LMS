@@ -15,7 +15,8 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "filament/support": "^3.0"
+        "filament/support": "^3.0",
+        "spatie/eloquent-sortable": "dev-main"
     },
     "extra": {
         "laravel": {

@@ -5,10 +5,16 @@ namespace Tapp\FilamentLms\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Tapp\FilamentLms\Database\Factories\LessonFactory;
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
 
-class Lesson extends Model
+class Lesson extends Model implements Sortable
 {
-    use HasFactory;
+    use HasFactory, SortableTrait;
+
+        public $sortable = [
+        'order_column_name' => 'order',
+    ];
 
     protected $guarded = [];
 

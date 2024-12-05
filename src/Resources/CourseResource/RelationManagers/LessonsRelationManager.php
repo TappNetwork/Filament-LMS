@@ -10,6 +10,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Resources\LessonResource\Pages\EditLesson;
+use Filament\Forms\Set;
+use Illuminate\Support\Str;
+use Tapp\FilamentLms\Resources\LessonResource\Pages\CreateLesson;
 
 class LessonsRelationManager extends RelationManager
 {
@@ -20,7 +23,11 @@ class LessonsRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                    ->live(onBlur: true)
                 ->required()
+                    ->afterStateUpdated(function (Set $set, ?string $state) {
+                        $set('slug', Str::slug($state));
+                    })
                     ->maxLength(255),
                 Forms\Components\TextInput::make('slug')
                 ->helperText('Used for urls.')
@@ -46,7 +53,7 @@ class LessonsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    // ->slideOver(),
+                    ->url(fn () => CreateLesson::getUrl(['course_id' => $this->ownerRecord])),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()

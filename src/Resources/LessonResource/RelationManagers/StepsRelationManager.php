@@ -9,6 +9,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Tapp\FilamentLms\Resources\StepResource\Pages\CreateStep;
+use Tapp\FilamentLms\Resources\StepResource\Pages\EditStep;
 
 class StepsRelationManager extends RelationManager
 {
@@ -52,11 +54,11 @@ class StepsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->slideOver(),
+                    ->url(fn () => CreateStep::getUrl(['lesson_id' => $this->ownerRecord])),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->slideOver(),
+                    ->url(fn ($record) => EditStep::getUrl([$record])),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

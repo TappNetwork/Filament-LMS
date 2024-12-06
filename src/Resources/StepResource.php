@@ -5,6 +5,7 @@ namespace Tapp\FilamentLms\Resources;
 use Tapp\FilamentLms\Resources\StepResource\Pages;
 use Tapp\FilamentLms\Resources\StepResource\RelationManagers;
 use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\Video;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,6 +13,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Forms\Set;
+use Illuminate\Support\Str;
 
 class StepResource extends Resource
 {
@@ -26,7 +29,10 @@ class StepResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                    ->label('Name')
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (Set $set, ?string $state) {
+                        $set('slug', Str::slug($state));
+                    })
                     ->required(),
                 Forms\Components\TextInput::make('slug')
                     ->helperText('Used for urls.')
@@ -34,6 +40,13 @@ class StepResource extends Resource
                 Forms\Components\Select::make('lesson_id')
                     ->relationship(name: 'lesson', titleAttribute: 'name')
                     ->required(),
+                Forms\Components\MorphToSelect::make('material')
+                    ->types([
+                        Forms\Components\MorphToSelect\Type::make(Video::class)
+                        ->titleAttribute('name'),
+                    ])
+                    ->required(),
+
             ]);
     }
 

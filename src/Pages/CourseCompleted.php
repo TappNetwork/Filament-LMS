@@ -32,4 +32,9 @@ class CourseCompleted extends Page
 
         $this->registerCourseLayout();
     }
+
+    public function downloadCertificate()
+    {
+        return response()->download($this->course->certificate_path);
+    }
 }

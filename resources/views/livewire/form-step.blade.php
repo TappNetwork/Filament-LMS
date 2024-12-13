@@ -1,10 +1,18 @@
 <div>
     @if($entry)
-        <x-filament::section>
-            <h1 class="text-2xl">
-                Thank you for completing the form: {{ $form->name }}
-            </h1>
+            <div class="mb-8">
+        <x-filament::section
+    icon="heroicon-o-check"
+    icon-color="primary"
+>
+            <x-slot name="heading">
+                Form Completed!
+            </x-slot>
+
+            Click "Next" (at the bottom of the page) to continue the course.
         </x-filament::section>
+            </div>
+        @livewire('tapp.filament-form-builder.livewire.filament-form-user.show', [$entry])
     @else
         @livewire('tapp.filament-form-builder.livewire.filament-form.show', [$form, 'blockRedirect' => true])
     @endif

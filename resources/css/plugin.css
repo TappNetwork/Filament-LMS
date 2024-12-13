@@ -5,5 +5,3 @@
 .fb-form-submit-button {
     @apply mt-10 bg-emerald-600 hover:bg-emerald-500 font-semibold px-3 rounded-lg px-4 py-3 text-sm shadow-sm;
 }
-
-/* fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-color-custom fi-btn-color-primary fi-color-primary fi-size-xl fi-btn-size-xl gap-1.5 px-4 py-3 text-sm inline-grid shadow-sm bg-custom-600 text-white hover:bg-custom-500 focus-visible:ring-custom-500/50 dark:bg-custom-500 dark:hover:bg-custom-400 dark:focus-visible:ring-custom-400/50 */

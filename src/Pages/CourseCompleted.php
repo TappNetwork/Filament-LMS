@@ -35,6 +35,6 @@ class CourseCompleted extends Page
 
     public function downloadCertificate()
     {
-        return response()->download($this->course->certificate_path);
+        // return response()->download($this->course->certificate_path);
     }
 }

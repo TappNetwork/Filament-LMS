@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.fb-form-submit-button {
+    @apply mt-10 bg-emerald-600 hover:bg-emerald-500 font-semibold px-3 rounded-lg px-4 py-3 text-sm shadow-sm;
+}
+
+  .fb-form-user-container {
+    @apply bg-white px-8 py-16;
+  }

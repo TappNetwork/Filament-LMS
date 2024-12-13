@@ -3,6 +3,7 @@
 namespace Tapp\FilamentLms\Resources;
 
 use Tapp\FilamentLms\Resources\CourseResource\Pages;
+use Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
 use Tapp\FilamentLms\Models\Course;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -27,8 +28,10 @@ class CourseResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->live(onBlur: true)
-                    ->afterStateUpdated(function (Set $set, ?string $state) {
-                        $set('alternative_id', Str::snake($state));
+                    ->afterStateUpdated(function (Set $set, ?string $state, string $operation) {
+                        if ($operation === 'create') {
+                            $set('external_id', Str::snake($state));
+                        }
                         $set('slug', Str::slug($state));
                     })
                     ->required(),
@@ -89,7 +92,7 @@ class CourseResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\LessonsRelationManager::make(),
         ];
     }
 

@@ -23,6 +23,7 @@ use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Livewire\VideoStep;
+use Tapp\FilamentLms\Livewire\FormStep;
 use Illuminate\Support\Facades\Route;
 use Tapp\FilamentLms\Models\Course;
 use Filament\Facades\Filament;
@@ -57,6 +58,7 @@ class LmsPanelProvider extends PanelProvider
             ])
             ->livewireComponents([
                 VideoStep::class,
+                FormStep::class,
             ])
             ->middleware([
                 EncryptCookies::class,

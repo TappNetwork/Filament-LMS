@@ -11,6 +11,7 @@ use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Livewire;
 use Tapp\FilamentLms\Livewire\VideoStep;
+use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider
@@ -38,6 +39,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
     public function packageBooted()
     {
         Livewire::component('video-step', VideoStep::class);
+        Livewire::component('form-step', FormStep::class);
         Livewire::component('vimeo-video', VimeoVideo::class);
 
         FilamentAsset::register([
@@ -47,6 +49,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
 
         Relation::morphMap([
             'video' => 'Tapp\FilamentLms\Models\Video',
+            'form' => 'Tapp\FilamentFormBuilder\Models\FilamentForm',
         ]);
     }
 }

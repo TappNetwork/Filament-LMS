@@ -9,10 +9,16 @@ use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Tapp\FilamentLms\Database\Factories\StepFactory;
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
 
-class Step extends Model
+class Step extends Model implements Sortable
 {
-    use HasFactory;
+    use HasFactory, SortableTrait;
+
+        public $sortable = [
+        'order_column_name' => 'order',
+    ];
 
     protected $guarded = [];
 

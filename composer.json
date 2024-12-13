@@ -16,7 +16,8 @@
     "minimum-stability": "dev",
     "require": {
         "filament/support": "^3.0",
-        "spatie/eloquent-sortable": "dev-main"
+        "spatie/eloquent-sortable": "^4.4.0",
+        "tapp/filament-form-builder": "^1.2"
     },
     "extra": {
         "laravel": {
@@ -24,6 +25,12 @@
                 "Tapp\\FilamentLms\\FilamentLmsServiceProvider",
                 "Tapp\\FilamentLms\\LmsPanelProvider"
             ]
+        }
+    },
+    "repositories": {
+        "tapp/filament-form-builder": {
+            "type": "vcs",
+            "url": "https://github.com/tappnetwork/filament-form-builder"
         }
     }
 }

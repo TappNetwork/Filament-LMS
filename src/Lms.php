@@ -7,8 +7,8 @@ use Tapp\FilamentLms\Resources\LessonResource;
 use Tapp\FilamentLms\Resources\StepResource;
 use Tapp\FilamentLms\Resources\VideoResource;
 use Filament\Panel;
-
 use Filament\Contracts\Plugin;
+use Filament\SpatieLaravelTranslatablePlugin;
 
 class Lms implements Plugin
 {
@@ -24,7 +24,7 @@ class Lms implements Plugin
             LessonResource::class,
             StepResource::class,
             VideoResource::class,
-        ]);
+            ]);
     }
 
     public function boot(Panel $panel): void

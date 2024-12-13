@@ -29,7 +29,7 @@ class CourseFactory extends Factory
             'slug' => $slug,
             'external_id' => $externalId,
             'award_layout' => 'default',
-            'description' => 'This course will introduce you to the basics of AI.',
+            'description' => $this->faker->sentence(),
         ];
     }
 }

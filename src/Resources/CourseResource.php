@@ -28,8 +28,10 @@ class CourseResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->live(onBlur: true)
-                    ->afterStateUpdated(function (Set $set, ?string $state) {
-                        $set('external_id', Str::snake($state));
+                    ->afterStateUpdated(function (Set $set, ?string $state, string $operation) {
+                        if ($operation === 'create') {
+                            $set('external_id', Str::snake($state));
+                        }
                         $set('slug', Str::slug($state));
                     })
                     ->required(),

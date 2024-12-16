@@ -37,6 +37,13 @@ class LmsPanelProvider extends PanelProvider
         return $panel
             ->id('lms')
             ->path('lms')
+            ->brandName('LMS')
+            ->userMenuItems([
+                \Filament\Navigation\MenuItem::make()
+                    ->label('Exit LMS')
+                    ->url(fn (): string => '/')
+                    ->icon('heroicon-o-home'),
+            ])
             ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
                 return $this->navigationItems($builder);
             })

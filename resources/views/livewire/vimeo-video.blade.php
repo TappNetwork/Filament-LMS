@@ -2,6 +2,7 @@
     <!-- https://codepen.io/danfascia/pen/zYxXXXM?editors=1011 -->
     <iframe
         class="bg-black mx-auto w-full h-full inset-0 absolute"
+        style="max-height:80vh"
         src="{{$video->url}}"
         width="800"
         height="450"

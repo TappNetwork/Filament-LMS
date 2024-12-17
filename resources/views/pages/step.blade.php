@@ -1,7 +1,7 @@
 <div>
     <div class="py-5">
         <div class="sm:flex sm:items-center sm:justify-between">
-            <h3 class="text-xl font-semibold text-gray-900">
+            <h3 class="text-xl font-semibold text-white">
                 {{ $step->name }}
             </h3>
             <div>

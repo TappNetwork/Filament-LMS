@@ -11,12 +11,17 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Routing\Controller;
 // TODO get from config
 use App\Models\User;
+use Illuminate\Support\Facades\URL;
 
 class CertificateController extends Controller
 {
     // TODO does this need authentication to prevent direct visits?
     public function show($courseId, $userId): View
     {
+        if (!request()->hasValidSignature() && !(auth()->user() && auth()->user()->hasRole('Admin'))) {
+            abort(403);
+        }
+
         $course = Course::findOrFail($courseId);
 
         $completedAt = $course->completedByUserAt($userId);
@@ -38,7 +43,11 @@ class CertificateController extends Controller
             return redirect()->route('login');
         }
 
-        $url = route('filament-lms::certificates.show', [ 'course' => $course, 'user' => auth()->user()->id]);
+        $url = URL::temporarySignedRoute(
+            'filament-lms::certificates.show',
+            now()->addMinutes(20),
+            [ 'course' => $course, 'user' => auth()->user()->id]
+        );
 
         $pdf = Browsershot::url($url)
             ->waitUntilNetworkIdle()

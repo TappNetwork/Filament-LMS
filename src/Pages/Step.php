@@ -17,7 +17,7 @@ class Step extends Page
 
     protected static string $view = 'filament-lms::pages.step';
 
-    protected static ?string $slug = '{courseSlug}/{lessonSlug}/{stepSlug}';
+    protected static ?string $slug = 'courses/{courseSlug}/{lessonSlug}/{stepSlug}';
 
     public $course;
     public $lesson;

@@ -51,5 +51,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             'video' => 'Tapp\FilamentLms\Models\Video',
             'form' => 'Tapp\FilamentFormBuilder\Models\FilamentForm',
         ]);
+
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
     }
 }

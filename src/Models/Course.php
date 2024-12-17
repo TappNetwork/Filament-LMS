@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -37,6 +38,10 @@ class Course extends Model
     {
         $step = $this->currentStep();
 
+        if ($step->completed_at && $step->last_step) {
+            return $this->certificateUrl();
+        }
+
         return $step ? StepPage::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]) : '';
     }
 
@@ -62,6 +67,22 @@ class Course extends Model
     public function steps(): HasManyThrough
     {
         return $this->hasManyThrough(Step::class, Lesson::class)->orderBy('lms_steps.order');
+    }
+
+    public function completedByUserAt($userId): ?string
+    {
+        $userSteps = StepUser::whereIn('lms_step_user.step_id', $this->steps()->pluck('lms_steps.id'))
+            ->where('lms_step_user.user_id', $userId)
+            ->whereNotNull('lms_step_user.completed_at')
+            ->get();
+
+        foreach ($this->steps as $step) {
+            if (!$userSteps->contains('step_id', $step->id)) {
+                return null;
+            }
+        }
+
+        return $userSteps->max('completed_at');
     }
 
     public function getCompletedAtAttribute()

@@ -15,7 +15,7 @@
         </x-filament::button>
     </a>
 
-    <x-filament::button wire:click="downloadCertificate">
+    <x-filament::button tag="a" href="{{route('filament-lms::certificates.download', [$this->course->id])}}">
         Download Certificate
     </x-filament::button>
     </div>

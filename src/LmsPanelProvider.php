@@ -31,11 +31,21 @@ use Illuminate\Support\HtmlString;
 use App\Providers\Filament\Support\Colors\DphColor as Color;
 use Filament\View\PanelsRenderHook;
 use Illuminate\View\View;
+use Filament\Support\Facades\FilamentView;
 
 class LmsPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::USER_MENU_BEFORE,
+            function () {
+                if (Filament::getCurrentPanel()->getId() == 'lms') {
+                    return view('filament-lms::components.exit-lms');
+                }
+            }
+        );
+
         return $panel
             ->id('lms')
             ->path('lms')
@@ -48,12 +58,6 @@ class LmsPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_END,
                 fn (): View => view('usersnap'),
             )
-            ->userMenuItems([
-                \Filament\Navigation\MenuItem::make()
-                    ->label('Exit LMS')
-                    ->url(fn (): string => '/')
-                    ->icon('heroicon-o-home'),
-            ])
             ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
                 return $this->navigationItems($builder);
             })

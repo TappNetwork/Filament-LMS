@@ -2,14 +2,19 @@
 
 namespace Tapp\FilamentLms;
 
+use App\Providers\Filament\Support\Colors\DphColor as Color;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -19,19 +24,13 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\View\View;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step;
-use Filament\Facades\Filament;
-use Filament\Navigation\NavigationGroup;
-use Illuminate\Support\HtmlString;
-use App\Providers\Filament\Support\Colors\DphColor as Color;
-use Filament\View\PanelsRenderHook;
-use Illuminate\View\View;
-use Filament\Support\Facades\FilamentView;
 
 class LmsPanelProvider extends PanelProvider
 {

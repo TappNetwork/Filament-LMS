@@ -50,7 +50,7 @@ class CourseResource extends Resource
                     ->imageResizeTargetWidth('1080')
                     ->imageResizeTargetHeight('1080')
                     ->imageCropAspectRatio('1:1'),
-                Forms\Components\TextArea::make('description'),
+                Forms\Components\Textarea::make('description'),
 
                     /*
                      * TODO: Implement award layout and content

@@ -21,7 +21,9 @@ class Step extends Page
     protected static ?string $slug = 'courses/{courseSlug}/{lessonSlug}/{stepSlug}';
 
     public Course $course;
+
     public Lesson $lesson;
+
     public StepModel $step;
 
     public function mount($courseSlug, $lessonSlug, $stepSlug)

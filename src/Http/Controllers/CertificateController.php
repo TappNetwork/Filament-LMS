@@ -2,23 +2,23 @@
 
 namespace Tapp\FilamentLms\Http\Controllers;
 
-use Tapp\FilamentLms\Models\Course;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Spatie\Browsershot\Browsershot;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Routing\Controller;
 // TODO get from config
-use App\Models\User;
-use Illuminate\Support\Facades\URL;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Tapp\FilamentLms\Models\Course;
 
 class CertificateController extends Controller
 {
     // TODO does this need authentication to prevent direct visits?
     public function show($courseId, $userId): View
     {
-        if (!request()->hasValidSignature() && !(auth()->user() && auth()->user()->hasRole('Admin'))) {
+        if (! request()->hasValidSignature() && ! (auth()->user() && auth()->user()->hasRole('Admin'))) {
             abort(403);
         }
 
@@ -46,7 +46,7 @@ class CertificateController extends Controller
         $url = URL::temporarySignedRoute(
             'filament-lms::certificates.show',
             now()->addMinutes(20),
-            [ 'course' => $course, 'user' => auth()->user()->id]
+            ['course' => $course, 'user' => auth()->user()->id]
         );
 
         $pdf = Browsershot::url($url)

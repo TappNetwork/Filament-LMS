@@ -2,13 +2,12 @@
 
 namespace Tapp\FilamentLms\Database\Factories;
 
-use Tapp\FilamentLms\Models\Course;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Tapp\FilamentLms\Models\Course;
 
 class CourseFactory extends Factory
 {
-
     protected $model = Course::class;
 
     /**

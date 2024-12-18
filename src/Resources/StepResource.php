@@ -2,21 +2,17 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Tapp\FilamentLms\Resources\StepResource\Pages;
-use Tapp\FilamentLms\Resources\StepResource\RelationManagers;
-use Tapp\FilamentLms\Models\Step;
-use Tapp\FilamentLms\Models\Video;
-use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Set;
 use Illuminate\Support\Str;
-use Tapp\FilamentLms\Models\Survey;
+use Tapp\FilamentFormBuilder\Models\FilamentForm;
+use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Resources\StepResource\Pages;
 
 class StepResource extends Resource
 {
@@ -45,9 +41,9 @@ class StepResource extends Resource
                 Forms\Components\MorphToSelect::make('material')
                     ->types([
                         Forms\Components\MorphToSelect\Type::make(Video::class)
-                        ->titleAttribute('name'),
+                            ->titleAttribute('name'),
                         Forms\Components\MorphToSelect\Type::make(FilamentForm::class)
-                        ->titleAttribute('name'),
+                            ->titleAttribute('name'),
                     ])
                     ->required(),
 

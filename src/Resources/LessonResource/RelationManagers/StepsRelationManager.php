@@ -7,8 +7,6 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Resources\StepResource\Pages\CreateStep;
 use Tapp\FilamentLms\Resources\StepResource\Pages\EditStep;
 
@@ -21,21 +19,21 @@ class StepsRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                ->required()
+                    ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('slug')
-                ->helperText('Used for urls.')
-                ->required(),
+                    ->helperText('Used for urls.')
+                    ->required(),
                 Forms\Components\Select::make('lesson_id')
-                ->relationship(name: 'lesson', titleAttribute: 'name')
-                ->required()
+                    ->relationship(name: 'lesson', titleAttribute: 'name')
+                    ->required()
                     ->createOptionForm([
                         Forms\Components\TextInput::make('name')
-                        ->required(),
+                            ->required(),
                         Forms\Components\TextInput::make('slug')
-                        ->helperText('Used for urls.')
-                        ->required(),
-                    ])
+                            ->helperText('Used for urls.')
+                            ->required(),
+                    ]),
             ]);
     }
 

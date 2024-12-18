@@ -2,16 +2,13 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Tapp\FilamentLms\Resources\VideoResource\Pages;
-use Tapp\FilamentLms\Resources\VideoResource\RelationManagers;
-use Tapp\FilamentLms\Models\Video;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Resources\VideoResource\Pages;
 
 class VideoResource extends Resource
 {

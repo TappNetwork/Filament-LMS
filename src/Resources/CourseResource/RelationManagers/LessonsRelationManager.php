@@ -4,15 +4,13 @@ namespace Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Tapp\FilamentLms\Resources\LessonResource\Pages\EditLesson;
-use Filament\Forms\Set;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Resources\LessonResource\Pages\CreateLesson;
+use Tapp\FilamentLms\Resources\LessonResource\Pages\EditLesson;
 
 class LessonsRelationManager extends RelationManager
 {
@@ -24,17 +22,17 @@ class LessonsRelationManager extends RelationManager
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->live(onBlur: true)
-                ->required()
+                    ->required()
                     ->afterStateUpdated(function (Set $set, ?string $state) {
                         $set('slug', Str::slug($state));
                     })
                     ->maxLength(255),
                 Forms\Components\TextInput::make('slug')
-                ->helperText('Used for urls.')
-                ->required(),
+                    ->helperText('Used for urls.')
+                    ->required(),
                 Forms\Components\Select::make('course_id')
-                ->relationship(name: 'course', titleAttribute: 'name')
-                ->required(),
+                    ->relationship(name: 'course', titleAttribute: 'name')
+                    ->required(),
             ]);
     }
 

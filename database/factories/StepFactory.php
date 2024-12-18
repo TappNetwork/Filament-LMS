@@ -2,10 +2,10 @@
 
 namespace Tapp\FilamentLms\Database\Factories;
 
-use Tapp\FilamentLms\Models\Step;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Models\Lesson;
+use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
 
 class StepFactory extends Factory

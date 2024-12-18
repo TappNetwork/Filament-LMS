@@ -2,9 +2,8 @@
 
 namespace Tapp\FilamentLms\Resources\CourseResource\Pages;
 
-use Tapp\FilamentLms\Resources\CourseResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Tapp\FilamentLms\Resources\CourseResource;
 
 class CreateCourse extends CreateRecord
 {

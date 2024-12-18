@@ -2,17 +2,17 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Tapp\FilamentLms\Resources\CourseResource\Pages;
-use Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
-use Tapp\FilamentLms\Models\Course;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Set;
 use Illuminate\Support\Str;
-use Filament\Forms\Components\FileUpload;
+use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Resources\CourseResource\Pages;
+use Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
 
 class CourseResource extends Resource
 {
@@ -52,7 +52,7 @@ class CourseResource extends Resource
                     ->imageCropAspectRatio('1:1'),
                 Forms\Components\Textarea::make('description'),
 
-                    /*
+                /*
                      * TODO: Implement award layout and content
                      */
                 // Forms\Components\Select::make('award_layout')

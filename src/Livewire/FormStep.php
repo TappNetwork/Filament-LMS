@@ -2,20 +2,25 @@
 
 namespace Tapp\FilamentLms\Livewire;
 
-use Tapp\FilamentFormBuilder\Models\FilamentForm;
-use Tapp\FilamentLms\Models\Step;
 use Livewire\Component;
-use Livewire\Attributes\On;
+use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
+use Tapp\FilamentLms\Models\Step;
 
 class FormStep extends Component
 {
     public FilamentForm $form;
+
     public Step $step;
+
     public int $seconds;
+
     public bool $formCompleted;
+
     protected $listeners = ['entrySaved'];
+
     public bool $showResults = false;
+
     public ?FilamentFormUser $entry = null;
 
     public function mount($step)

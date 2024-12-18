@@ -10,7 +10,6 @@ use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -29,6 +28,9 @@ use Tapp\FilamentLms\Models\Course;
 use Filament\Facades\Filament;
 use Filament\Navigation\NavigationGroup;
 use Illuminate\Support\HtmlString;
+use App\Providers\Filament\Support\Colors\DphColor as Color;
+use Filament\View\PanelsRenderHook;
+use Illuminate\View\View;
 
 class LmsPanelProvider extends PanelProvider
 {
@@ -38,6 +40,14 @@ class LmsPanelProvider extends PanelProvider
             ->id('lms')
             ->path('lms')
             ->brandName('LMS')
+            ->homeUrl('/lms')
+            ->font('Poppins')
+            ->viteTheme('resources/css/filament/app/theme.css')
+            ->darkMode(false)
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): View => view('usersnap'),
+            )
             ->userMenuItems([
                 \Filament\Navigation\MenuItem::make()
                     ->label('Exit LMS')
@@ -48,7 +58,11 @@ class LmsPanelProvider extends PanelProvider
                 return $this->navigationItems($builder);
             })
             ->colors([
-                'primary' => Color::Emerald,
+                'primary' => Color::Blue,
+                'info' => Color::Gold,
+                'danger' => Color::Red,
+                'success' => Color::Green,
+                'gray' => Color::Purple,
             ])
             ->discoverResources(in: app_path('Filament/Lms/Resources'), for: 'App\\Filament\\Lms\\Resources')
             ->discoverPages(in: app_path('Filament/Lms/Pages'), for: 'App\\Filament\\Lms\\Pages')
@@ -97,7 +111,7 @@ class LmsPanelProvider extends PanelProvider
                         return NavigationItem::make($step->name)
                             ->icon(fn (): string => $step->completed_at ? 'heroicon-o-check-circle' : '')
                             ->isActiveWhen(fn (): bool => $step->isActive())
-                            ->url(fn (): string => $step->url);
+                            ->url(fn (): string => $step->available ? $step->url : '');
                     })->toArray());
                 })->toArray();
 

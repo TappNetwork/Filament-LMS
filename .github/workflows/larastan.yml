@@ -1,0 +1,29 @@
+name: Larastan
+on:
+  - push
+jobs:
+  test:
+    strategy:
+      matrix:
+        operating-system:
+          - ubuntu-latest
+        php-version:
+          - "8.2"
+    name: php ${{ matrix.php-version }} on ${{ matrix.operating-system }}
+    runs-on: ${{ matrix.operating-system }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: bcmath, ctype, fileinfo, json, mbstring, openssl, pdo, tokenizer, xml
+          coverage: none
+      - name: Install composer dependencies
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+        run: |
+          composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      - name: Larastan
+        run: ./vendor/bin/phpstan analyse

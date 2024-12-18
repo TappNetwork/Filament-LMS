@@ -7,7 +7,6 @@ use Tapp\FilamentLms\FilamentLmsServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
-
     protected function getPackageProviders($app)
     {
         return [

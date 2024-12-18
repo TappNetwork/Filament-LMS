@@ -2,9 +2,9 @@
 
 namespace Tapp\FilamentLms\Resources\StepResource\Pages;
 
-use Tapp\FilamentLms\Resources\StepResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Tapp\FilamentLms\Resources\StepResource;
 
 class ListSteps extends ListRecords
 {

@@ -4,19 +4,21 @@ namespace Tapp\FilamentLms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
+use Tapp\FilamentLms\Database\Factories\StepFactory;
 use Tapp\FilamentLms\Events\CourseCompleted;
 use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Tapp\FilamentLms\Database\Factories\StepFactory;
-use Spatie\EloquentSortable\Sortable;
-use Spatie\EloquentSortable\SortableTrait;
 
 class Step extends Model implements Sortable
 {
     use HasFactory, SortableTrait;
 
-        public $sortable = [
+    public $sortable = [
         'order_column_name' => 'order',
     ];
 
@@ -29,17 +31,17 @@ class Step extends Model implements Sortable
         return StepFactory::new();
     }
 
-    public function lesson()
+    public function lesson(): BelongsTo
     {
         return $this->belongsTo(Lesson::class);
     }
 
-    public function material()
+    public function material(): MorphTo
     {
         return $this->morphTo();
     }
 
-    public function complete(User $user = null)
+    public function complete(?User $user = null)
     {
         $user = $user ?: auth()->user();
 
@@ -110,7 +112,7 @@ class Step extends Model implements Sortable
 
     public function isActive()
     {
-        return request()->is('*' . $this->slug . '*');
+        return request()->is('*'.$this->slug.'*');
     }
 
     public function getUrlAttribute()
@@ -126,7 +128,7 @@ class Step extends Model implements Sortable
             ->where('step_id', $this->id)
             ->first();
 
-        if (!$userStep) {
+        if (! $userStep) {
             StepUser::create([
                 'user_id' => $user->id,
                 'step_id' => $this->id,
@@ -161,7 +163,7 @@ class Step extends Model implements Sortable
 
     public function getAvailableAttribute()
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return false;
         }
 

@@ -3,8 +3,8 @@
 namespace Tapp\FilamentLms\Pages;
 
 use Filament\Pages\Page;
-use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Concerns\CourseLayout;
+use Tapp\FilamentLms\Models\Course;
 
 class CourseCompleted extends Page
 {

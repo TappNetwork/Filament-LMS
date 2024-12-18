@@ -2,10 +2,10 @@
 
 namespace Tapp\FilamentLms\Events;
 
-use Tapp\FilamentLms\Models\Course;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Tapp\FilamentLms\Models\Course;
 
 class CourseCompleted
 {

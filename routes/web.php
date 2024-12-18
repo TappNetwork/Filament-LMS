@@ -1,7 +1,7 @@
 <?php
 
-use Tapp\FilamentLms\Http\Controllers\CertificateController;
 use Illuminate\Support\Facades\Route;
+use Tapp\FilamentLms\Http\Controllers\CertificateController;
 
 /*
 |--------------------------------------------------------------------------

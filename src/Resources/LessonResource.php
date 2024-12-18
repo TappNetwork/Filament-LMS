@@ -2,18 +2,16 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Tapp\FilamentLms\Resources\LessonResource\Pages;
-use Tapp\FilamentLms\Resources\LessonResource\RelationManagers;
-use Tapp\FilamentLms\Models\Lesson;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Set;
 use Illuminate\Support\Str;
+use Tapp\FilamentLms\Models\Lesson;
+use Tapp\FilamentLms\Resources\LessonResource\Pages;
+use Tapp\FilamentLms\Resources\LessonResource\RelationManagers;
 
 class LessonResource extends Resource
 {
@@ -33,7 +31,7 @@ class LessonResource extends Resource
                     ->afterStateUpdated(function (Set $set, ?string $state) {
                         $set('slug', Str::slug($state));
                     })
-                ->maxLength(255),
+                    ->maxLength(255),
                 Forms\Components\TextInput::make('slug')
                     ->helperText('Used for urls.')
                     ->required(),

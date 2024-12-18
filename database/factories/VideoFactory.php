@@ -2,8 +2,8 @@
 
 namespace Tapp\FilamentLms\Database\Factories;
 
-use Tapp\FilamentLms\Models\Video;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Tapp\FilamentLms\Models\Video;
 
 class VideoFactory extends Factory
 {
@@ -21,7 +21,7 @@ class VideoFactory extends Factory
     {
         return [
             'name' => $this->faker->word(),
-            'url' => "https://player.vimeo.com/video/226053498",
+            'url' => 'https://player.vimeo.com/video/226053498',
         ];
     }
 }

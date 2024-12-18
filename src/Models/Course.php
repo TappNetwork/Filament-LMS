@@ -5,12 +5,11 @@ namespace Tapp\FilamentLms\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
-use Tapp\FilamentLms\Models\Step;
-use Tapp\FilamentLms\Models\Lesson;
-use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Pages\CourseCompleted;
+use Tapp\FilamentLms\Pages\Step as StepPage;
 
 class Course extends Model
 {
@@ -29,7 +28,7 @@ class Course extends Model
         return CourseFactory::new();
     }
 
-    public function lessons()
+    public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class);
     }
@@ -77,7 +76,7 @@ class Course extends Model
             ->get();
 
         foreach ($this->steps as $step) {
-            if (!$userSteps->contains('step_id', $step->id)) {
+            if (! $userSteps->contains('step_id', $step->id)) {
                 return null;
             }
         }

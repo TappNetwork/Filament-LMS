@@ -2,10 +2,10 @@
 
 namespace Tapp\FilamentLms\Database\Factories;
 
-use Tapp\FilamentLms\Models\Lesson;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\Lesson;
 
 class LessonFactory extends Factory
 {

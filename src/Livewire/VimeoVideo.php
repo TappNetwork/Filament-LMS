@@ -2,13 +2,14 @@
 
 namespace Tapp\FilamentLms\Livewire;
 
-use Tapp\FilamentLms\Models\Video;
-use Tapp\FilamentLms\Models\Step;
 use Livewire\Component;
+use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\Video;
 
 class VimeoVideo extends Component
 {
     public Video $video;
+
     public Step $step;
 
     public function mount($step)

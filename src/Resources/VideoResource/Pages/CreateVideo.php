@@ -2,9 +2,8 @@
 
 namespace Tapp\FilamentLms\Resources\VideoResource\Pages;
 
-use Tapp\FilamentLms\Resources\VideoResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Tapp\FilamentLms\Resources\VideoResource;
 
 class CreateVideo extends CreateRecord
 {

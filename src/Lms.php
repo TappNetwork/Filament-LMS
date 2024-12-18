@@ -2,13 +2,12 @@
 
 namespace Tapp\FilamentLms;
 
+use Filament\Contracts\Plugin;
+use Filament\Panel;
 use Tapp\FilamentLms\Resources\CourseResource;
 use Tapp\FilamentLms\Resources\LessonResource;
 use Tapp\FilamentLms\Resources\StepResource;
 use Tapp\FilamentLms\Resources\VideoResource;
-use Filament\Panel;
-use Filament\Contracts\Plugin;
-use Filament\SpatieLaravelTranslatablePlugin;
 
 class Lms implements Plugin
 {
@@ -24,7 +23,7 @@ class Lms implements Plugin
             LessonResource::class,
             StepResource::class,
             VideoResource::class,
-            ]);
+        ]);
     }
 
     public function boot(Panel $panel): void
@@ -34,7 +33,7 @@ class Lms implements Plugin
 
     public static function make(): static
     {
-        return new static();
+        return new static;
     }
 
     public static function get(): static

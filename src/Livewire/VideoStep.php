@@ -2,17 +2,19 @@
 
 namespace Tapp\FilamentLms\Livewire;
 
-use Tapp\FilamentLms\Models\Video;
-use Tapp\FilamentLms\Models\Step;
-use Livewire\Component;
-use Tapp\FilamentLms\Pages\Step as StepPage;
 use Livewire\Attributes\On;
+use Livewire\Component;
+use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\Video;
 
 class VideoStep extends Component
 {
     public Video $video;
+
     public Step $step;
+
     public int $seconds;
+
     public bool $videoCompleted;
 
     public function mount($step)

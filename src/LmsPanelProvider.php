@@ -2,7 +2,6 @@
 
 namespace Tapp\FilamentLms;
 
-use App\Providers\Filament\Support\Colors\DphColor as Color;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -12,6 +11,7 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
@@ -61,7 +61,7 @@ class LmsPanelProvider extends PanelProvider
             })
             ->colors([
                 'primary' => Color::Blue,
-                'info' => Color::Gold,
+                'info' => Color::Orange,
                 'danger' => Color::Red,
                 'success' => Color::Green,
                 'gray' => Color::Purple,

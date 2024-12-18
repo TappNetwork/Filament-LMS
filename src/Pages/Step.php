@@ -3,11 +3,12 @@
 namespace Tapp\FilamentLms\Pages;
 
 use Filament\Pages\Page;
-use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Models\Step as StepModel;
 use Filament\Support\Enums\MaxWidth;
 use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;
+use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\Lesson;
+use Tapp\FilamentLms\Models\Step as StepModel;
 
 class Step extends Page
 {
@@ -19,9 +20,9 @@ class Step extends Page
 
     protected static ?string $slug = 'courses/{courseSlug}/{lessonSlug}/{stepSlug}';
 
-    public $course;
-    public $lesson;
-    public $step;
+    public Course $course;
+    public Lesson $lesson;
+    public StepModel $step;
 
     public function mount($courseSlug, $lessonSlug, $stepSlug)
     {
@@ -61,7 +62,7 @@ class Step extends Page
     }
 
     public function viewAllCourses()
-        {
-            return redirect()->to(Dashboard::getUrl());
-        }
+    {
+        return redirect()->to(Dashboard::getUrl());
+    }
 }

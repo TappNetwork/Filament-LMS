@@ -4,6 +4,7 @@ namespace Tapp\FilamentLms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Tapp\FilamentLms\Database\Factories\VideoFactory;
 
 class Video extends Model
@@ -17,9 +18,9 @@ class Video extends Model
     protected static function newFactory()
     {
         return VideoFactory::new();
-            }
+    }
 
-    public function step()
+    public function step(): MorphTo
     {
         return $this->morphTo(Step::class);
     }

@@ -4,20 +4,22 @@ namespace Tapp\FilamentLms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
+use Tapp\FilamentLms\Database\Factories\StepFactory;
 use Tapp\FilamentLms\Events\CourseCompleted;
 use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Tapp\FilamentLms\Database\Factories\StepFactory;
-use Spatie\EloquentSortable\Sortable;
-use Spatie\EloquentSortable\SortableTrait;
 
 class Step extends Model implements Sortable
 {
     use HasFactory, SortableTrait;
 
-        public $sortable = [
-        'order_column_name' => 'order',
+    public $sortable = [
+    'order_column_name' => 'order',
     ];
 
     protected $guarded = [];
@@ -29,12 +31,12 @@ class Step extends Model implements Sortable
         return StepFactory::new();
     }
 
-    public function lesson()
+    public function lesson(): BelongsTo
     {
         return $this->belongsTo(Lesson::class);
     }
 
-    public function material()
+    public function material(): MorphTo
     {
         return $this->morphTo();
     }

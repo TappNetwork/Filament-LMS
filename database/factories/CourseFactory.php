@@ -8,11 +8,7 @@ use Illuminate\Support\Str;
 
 class CourseFactory extends Factory
 {
-    /**
-     * The name of the factory's corresponding model.
-     *
-     * @var string
-     */
+
     protected $model = Course::class;
 
     /**

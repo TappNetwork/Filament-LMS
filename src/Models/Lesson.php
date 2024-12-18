@@ -4,15 +4,17 @@ namespace Tapp\FilamentLms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Tapp\FilamentLms\Database\Factories\LessonFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
+use Tapp\FilamentLms\Database\Factories\LessonFactory;
 
 class Lesson extends Model implements Sortable
 {
     use HasFactory, SortableTrait;
 
-        public $sortable = [
+    public $sortable = [
         'order_column_name' => 'order',
     ];
 
@@ -25,12 +27,12 @@ class Lesson extends Model implements Sortable
         return LessonFactory::new();
     }
 
-    public function course()
+    public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
     }
 
-    public function steps()
+    public function steps(): HasMany
     {
         return $this->hasMany(Step::class);
     }

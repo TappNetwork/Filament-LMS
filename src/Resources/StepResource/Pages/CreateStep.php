@@ -2,20 +2,19 @@
 
 namespace Tapp\FilamentLms\Resources\StepResource\Pages;
 
-use Tapp\FilamentLms\Resources\StepResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Tapp\FilamentLms\Resources\StepResource;
 
 class CreateStep extends CreateRecord
 {
     protected static string $resource = StepResource::class;
 
     protected function fillForm(): void
-{
-    parent::fillForm();
+    {
+        parent::fillForm();
 
-    $request = request();
+        $request = request();
 
-    $this->form->fill($request->query());
-}
+        $this->form->fill($request->query());
+    }
 }

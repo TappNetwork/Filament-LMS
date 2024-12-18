@@ -2,9 +2,9 @@
 
 namespace Tapp\FilamentLms\Resources\VideoResource\Pages;
 
-use Tapp\FilamentLms\Resources\VideoResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Tapp\FilamentLms\Resources\VideoResource;
 
 class EditVideo extends EditRecord
 {

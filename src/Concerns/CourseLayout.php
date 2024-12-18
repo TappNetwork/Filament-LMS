@@ -16,7 +16,7 @@ trait CourseLayout
         );
 
         FilamentView::registerRenderHook(
-        PanelsRenderHook::TOPBAR_AFTER,
+            PanelsRenderHook::TOPBAR_AFTER,
             fn (): View => view('filament-lms::components.topbar-course-progress', ['course' => $this->course]),
         );
 

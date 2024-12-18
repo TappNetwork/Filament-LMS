@@ -2,16 +2,16 @@
 
 namespace Tapp\FilamentLms;
 
-use Spatie\LaravelPackageTools\Commands\InstallCommand;
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Livewire;
-use Tapp\FilamentLms\Livewire\VideoStep;
+use Spatie\LaravelPackageTools\Commands\InstallCommand;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Tapp\FilamentLms\Livewire\FormStep;
+use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider
@@ -43,8 +43,8 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('vimeo-video', VimeoVideo::class);
 
         FilamentAsset::register([
-            Css::make('filament-lms', __DIR__ . '/../dist/filament-lms.css'),
-            Js::make('vimeo', __DIR__ . '/../dist/vimeo.js'),
+            Css::make('filament-lms', __DIR__.'/../dist/filament-lms.css'),
+            Js::make('vimeo', __DIR__.'/../dist/vimeo.js'),
         ], package: 'tapp/filament-lms');
 
         Relation::morphMap([

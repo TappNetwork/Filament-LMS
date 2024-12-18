@@ -39,7 +39,7 @@ class Lesson extends Model implements Sortable
 
     public function isActive()
     {
-        return request()->is('*' . $this->slug . '*');
+        return request()->is('*'.$this->slug.'*');
     }
 
     public function getCompletedAtAttribute()

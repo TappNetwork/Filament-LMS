@@ -6,8 +6,8 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationBuilder;
+use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -18,17 +18,14 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Tapp\FilamentLms\Pages\CourseCompleted;
-use Tapp\FilamentLms\Pages\Step;
-use Tapp\FilamentLms\Pages\Dashboard;
-use Tapp\FilamentLms\Livewire\VideoStep;
-use Tapp\FilamentLms\Livewire\FormStep;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Tapp\FilamentLms\Livewire\FormStep;
+use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Models\Course;
-use Filament\Facades\Filament;
-use Filament\Navigation\NavigationGroup;
-use Illuminate\Support\HtmlString;
+use Tapp\FilamentLms\Pages\CourseCompleted;
+use Tapp\FilamentLms\Pages\Dashboard;
+use Tapp\FilamentLms\Pages\Step;
 
 class LmsPanelProvider extends PanelProvider
 {
@@ -99,14 +96,13 @@ class LmsPanelProvider extends PanelProvider
                             ->isActiveWhen(fn (): bool => $step->isActive())
                             ->url(fn (): string => $step->url);
                     })->toArray());
-                })->toArray();
+            })->toArray();
 
-
-            $navigationGroups []= NavigationGroup::make('Course Completed')->items([
+            $navigationGroups[] = NavigationGroup::make('Course Completed')->items([
                 NavigationItem::make('Certificate')
                     ->icon('heroicon-o-trophy')
                     ->url(fn (): string => CourseCompleted::getUrl([$course->slug]))
-                    ->isActiveWhen(fn (): bool => request()->routeIs(CourseCompleted::getRouteName()))
+                    ->isActiveWhen(fn (): bool => request()->routeIs(CourseCompleted::getRouteName())),
             ]);
 
             $builder->groups($navigationGroups);
@@ -116,12 +112,12 @@ class LmsPanelProvider extends PanelProvider
 
         return $builder->items([
             NavigationItem::make('Home')
-                    ->icon('heroicon-o-home')
-                    ->url(fn (): string => '/'),
+                ->icon('heroicon-o-home')
+                ->url(fn (): string => '/'),
             NavigationItem::make('Courses')
-                    ->icon('heroicon-o-academic-cap')
-                    ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
-                    ->url(fn (): string => Dashboard::getUrl()),
+                ->icon('heroicon-o-academic-cap')
+                ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
+                ->url(fn (): string => Dashboard::getUrl()),
         ]);
     }
 }

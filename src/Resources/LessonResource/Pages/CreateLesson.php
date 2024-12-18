@@ -2,20 +2,19 @@
 
 namespace Tapp\FilamentLms\Resources\LessonResource\Pages;
 
-use Tapp\FilamentLms\Resources\LessonResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Tapp\FilamentLms\Resources\LessonResource;
 
 class CreateLesson extends CreateRecord
 {
     protected static string $resource = LessonResource::class;
 
     protected function fillForm(): void
-{
-    parent::fillForm();
+    {
+        parent::fillForm();
 
-    $request = request();
+        $request = request();
 
-    $this->form->fill($request->query());
-}
+        $this->form->fill($request->query());
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms;
 
+use App\Providers\Filament\Support\Colors\DphColor as Color;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -29,7 +30,6 @@ use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step;
-use App\Providers\Filament\Support\Colors\DphColor as Color;
 
 class LmsPanelProvider extends PanelProvider
 {

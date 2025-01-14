@@ -19,7 +19,7 @@
     "require": {
         "filament/support": "^3.0",
         "spatie/eloquent-sortable": "^4.4.0",
-        "tapp/filament-form-builder": "^1.2"
+        "tapp/filament-form-builder": "^1.40"
     },
     "require-dev": {
         "laravel/pint": "^1.14",

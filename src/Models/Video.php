@@ -27,7 +27,10 @@ class Video extends Model
 
     public function getProviderAttribute()
     {
-        // TODO determine provider from url
+        if (str_contains($this->url, 'youtube')) {
+            return 'youtube';
+        }
+
         return 'vimeo';
     }
 }

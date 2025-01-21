@@ -41,7 +41,7 @@ class Step extends Model implements Sortable
         return $this->morphTo();
     }
 
-    public function complete(?User $user = null)
+    public function complete($user = null)
     {
         $user = $user ?: auth()->user();
 

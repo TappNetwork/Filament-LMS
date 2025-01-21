@@ -21,7 +21,8 @@ class VideoFactory extends Factory
     {
         return [
             'name' => $this->faker->word(),
-            'url' => 'https://player.vimeo.com/video/226053498',
+            'url' => 'https://www.youtube.com/watch?v=1wdqeyD-5YM',
+            // 'url' => 'https://player.vimeo.com/video/226053498',
         ];
     }
 }

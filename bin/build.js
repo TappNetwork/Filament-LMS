@@ -1,8 +1,8 @@
 import * as esbuild from "esbuild";
 
 esbuild.build({
-  entryPoints: ["./resources/js/vimeo.js"],
-  outfile: "./dist/vimeo.js",
+  entryPoints: ["./resources/js/filament-lms.js"],
+  outfile: "./dist/filament-lms.js",
   bundle: true,
   mainFields: ["module", "main"],
   platform: "browser",

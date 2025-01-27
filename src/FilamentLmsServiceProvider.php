@@ -11,9 +11,9 @@ use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Tapp\FilamentLms\Livewire\FormStep;
+use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
-use Tapp\FilamentLms\Livewire\VideoPlayer;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider
 {

@@ -1,5 +1,5 @@
 <div>
-    <iframe id="target" src="{{$video->url}}"></iframe>
+    <div wire:ignore id="target"></div>
 </div>
 
 @assets
@@ -9,19 +9,26 @@
 
 @script
 <script>
-    const player = await VidstackPlayer.create({
-    target: '#target',
-    src: '{{$video->url}}',
-    viewType: 'video',
-    streamType: 'on-demand',
-    logLevel: 'warn',
-    crossOrigin: true,
-    playsInline: true,
-    title: 'Sprite Fight',
-        // poster: 'https://files.vidstack.io/sprite-fight/poster.webp',
-    layout: new VidstackPlayerLayout({
-        // thumbnails: 'https://files.vidstack.io/sprite-fight/thumbnails.vtt',
-    }),
-    });
+ let completed = {{ $step->completed_at ? 1 : 0 }};
+
+const player = await VidstackPlayer.create({
+     target: '#target',
+     src: '{{$video->url}}',
+     viewType: 'video',
+     streamType: 'on-demand',
+     logLevel: 'warn',
+     crossOrigin: true,
+     playsInline: true,
+     // title: 'Sprite Fight',
+     layout: new VidstackPlayerLayout(),
+ });
+
+ // events
+ player.subscribe(({currentTime}) => {
+     if (!completed && currentTime > 0) {
+         $wire.videoEnded()
+     }
+ })
+
 </script>
 @endscript

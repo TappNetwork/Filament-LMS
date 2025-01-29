@@ -24,6 +24,8 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             ->hasViews()
             ->hasAssets()
             ->hasMigrations([
+                'create_lms_documents_table',
+                'create_lms_links_table',
                 'create_lms_courses_table',
                 'create_lms_lessons_table',
                 'create_lms_steps_table',

@@ -4,10 +4,10 @@ namespace Tapp\FilamentLms;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
-use Tapp\FilamentLms\Resources\DocumentResource;
-use Tapp\FilamentLms\Resources\LinkResource;
 use Tapp\FilamentLms\Resources\CourseResource;
+use Tapp\FilamentLms\Resources\DocumentResource;
 use Tapp\FilamentLms\Resources\LessonResource;
+use Tapp\FilamentLms\Resources\LinkResource;
 use Tapp\FilamentLms\Resources\StepResource;
 use Tapp\FilamentLms\Resources\VideoResource;
 

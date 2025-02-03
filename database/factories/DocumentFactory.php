@@ -24,7 +24,7 @@ class DocumentFactory extends Factory
         ];
     }
 
-        /**
+    /**
      * Associate media after creating
      */
     public function configure(): static
@@ -36,5 +36,4 @@ class DocumentFactory extends Factory
                 ->toMediaCollection();
         });
     }
-
 }

@@ -2,9 +2,9 @@
 
 namespace Tapp\FilamentLms\Resources\DocumentResource\Pages;
 
-use Tapp\FilamentLms\Resources\DocumentResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Tapp\FilamentLms\Resources\DocumentResource;
 
 class EditDocument extends EditRecord
 {

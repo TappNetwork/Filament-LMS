@@ -3,8 +3,8 @@
 namespace Tapp\FilamentLms\Resources;
 
 use Tapp\FilamentLms\Resources\LinkResource\Pages;
-use App\Filament\Resources\LinkResource\RelationManagers;
-use App\Models\Link;
+use Tapp\FilamentLms\Resources\LinkResource\RelationManagers;
+use Tapp\FilamentLms\Models\Link;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -17,7 +17,7 @@ class LinkResource extends Resource
 {
     protected static ?string $model = Link::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-paperclip';
+    protected static ?string $navigationIcon = 'heroicon-o-paper-clip';
 
     protected static ?string $navigationGroup = 'LMS';
 

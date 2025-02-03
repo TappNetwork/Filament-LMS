@@ -2,7 +2,7 @@
 
 namespace Tapp\FilamentLms;
 
-use App\Providers\Filament\Support\Colors\DphColor as Color;
+use Filament\Support\Colors\Color;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;

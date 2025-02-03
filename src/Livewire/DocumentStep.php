@@ -33,10 +33,6 @@ class DocumentStep extends Component
 
         $mediaItem = $this->document->getFirstMedia();
 
-        try {
-            return response()->download($mediaItem->getPath(), $mediaItem->file_name);
-        } catch (\Exception $e) {
-            dd($e);
-        }
+        return response()->download($mediaItem->getPath(), $mediaItem->file_name);
     }
 }

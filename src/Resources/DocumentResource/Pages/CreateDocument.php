@@ -2,9 +2,8 @@
 
 namespace Tapp\FilamentLms\Resources\DocumentResource\Pages;
 
-use Tapp\FilamentLms\Resources\DocumentResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Tapp\FilamentLms\Resources\DocumentResource;
 
 class CreateDocument extends CreateRecord
 {

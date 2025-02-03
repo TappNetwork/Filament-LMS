@@ -2,9 +2,9 @@
 
 namespace Tapp\FilamentLms\Resources\LinkResource\Pages;
 
-use Tapp\FilamentLms\Resources\LinkResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Tapp\FilamentLms\Resources\LinkResource;
 
 class ListLinks extends ListRecords
 {

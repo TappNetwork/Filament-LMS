@@ -2,9 +2,8 @@
 
 namespace Tapp\FilamentLms\Resources\LinkResource\Pages;
 
-use Tapp\FilamentLms\Resources\LinkResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Tapp\FilamentLms\Resources\LinkResource;
 
 class CreateLink extends CreateRecord
 {

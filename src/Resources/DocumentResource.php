@@ -2,18 +2,16 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Tapp\FilamentLms\Resources\DocumentResource\Pages;
-use Tapp\FilamentLms\Resources\DocumentResource\RelationManagers;
-use Tapp\FilamentLms\Models\Document;
 use Filament\Forms;
-use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Tapp\FilamentLms\Models\Document;
+use Tapp\FilamentLms\Resources\DocumentResource\Pages;
 
 class DocumentResource extends Resource
 {
@@ -30,7 +28,7 @@ class DocumentResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required(),
                 SpatieMediaLibraryFileUpload::make('file')
-                ->required(),
+                    ->required(),
             ]);
     }
 

@@ -2,10 +2,9 @@
 
 namespace Tapp\FilamentLms\Livewire;
 
-use Livewire\Attributes\On;
 use Livewire\Component;
-use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Link;
+use Tapp\FilamentLms\Models\Step;
 
 class LinkStep extends Component
 {

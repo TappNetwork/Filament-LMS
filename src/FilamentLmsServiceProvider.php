@@ -10,11 +10,11 @@ use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
+use Tapp\FilamentLms\Livewire\LinkStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
-use Tapp\FilamentLms\Livewire\DocumentStep;
-use Tapp\FilamentLms\Livewire\LinkStep;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider

@@ -18,6 +18,10 @@
         <livewire:video-step :step="$step"/>
     @elseif ($step->material_type == 'form')
         <livewire:form-step :step="$step"/>
+    @elseif ($step->material_type == 'document')
+        <livewire:document-step :step="$step"/>
+    @elseif ($step->material_type == 'link')
+        <livewire:link-step :step="$step"/>
     @else
         unsupported material type: {{ $step->material_type }}
     @endif

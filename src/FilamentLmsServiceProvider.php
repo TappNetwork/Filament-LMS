@@ -10,7 +10,9 @@ use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
+use Tapp\FilamentLms\Livewire\LinkStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
@@ -24,6 +26,8 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             ->hasViews()
             ->hasAssets()
             ->hasMigrations([
+                'create_lms_documents_table',
+                'create_lms_links_table',
                 'create_lms_courses_table',
                 'create_lms_lessons_table',
                 'create_lms_steps_table',
@@ -40,6 +44,8 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
     public function packageBooted()
     {
         Livewire::component('video-step', VideoStep::class);
+        Livewire::component('document-step', DocumentStep::class);
+        Livewire::component('link-step', LinkStep::class);
         Livewire::component('form-step', FormStep::class);
         Livewire::component('vimeo-video', VimeoVideo::class);
         Livewire::component('video-player', VideoPlayer::class);
@@ -51,6 +57,8 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
 
         Relation::morphMap([
             'video' => 'Tapp\FilamentLms\Models\Video',
+            'document' => 'Tapp\FilamentLms\Models\Document',
+            'link' => 'Tapp\FilamentLms\Models\Link',
             'form' => 'Tapp\FilamentFormBuilder\Models\FilamentForm',
         ]);
 

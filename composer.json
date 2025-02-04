@@ -17,6 +17,7 @@
     ],
     "minimum-stability": "dev",
     "require": {
+        "filament/spatie-laravel-media-library-plugin": "^3.2",
         "filament/support": "^3.0",
         "spatie/eloquent-sortable": "^4.4.0",
         "tapp/filament-form-builder": "dev-main"

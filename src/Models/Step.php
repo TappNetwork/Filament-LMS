@@ -112,7 +112,7 @@ class Step extends Model implements Sortable
 
     public function isActive()
     {
-        return request()->is('*'.$this->slug.'*');
+        return request()->is('*'.$this->lesson->course->slug . '/'. $this->lesson->slug . '/' .$this->slug.'*');
     }
 
     public function getUrlAttribute()

@@ -106,7 +106,17 @@ parameters:
 			path: src/Models/Lesson.php
 
 		-
+			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$slug\\.$#"
+			count: 1
+			path: src/Models/Step.php
+
+		-
 			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Lesson\\:\\:\\$order\\.$#"
+			count: 1
+			path: src/Models/Step.php
+
+		-
+			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Lesson\\:\\:\\$slug\\.$#"
 			count: 1
 			path: src/Models/Step.php
 
@@ -134,6 +144,11 @@ parameters:
 			message: "#^Parameter \\#1 \\$related of method Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:belongsTo\\(\\) expects class\\-string\\<Illuminate\\\\Database\\\\Eloquent\\\\Model\\>, string given\\.$#"
 			count: 1
 			path: src/Models/StepUser.php
+
+		-
+			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Video\\:\\:\\$url\\.$#"
+			count: 1
+			path: src/Models/Video.php
 
 		-
 			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$slug\\.$#"

@@ -26,7 +26,8 @@ class DocumentFactory extends Factory
      */
     public function configure(): static
     {
-        return $this->afterCreating(function (Document $document) {
+        return $this->afterCreating(function ($document) {
+            /** @var Document $document */
             $testFile = './vendor/tapp/filament-lms/test.pdf';
             $document->addMedia($testFile)
                 ->preservingOriginal()

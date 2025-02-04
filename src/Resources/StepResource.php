@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Models\Link;
+use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Resources\StepResource\Pages;
 
 class StepResource extends Resource
@@ -41,6 +43,10 @@ class StepResource extends Resource
                 Forms\Components\MorphToSelect::make('material')
                     ->types([
                         Forms\Components\MorphToSelect\Type::make(Video::class)
+                            ->titleAttribute('name'),
+                        Forms\Components\MorphToSelect\Type::make(Document::class)
+                            ->titleAttribute('name'),
+                        Forms\Components\MorphToSelect\Type::make(Link::class)
                             ->titleAttribute('name'),
                         Forms\Components\MorphToSelect\Type::make(FilamentForm::class)
                             ->titleAttribute('name'),

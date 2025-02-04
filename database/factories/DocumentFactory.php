@@ -5,9 +5,6 @@ namespace Tapp\FilamentLms\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Tapp\FilamentLms\Models\Document;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Document>
- */
 class DocumentFactory extends Factory
 {
     protected $model = Document::class;

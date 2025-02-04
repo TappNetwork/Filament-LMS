@@ -131,16 +131,6 @@ parameters:
 			path: src/Models/Step.php
 
 		-
-			message: "#^Access to property \\$id on an unknown class Tapp\\\\FilamentLms\\\\Models\\\\User\\.$#"
-			count: 3
-			path: src/Models/Step.php
-
-		-
-			message: "#^Parameter \\$user of method Tapp\\\\FilamentLms\\\\Models\\\\Step\\:\\:complete\\(\\) has invalid type Tapp\\\\FilamentLms\\\\Models\\\\User\\.$#"
-			count: 1
-			path: src/Models/Step.php
-
-		-
 			message: "#^Class Tapp\\\\FilamentLms\\\\Models\\\\User not found\\.$#"
 			count: 1
 			path: src/Models/StepUser.php

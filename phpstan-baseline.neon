@@ -71,11 +71,6 @@ parameters:
 			path: src/LmsPanelProvider.php
 
 		-
-			message: "#^Parameter \\#1 \\$components of method Filament\\\\Panel\\:\\:livewireComponents\\(\\) expects array\\<string, class\\-string\\<Livewire\\\\Component\\>\\>, array\\{'Tapp\\\\\\\\FilamentLms\\\\\\\\Livewire\\\\\\\\VideoStep', 'Tapp\\\\\\\\FilamentLms\\\\\\\\Livewire\\\\\\\\FormStep'\\} given\\.$#"
-			count: 1
-			path: src/LmsPanelProvider.php
-
-		-
 			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$image\\.$#"
 			count: 1
 			path: src/Models/Course.php
@@ -111,7 +106,17 @@ parameters:
 			path: src/Models/Lesson.php
 
 		-
+			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$slug\\.$#"
+			count: 1
+			path: src/Models/Step.php
+
+		-
 			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Lesson\\:\\:\\$order\\.$#"
+			count: 1
+			path: src/Models/Step.php
+
+		-
+			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Lesson\\:\\:\\$slug\\.$#"
 			count: 1
 			path: src/Models/Step.php
 
@@ -131,16 +136,6 @@ parameters:
 			path: src/Models/Step.php
 
 		-
-			message: "#^Access to property \\$id on an unknown class Tapp\\\\FilamentLms\\\\Models\\\\User\\.$#"
-			count: 3
-			path: src/Models/Step.php
-
-		-
-			message: "#^Parameter \\$user of method Tapp\\\\FilamentLms\\\\Models\\\\Step\\:\\:complete\\(\\) has invalid type Tapp\\\\FilamentLms\\\\Models\\\\User\\.$#"
-			count: 1
-			path: src/Models/Step.php
-
-		-
 			message: "#^Class Tapp\\\\FilamentLms\\\\Models\\\\User not found\\.$#"
 			count: 1
 			path: src/Models/StepUser.php
@@ -149,6 +144,11 @@ parameters:
 			message: "#^Parameter \\#1 \\$related of method Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:belongsTo\\(\\) expects class\\-string\\<Illuminate\\\\Database\\\\Eloquent\\\\Model\\>, string given\\.$#"
 			count: 1
 			path: src/Models/StepUser.php
+
+		-
+			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Video\\:\\:\\$url\\.$#"
+			count: 1
+			path: src/Models/Video.php
 
 		-
 			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$slug\\.$#"

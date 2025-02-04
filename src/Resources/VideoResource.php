@@ -7,6 +7,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Resources\VideoResource\Pages;
 
@@ -25,6 +26,7 @@ class VideoResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required(),
                 Forms\Components\TextInput::make('url')
+                    ->helperText(new HtmlString('https://www.youtube.com/watch?v=xxxxxxxxxxx <br/> https://vimeo.com/xxxxxxxxx'))
                     ->activeUrl()
                     ->required(),
             ]);

@@ -71,11 +71,6 @@ parameters:
 			path: src/LmsPanelProvider.php
 
 		-
-			message: "#^Parameter \\#1 \\$components of method Filament\\\\Panel\\:\\:livewireComponents\\(\\) expects array\\<string, class\\-string\\<Livewire\\\\Component\\>\\>, array\\{'Tapp\\\\\\\\FilamentLms\\\\\\\\Livewire\\\\\\\\VideoStep', 'Tapp\\\\\\\\FilamentLms\\\\\\\\Livewire\\\\\\\\FormStep'\\} given\\.$#"
-			count: 1
-			path: src/LmsPanelProvider.php
-
-		-
 			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$image\\.$#"
 			count: 1
 			path: src/Models/Course.php

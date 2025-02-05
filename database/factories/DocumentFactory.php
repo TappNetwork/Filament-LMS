@@ -5,9 +5,6 @@ namespace Tapp\FilamentLms\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Tapp\FilamentLms\Models\Document;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Document>
- */
 class DocumentFactory extends Factory
 {
     protected $model = Document::class;
@@ -29,7 +26,8 @@ class DocumentFactory extends Factory
      */
     public function configure(): static
     {
-        return $this->afterCreating(function (Document $document) {
+        return $this->afterCreating(function ($document) {
+            /** @var Document $document */
             $testFile = './vendor/tapp/filament-lms/test.pdf';
             $document->addMedia($testFile)
                 ->preservingOriginal()

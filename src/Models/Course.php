@@ -29,7 +29,7 @@ class Course extends Model
      */
     public function scopeVisible(Builder $query): void
     {
-        $query->whereHas('steps');
+        $query->whereHas('steps')->where('hidden', false);
     }
 
     protected static function newFactory()

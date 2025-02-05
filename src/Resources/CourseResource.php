@@ -51,6 +51,7 @@ class CourseResource extends Resource
                     ->imageResizeTargetHeight('1080')
                     ->imageCropAspectRatio('1:1'),
                 Forms\Components\Textarea::make('description'),
+                Forms\Components\Checkbox::make('hidden'),
 
                 /*
                      * TODO: Implement award layout and content

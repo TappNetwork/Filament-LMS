@@ -37,7 +37,7 @@ class Course extends Model
     {
         $step = $this->currentStep();
 
-        if ($step->completed_at && $step->last_step) {
+        if ($step && $step->completed_at && $step->last_step) {
             return $this->certificateUrl();
         }
 

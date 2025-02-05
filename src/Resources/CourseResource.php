@@ -45,6 +45,8 @@ class CourseResource extends Resource
                     ->required(),
                 FileUpload::make('image')
                     ->helperText('Image will be automatically cropped to a square.')
+                    ->disk('public')
+                    ->directory('courses')
                     ->image()
                     ->imageResizeMode('cover')
                     ->imageResizeTargetWidth('1080')

@@ -51,6 +51,7 @@ class StepResource extends Resource
                         Forms\Components\MorphToSelect\Type::make(FilamentForm::class)
                             ->titleAttribute('name'),
                     ])
+                    ->searchable()
                     ->required(),
 
             ]);

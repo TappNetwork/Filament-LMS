@@ -27,6 +27,10 @@ class VideoResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('url')
                     ->helperText(new HtmlString('https://www.youtube.com/embed/xxxxxxxxxxx <br/> https://player.vimeo.com/video/xxxxxxxxx'))
+                    // regex validation to match youtube and vimeo urls
+                    // https://www.youtube.com/embed/xxxxxxxxxxx
+                    // https://player.vimeo.com/video/xxxxxxxxx
+                    ->regex('/(https:\/\/www\.youtube\.com\/embed\/|https:\/\/player\.vimeo\.com\/video\/)([a-zA-Z0-9_-]+)/')
                     ->activeUrl()
                     ->required(),
             ]);

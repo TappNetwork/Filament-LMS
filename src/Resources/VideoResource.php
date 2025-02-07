@@ -26,7 +26,7 @@ class VideoResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required(),
                 Forms\Components\TextInput::make('url')
-                    ->helperText(new HtmlString('https://www.youtube.com/watch?v=xxxxxxxxxxx <br/> https://vimeo.com/xxxxxxxxx'))
+                    ->helperText(new HtmlString('https://www.youtube.com/embed/xxxxxxxxxxx <br/> https://player.vimeo.com/video/xxxxxxxxx'))
                     ->activeUrl()
                     ->required(),
             ]);

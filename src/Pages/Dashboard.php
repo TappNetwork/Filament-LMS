@@ -18,6 +18,6 @@ class Dashboard extends \Filament\Pages\Dashboard
 
     public function mount()
     {
-        $this->courses = Course::all();
+        $this->courses = Course::visible()->get();
     }
 }

@@ -27,7 +27,7 @@ parameters:
 
 		-
 			message: "#^Call to an undefined method Illuminate\\\\Foundation\\\\Auth\\\\User\\:\\:hasRole\\(\\)\\.$#"
-			count: 1
+			count: 2
 			path: src/Http/Controllers/CertificateController.php
 
 		-

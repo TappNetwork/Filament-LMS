@@ -26,7 +26,7 @@ class CertificateController extends Controller
 
         $completedAt = $course->completedByUserAt($userId);
 
-        if (! $completedAt) {
+        if (! $completedAt && ! (auth()->user() && auth()->user()->hasRole('Admin'))) {
             abort(403, __('Course is not completed'));
         }
 

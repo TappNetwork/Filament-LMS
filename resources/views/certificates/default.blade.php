@@ -28,6 +28,8 @@
   <body>
   <div class="m-auto certificate font-serif antialiased text-center border-zinc-400 border-8">
     <div class="certificate-border border-zinc-300 border-4">
+      <img src="{{ asset('logo.png') }}" class="mx-auto" />
+
       <h1 class="text-7xl font-extrabold my-16 font-serif italic">
           {{ $user->name }}
       </h1>
@@ -38,9 +40,6 @@
           <h1 class="text-5xl font-extrabold mb-16">
               {{$course->name}}
           </h1>
-          <h2>
-              {{$course->description}}
-          </h2>
       </div>
 
     </div>

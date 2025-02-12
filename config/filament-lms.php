@@ -7,5 +7,5 @@ return [
     'brand_name' => 'LMS',
     'brand_logo' => '',
     'vite_theme' => '',
-    'colors' => []
+    'colors' => [],
 ];

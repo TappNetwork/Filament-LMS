@@ -1,3 +1,58 @@
+# Filament LMS
+An opinionated LMS plugin for Filament containing a user facing LMS panel and Resources for an existing admin panel
+
+## Installation
+### add the following to composer.json
+
+``` json
+"require": {
+    "tapp/filament-lms": "*",
+}
+```
+
+``` json
+"minimum-stability": "dev"
+```
+
+```json
+"repositories": {
+    "tapp/filament-lms": {
+        "type": "vcs",
+        "url": "https://github.com/tappnetwork/filament-lms"
+    },
+    "tapp/filament-form-builder": {
+        "type": "vcs",
+        "url": "https://github.com/tappnetwork/filament-form-builder"
+    }
+},
+```
+
+### publish 
+
+``` sh
+php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider"
+```
+
+run migrations after publishing
+
+### add plugin to admin panel
+This will create resources that allow admin to manage course material.
+
+``` php
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->plugins([
+                \Tapp\FilamentLms\Lms::make(),
+            ])
+    }
+}
+```
+
+
+
 # Development Reccomendations
 - create the directory {project}/packages
 - from within the packages directory, clone this repo

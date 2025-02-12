@@ -25,6 +25,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             ->name('filament-lms')
             ->hasViews()
             ->hasAssets()
+            ->hasConfigFile('filament-lms')
             ->hasMigrations([
                 'create_lms_documents_table',
                 'create_lms_links_table',

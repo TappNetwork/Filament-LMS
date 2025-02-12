@@ -1,4 +1,5 @@
- import { VidstackPlayer, VidstackPlayerLayout } from 'https://cdn.vidstack.io/player';
+import { VidstackPlayer, VidstackPlayerLayout } from 'vidstack/global/player';
+
 
 window.VidstackPlayer = VidstackPlayer
 window.VidstackPlayerLayout = VidstackPlayerLayout

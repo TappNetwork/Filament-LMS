@@ -58,11 +58,5 @@
                 "Tapp\\FilamentLms\\LmsPanelProvider"
             ]
         }
-    },
-    "repositories": {
-        "tapp/filament-form-builder": {
-            "type": "vcs",
-            "url": "https://github.com/tappnetwork/filament-form-builder"
-        }
     }
 }

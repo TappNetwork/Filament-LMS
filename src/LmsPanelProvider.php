@@ -11,7 +11,6 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
@@ -45,28 +44,31 @@ class LmsPanelProvider extends PanelProvider
             }
         );
 
+        if (config('filament-lms.vite_theme')) {
+            $panel->viteTheme(config('filament-lms.vite_theme'));
+        }
+
+        if (config('filament-lms.brand_logo')) {
+            $panel->brandLogo(asset(config('filament-lms.brand_logo')));
+        } else {
+            $panel->brandName(config('filament-lms.brand_name'));
+        }
+
         return $panel
             ->id('lms')
             ->path('lms')
-            ->brandName('LMS')
-            ->homeUrl('/lms')
-            ->font('Poppins')
-            ->viteTheme('resources/css/filament/app/theme.css')
+            ->homeUrl(config('filament-lms.home_url'))
+            ->font(config('filament-lms.font'))
             ->darkMode(false)
-            ->renderHook(
-                PanelsRenderHook::BODY_END,
-                fn (): View => view('usersnap'),
-            )
+            // ->renderHook(
+                // TODO how can we configure this
+            //     PanelsRenderHook::BODY_END,
+            //     fn (): View => view('usersnap'),
+            // )
             ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
                 return $this->navigationItems($builder);
             })
-            ->colors([
-                'primary' => Color::Blue,
-                'info' => Color::Orange,
-                'danger' => Color::Red,
-                'success' => Color::Green,
-                'gray' => Color::Purple,
-            ])
+            ->colors(config('filament-lms.colors', []))
             ->discoverResources(in: app_path('Filament/Lms/Resources'), for: 'App\\Filament\\Lms\\Resources')
             ->discoverPages(in: app_path('Filament/Lms/Pages'), for: 'App\\Filament\\Lms\\Pages')
             ->pages([

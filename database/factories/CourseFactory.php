@@ -23,7 +23,7 @@ class CourseFactory extends Factory
             'name' => $name,
             'slug' => $slug,
             'external_id' => $externalId,
-            'award_layout' => 'default',
+            'award' => 'default',
             'description' => $this->faker->sentence(),
         ];
     }

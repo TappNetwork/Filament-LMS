@@ -8,4 +8,7 @@ return [
     'brand_logo' => '',
     'vite_theme' => '',
     'colors' => [],
+    'awards' => [
+        'Default' => 'default',
+    ],
 ];

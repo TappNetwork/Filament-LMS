@@ -17,8 +17,7 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->string('external_id')->unique();
             $table->text('image')->nullable();
-            $table->string('award_layout')->nullable();
-            $table->json('award_content')->nullable();
+            $table->string('award')->nullable();
             $table->text('description')->nullable();
             $table->boolean('hidden')->default(false);
             $table->timestamps();

@@ -30,9 +30,9 @@ class CertificateController extends Controller
             abort(403, __('Course is not completed'));
         }
 
-        $view = 'filament-lms::certificates.' . $course->award;
+        $view = 'filament-lms::certificates.'.$course->award;
 
-        if (!view()->exists($view)) {
+        if (! view()->exists($view)) {
             $view = 'filament-lms::certificates.default';
         }
 

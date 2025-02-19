@@ -9,6 +9,7 @@ use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Resources\CourseResource\Pages;
@@ -53,6 +54,15 @@ class CourseResource extends Resource
                     ->imageResizeTargetHeight('1080')
                     ->imageCropAspectRatio('1:1'),
                 Forms\Components\Textarea::make('description'),
+                Forms\Components\Select::make('award')
+                    ->options(config('filament-lms.awards'))
+                    ->required()
+                    ->hint(function ($record) {
+                        $link = route('filament-lms::certificates.show', ['course' => $record->id, 'user' => auth()->id()]);
+
+                        return new HtmlString("<a rel='noopener noreferrer' target='_blank' href='{$link}'>Click to Preview</a>");
+                    })
+                    ->helperText('Form must be saved before previewing.'),
                 Forms\Components\Checkbox::make('hidden'),
 
                 /*

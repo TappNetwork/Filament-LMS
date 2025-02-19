@@ -30,7 +30,13 @@ class CertificateController extends Controller
             abort(403, __('Course is not completed'));
         }
 
-        return view('filament-lms::certificates.default')
+        $view = 'filament-lms::certificates.'.$course->award;
+
+        if (! view()->exists($view)) {
+            $view = 'filament-lms::certificates.default';
+        }
+
+        return view($view)
             ->with('dateEarned', Carbon::parse($completedAt)->format(('F j, Y')))
             ->with('user', User::find($userId))
             ->with('course', $course);

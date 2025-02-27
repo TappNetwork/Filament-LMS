@@ -39,9 +39,7 @@ class DocumentResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('type')
-                    ->searchable()
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('type'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->searchable()
                     ->sortable(),

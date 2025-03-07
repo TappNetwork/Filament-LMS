@@ -18,10 +18,12 @@
     "minimum-stability": "dev",
     "require": {
         "php": "^8.3",
-        "filament/spatie-laravel-media-library-plugin": "^3.2",
         "filament/filament": "^3.2",
+        "filament/spatie-laravel-media-library-plugin": "^3.2",
         "filament/support": "^3.0",
         "illuminate/contracts": "^10.0||^11.0||^12.0",
+        "laravel/framework": "12.*",
+        "orchestra/testbench": "10.*",
         "spatie/eloquent-sortable": "^4.4.0",
         "tapp/filament-form-builder": "dev-main"
     },
@@ -29,7 +31,6 @@
         "laravel/pint": "^1.14",
         "nunomaduro/collision": "^8.1.1||^7.10.0",
         "larastan/larastan": "^2.9||^3.0",
-        "orchestra/testbench": "^10.0.0||^9.0.0||^8.22.0",
         "pestphp/pest": "^3.0",
         "pestphp/pest-plugin-arch": "^3.0",
         "pestphp/pest-plugin-laravel": "^3.0",

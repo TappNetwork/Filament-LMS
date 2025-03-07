@@ -60,6 +60,7 @@ class CourseResource extends Resource
                     ->hint(function ($record) {
                         if ($record?->id) {
                             $link = route('filament-lms::certificates.show', ['course' => $record->id, 'user' => auth()->id()]);
+
                             return new HtmlString("<a rel='noopener noreferrer' target='_blank' href='{$link}'>Click to Preview</a>");
                         }
 

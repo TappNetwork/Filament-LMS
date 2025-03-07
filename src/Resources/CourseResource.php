@@ -58,9 +58,12 @@ class CourseResource extends Resource
                     ->options(config('filament-lms.awards'))
                     ->required()
                     ->hint(function ($record) {
-                        $link = route('filament-lms::certificates.show', ['course' => $record->id, 'user' => auth()->id()]);
+                        if ($record?->id) {
+                            $link = route('filament-lms::certificates.show', ['course' => $record->id, 'user' => auth()->id()]);
+                            return new HtmlString("<a rel='noopener noreferrer' target='_blank' href='{$link}'>Click to Preview</a>");
+                        }
 
-                        return new HtmlString("<a rel='noopener noreferrer' target='_blank' href='{$link}'>Click to Preview</a>");
+                        return null;
                     })
                     ->helperText('Form must be saved before previewing.'),
                 Forms\Components\Checkbox::make('hidden'),

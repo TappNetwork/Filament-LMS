@@ -1,5 +1,5 @@
 <div>
-    <div wire:ignore id="target"></div>
+    <div style="max-height:80vh; max-width:160vh" wire:ignore id="target"></div>
 </div>
 
 @assets

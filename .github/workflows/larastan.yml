@@ -1,29 +1,28 @@
-name: Larastan
+name: PHPStan
+
 on:
-  - push
+  push:
+    paths:
+      - '**.php'
+      - 'phpstan.neon.dist'
+      - '.github/workflows/phpstan.yml'
+
 jobs:
-  test:
-    strategy:
-      matrix:
-        operating-system:
-          - ubuntu-latest
-        php-version:
-          - "8.3"
-    name: php ${{ matrix.php-version }} on ${{ matrix.operating-system }}
-    runs-on: ${{ matrix.operating-system }}
+  phpstan:
+    name: phpstan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
-          extensions: bcmath, ctype, fileinfo, json, mbstring, openssl, pdo, tokenizer, xml
+          php-version: '8.3'
           coverage: none
+
       - name: Install composer dependencies
-        env:
-          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
-        run: |
-          composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-      - name: Larastan
-        run: ./vendor/bin/phpstan analyse
+        uses: ramsey/composer-install@v3
+
+      - name: Run PHPStan
+        run: ./vendor/bin/phpstan --error-format=github

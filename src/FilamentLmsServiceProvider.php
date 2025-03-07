@@ -23,6 +23,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('filament-lms')
+            // TODO how do we get the views working without making them publishable?
             ->hasViews()
             ->hasAssets()
             ->hasConfigFile('filament-lms')

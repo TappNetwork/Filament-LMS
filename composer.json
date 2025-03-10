@@ -2,14 +2,6 @@
     "name": "tapp/filament-lms",
     "type": "library",
     "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Tapp\\FilamentLms\\": "src/",
-            "Tapp\\FilamentLms\\Database\\Factories\\": "database/factories/",
-            "Tapp\\FilamentLms\\Tests\\": "tests/",
-            "Workbench\\App\\": "workbench/app/"
-        }
-    },
     "authors": [
         {
             "name": "Tapp Network"
@@ -17,24 +9,38 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "filament/spatie-laravel-media-library-plugin": "^3.2",
+        "php": "^8.3",
         "filament/filament": "^3.2",
+        "filament/spatie-laravel-media-library-plugin": "^3.2",
         "filament/support": "^3.0",
+        "illuminate/contracts": "^10.0||^11.0||^12.0",
         "spatie/eloquent-sortable": "^4.4.0",
         "tapp/filament-form-builder": "dev-main"
     },
     "require-dev": {
         "laravel/pint": "^1.14",
         "nunomaduro/collision": "^8.1.1||^7.10.0",
-        "larastan/larastan": "^2.9",
-        "orchestra/testbench": "^9.0.0||^8.22.0",
-        "pestphp/pest": "^3.0",
-        "pestphp/pest-plugin-arch": "^3.0",
-        "pestphp/pest-plugin-laravel": "^3.0",
-        "phpstan/extension-installer": "^1.3",
-        "phpstan/phpstan-deprecation-rules": "^1.1",
-        "phpstan/phpstan-phpunit": "^1.3",
+        "larastan/larastan": "^2.9||^3.0",
+        "orchestra/testbench": "^10.0.0||^9.0.0||^8.22.0",
+        "pestphp/pest": "^3.0||^2.34",
+        "pestphp/pest-plugin-arch": "^3.0||^2.7",
+        "pestphp/pest-plugin-laravel": "^3.0||^2.3",
+        "phpstan/extension-installer": "^1.3||^2.0",
+        "phpstan/phpstan-deprecation-rules": "^1.1||^2.0",
+        "phpstan/phpstan-phpunit": "^1.3||^2.0",
         "spatie/laravel-ray": "^1.35"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tapp\\FilamentLms\\": "src/",
+            "Tapp\\FilamentLms\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tapp\\FilamentLms\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/"
+        }
     },
     "repositories": {
         "tapp/filament-form-builder": {

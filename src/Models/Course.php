@@ -12,6 +12,10 @@ use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 
+/**
+ * @property string|null $award
+ * @property array $award_content
+ */
 class Course extends Model
 {
     use HasFactory;

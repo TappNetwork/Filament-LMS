@@ -10,6 +10,5 @@ parameters:
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true
-    reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         - '#Static property .* \(view-string\) does not accept#'

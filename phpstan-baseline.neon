@@ -1,186 +1,253 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^PHPDoc type string of property Tapp\\\\FilamentLms\\\\Database\\\\Factories\\\\LessonFactory\\:\\:\\$model is not covariant with PHPDoc type class\\-string\\<Illuminate\\\\Database\\\\Eloquent\\\\Model\\> of overridden property Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\Factory\\<Illuminate\\\\Database\\\\Eloquent\\\\Model\\>\\:\\:\\$model\\.$#"
+			message: '#^PHPDoc type string of property Tapp\\FilamentLms\\Database\\Factories\\LessonFactory\:\:\$model is not covariant with PHPDoc type class\-string\<Illuminate\\Database\\Eloquent\\Model\> of overridden property Illuminate\\Database\\Eloquent\\Factories\\Factory\<Illuminate\\Database\\Eloquent\\Model\>\:\:\$model\.$#'
+			identifier: property.phpDocType
 			count: 1
 			path: database/factories/LessonFactory.php
 
 		-
-			message: "#^PHPDoc type string of property Tapp\\\\FilamentLms\\\\Database\\\\Factories\\\\StepFactory\\:\\:\\$model is not covariant with PHPDoc type class\\-string\\<Illuminate\\\\Database\\\\Eloquent\\\\Model\\> of overridden property Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\Factory\\<Illuminate\\\\Database\\\\Eloquent\\\\Model\\>\\:\\:\\$model\\.$#"
+			message: '#^PHPDoc type string of property Tapp\\FilamentLms\\Database\\Factories\\StepFactory\:\:\$model is not covariant with PHPDoc type class\-string\<Illuminate\\Database\\Eloquent\\Model\> of overridden property Illuminate\\Database\\Eloquent\\Factories\\Factory\<Illuminate\\Database\\Eloquent\\Model\>\:\:\$model\.$#'
+			identifier: property.phpDocType
 			count: 1
 			path: database/factories/StepFactory.php
 
 		-
-			message: "#^PHPDoc type string of property Tapp\\\\FilamentLms\\\\Database\\\\Factories\\\\VideoFactory\\:\\:\\$model is not covariant with PHPDoc type class\\-string\\<Illuminate\\\\Database\\\\Eloquent\\\\Model\\> of overridden property Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\Factory\\<Illuminate\\\\Database\\\\Eloquent\\\\Model\\>\\:\\:\\$model\\.$#"
+			message: '#^PHPDoc type string of property Tapp\\FilamentLms\\Database\\Factories\\VideoFactory\:\:\$model is not covariant with PHPDoc type class\-string\<Illuminate\\Database\\Eloquent\\Model\> of overridden property Illuminate\\Database\\Eloquent\\Factories\\Factory\<Illuminate\\Database\\Eloquent\\Model\>\:\:\$model\.$#'
+			identifier: property.phpDocType
 			count: 1
 			path: database/factories/VideoFactory.php
 
 		-
-			message: "#^Access to an undefined property Illuminate\\\\Foundation\\\\Auth\\\\User\\:\\:\\$name\\.$#"
+			message: '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$name\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Http/Controllers/CertificateController.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$name\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$name\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Http/Controllers/CertificateController.php
 
 		-
-			message: "#^Call to an undefined method Illuminate\\\\Foundation\\\\Auth\\\\User\\:\\:hasRole\\(\\)\\.$#"
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:hasRole\(\)\.$#'
+			identifier: method.notFound
 			count: 2
 			path: src/Http/Controllers/CertificateController.php
 
 		-
-			message: "#^Call to static method find\\(\\) on an unknown class App\\\\Models\\\\User\\.$#"
+			message: '#^Call to static method find\(\) on an unknown class App\\Models\\User\.$#'
+			identifier: class.notFound
 			count: 1
 			path: src/Http/Controllers/CertificateController.php
 
 		-
-			message: "#^Call to static method url\\(\\) on an unknown class Spatie\\\\Browsershot\\\\Browsershot\\.$#"
+			message: '#^Call to static method url\(\) on an unknown class Spatie\\Browsershot\\Browsershot\.$#'
+			identifier: class.notFound
 			count: 1
 			path: src/Http/Controllers/CertificateController.php
 
 		-
-			message: "#^Method Tapp\\\\FilamentLms\\\\Http\\\\Controllers\\\\CertificateController\\:\\:download\\(\\) should return Symfony\\\\Component\\\\HttpFoundation\\\\StreamedResponse but returns Illuminate\\\\Http\\\\RedirectResponse\\.$#"
+			message: '#^Method Tapp\\FilamentLms\\Http\\Controllers\\CertificateController\:\:download\(\) should return Symfony\\Component\\HttpFoundation\\StreamedResponse but returns Illuminate\\Http\\RedirectResponse\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Http/Controllers/CertificateController.php
 
 		-
-			message: "#^Method Tapp\\\\FilamentLms\\\\Lms\\:\\:get\\(\\) should return static\\(Tapp\\\\FilamentLms\\\\Lms\\) but returns Filament\\\\Contracts\\\\Plugin\\|Filament\\\\FilamentManager\\.$#"
+			message: '#^Method Tapp\\FilamentLms\\Lms\:\:get\(\) should return static\(Tapp\\FilamentLms\\Lms\) but returns Filament\\Contracts\\Plugin\|Filament\\FilamentManager\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Lms.php
 
 		-
-			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
 			count: 1
 			path: src/Lms.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$slug\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$slug\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/LmsPanelProvider.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Lesson\\:\\:\\$name\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Lesson\:\:\$name\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/LmsPanelProvider.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Step\\:\\:\\$name\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Step\:\:\$name\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/LmsPanelProvider.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$image\\.$#"
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Models/Course.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$slug\\.$#"
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Models/Course.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Models/Course.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Support\\HigherOrderCollectionProxy\<string, Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\>\:\:\$completed_at\.$#'
+			identifier: property.notFound
 			count: 2
 			path: src/Models/Course.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Lesson\\:\\:\\$slug\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$image\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Models/Course.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Step\\:\\:\\$slug\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$slug\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Models/Course.php
 
 		-
-			message: "#^Access to property \\$id on an unknown class App\\\\Models\\\\User\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Step\:\:\$slug\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Models/Course.php
 
 		-
-			message: "#^Parameter \\#1 \\$column of method Illuminate\\\\Database\\\\Eloquent\\\\Builder\\<Tapp\\\\FilamentLms\\\\Models\\\\StepUser\\>\\:\\:where\\(\\) expects array\\<int\\|model property of Tapp\\\\FilamentLms\\\\Models\\\\StepUser, mixed\\>\\|\\(Closure\\(Illuminate\\\\Database\\\\Eloquent\\\\Builder\\<Tapp\\\\FilamentLms\\\\Models\\\\StepUser\\>\\)\\: mixed\\)\\|Illuminate\\\\Contracts\\\\Database\\\\Query\\\\Expression\\|model property of Tapp\\\\FilamentLms\\\\Models\\\\StepUser, 'lms_step_user\\.user…' given\\.$#"
-			count: 2
-			path: src/Models/Course.php
-
-		-
-			message: "#^Parameter \\$user of method Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:currentStep\\(\\) has invalid type App\\\\Models\\\\User\\.$#"
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:steps\(\)\.$#'
+			identifier: method.notFound
 			count: 1
 			path: src/Models/Course.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Lesson\\:\\:\\$slug\\.$#"
+			message: '#^Method Tapp\\FilamentLms\\Models\\Course\:\:currentStep\(\) should return Tapp\\FilamentLms\\Models\\Step\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Course.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Support\\HigherOrderCollectionProxy\<string, Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\>\:\:\$completed_at\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Models/Lesson.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$slug\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Lesson\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Models/Lesson.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$completed_at\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Models/Step.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Lesson\\:\\:\\$order\\.$#"
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
+			count: 7
+			path: src/Models/Step.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$order\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Models/Step.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Lesson\\:\\:\\$slug\\.$#"
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Models/Step.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Step\\:\\:\\$order\\.$#"
-			count: 3
-			path: src/Models/Step.php
-
-		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Step\\:\\:\\$slug\\.$#"
-			count: 1
-			path: src/Models/Step.php
-
-		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\StepUser\\:\\:\\$completed_at\\.$#"
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$steps\.$#'
+			identifier: property.notFound
 			count: 2
 			path: src/Models/Step.php
 
 		-
-			message: "#^Class Tapp\\\\FilamentLms\\\\Models\\\\User not found\\.$#"
-			count: 1
-			path: src/Models/StepUser.php
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Step\:\:\$order\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Models/Step.php
 
 		-
-			message: "#^Parameter \\#1 \\$related of method Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:belongsTo\\(\\) expects class\\-string\\<Illuminate\\\\Database\\\\Eloquent\\\\Model\\>, string given\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Step\:\:\$slug\.$#'
+			identifier: property.notFound
 			count: 1
-			path: src/Models/StepUser.php
+			path: src/Models/Step.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Video\\:\\:\\$url\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\StepUser\:\:\$completed_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Models/Step.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:steps\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Models/Step.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>seconds" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: src/Models/Step.php
+
+		-
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Video\:\:\$url\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Models/Video.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Course\\:\\:\\$slug\\.$#"
-			count: 2
-			path: src/Pages/Step.php
-
-		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Lesson\\:\\:\\$slug\\.$#"
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Pages/Step.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Step\\:\\:\\$name\\.$#"
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Pages/Step.php
 
 		-
-			message: "#^Access to an undefined property Tapp\\\\FilamentLms\\\\Models\\\\Step\\:\\:\\$slug\\.$#"
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$steps\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/Pages/Step.php
 
 		-
-			message: "#^Parameter \\#1 \\$parameters of static method Filament\\\\Resources\\\\Pages\\\\Page\\:\\:getUrl\\(\\) expects array\\<string, mixed\\>, array\\<int, mixed\\> given\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$slug\.$#'
+			identifier: property.notFound
 			count: 1
-			path: src/Resources/CourseResource/RelationManagers/LessonsRelationManager.php
+			path: src/Pages/Step.php
 
 		-
-			message: "#^Parameter \\#1 \\$parameters of static method Filament\\\\Resources\\\\Pages\\\\Page\\:\\:getUrl\\(\\) expects array\\<string, mixed\\>, array\\<int, mixed\\> given\\.$#"
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Step\:\:\$slug\.$#'
+			identifier: property.notFound
 			count: 1
-			path: src/Resources/LessonResource/RelationManagers/StepsRelationManager.php
+			path: src/Pages/Step.php
+
+		-
+			message: '#^Property Tapp\\FilamentLms\\Pages\\Step\:\:\$lesson \(Tapp\\FilamentLms\\Models\\Lesson\) does not accept Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Pages/Step.php

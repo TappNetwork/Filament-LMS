@@ -59,6 +59,7 @@ class Course extends Model
 
         $userStep = StepUser::whereIn('lms_step_user.step_id', $this->steps()->pluck('lms_steps.id'))
             ->join('lms_steps', 'lms_step_user.step_id', '=', 'lms_steps.id')
+            ->where('lms_step_user.user_id', $user->id)
             ->orderBy('lms_steps.order', 'desc')
             ->first();
 

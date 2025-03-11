@@ -2,12 +2,12 @@
 
 namespace Tapp\FilamentLms\Models;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
@@ -57,7 +57,7 @@ class Course extends Model
         return $step ? StepPage::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]) : '';
     }
 
-    public function currentStep(?User $user = null): ?Step
+    public function currentStep(?Authenticatable $user = null): ?Step
     {
         $user = $user ?: auth()->user();
 

@@ -110,11 +110,13 @@ class LmsPanelProvider extends PanelProvider
             $course = Course::where('slug', Route::current()->parameter('courseSlug'))->firstOrFail();
 
             $navigationGroups = $course->lessons->map(function ($lesson) {
+                /** @var \Tapp\FilamentLms\Models\Lesson $lesson */
                 return NavigationGroup::make($lesson->name)
                     // TODO collapsed is not working
                     // ->collapsed(fn (): bool => ! $lesson->isActive())
                     // ->collapsible(true)
                     ->items($lesson->steps->map(function ($step) {
+                        /** @var \Tapp\FilamentLms\Models\Step $step */
                         return NavigationItem::make($step->name)
                             ->icon(fn (): string => $step->completed_at ? 'heroicon-o-check-circle' : '')
                             ->isActiveWhen(fn (): bool => $step->isActive())

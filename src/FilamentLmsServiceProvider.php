@@ -16,7 +16,6 @@ use Tapp\FilamentLms\Livewire\LinkStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
-
 class FilamentLmsServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void

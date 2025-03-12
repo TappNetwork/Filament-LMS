@@ -10,6 +10,7 @@
 @script
 <script>
  let completed = {{ $step->completed_at ? 1 : 0 }};
+ let lastTime = {{ $step->seconds }};
 
 const player = await VidstackPlayer.create({
      target: '#target',
@@ -19,16 +20,25 @@ const player = await VidstackPlayer.create({
      logLevel: 'warn',
      crossOrigin: true,
      playsInline: true,
-     // title: 'Sprite Fight',
      layout: new VidstackPlayerLayout(),
  });
 
- // events
- player.subscribe(({currentTime}) => {
-     if (!completed && currentTime > 0) {
-         $wire.videoEnded()
+ // Ensure the video starts at the correct time after loading
+ player.subscribe(({canPlay}) => {
+     if (canPlay) {
+         player.currentTime = lastTime;
      }
- })
+ });
+
+ // events
+ player.subscribe(({currentTime, ended}) => {
+     const rounded = Math.round(currentTime);
+     if (!completed && rounded > lastTime && rounded % 10 === 0) {
+         $wire.videoProgress(rounded);
+     } else if (ended) {
+         $wire.videoEnded();
+     }
+ });
 
 </script>
 @endscript

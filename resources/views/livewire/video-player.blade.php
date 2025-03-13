@@ -11,9 +11,12 @@
         height: 80vh;
         max-width: calc(80vh * 16/9);
     }
+
+    @if (! auth()->user()->is_admin)
     .vds-controls {
         display: none;
     }
+    @endif
 </style>
 @endassets
 

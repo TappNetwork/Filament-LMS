@@ -1,10 +1,20 @@
 <div>
-    <div style="max-height:80vh; max-width:160vh" wire:ignore id="target"></div>
+    <div class="vidstack-player-custom" wire:ignore id="target"></div>
 </div>
 
 @assets
 <link rel="stylesheet" href="https://cdn.vidstack.io/player/theme.css" />
 <link rel="stylesheet" href="https://cdn.vidstack.io/player/video.css" />
+
+<style>
+    .vidstack-player-custom {
+        height: 80vh;
+        max-width: calc(80vh * 16/9);
+    }
+    .vds-controls {
+        display: none;
+    }
+</style>
 @endassets
 
 @script
@@ -20,7 +30,9 @@ const player = await VidstackPlayer.create({
      logLevel: 'warn',
      crossOrigin: true,
      playsInline: true,
-     layout: new VidstackPlayerLayout(),
+     layout: new VidstackPlayerLayout({
+        disableTimeSlider: true,
+     }),
  });
 
  // Ensure the video starts at the correct time after loading

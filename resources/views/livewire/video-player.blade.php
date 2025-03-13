@@ -1,5 +1,8 @@
 <div>
     <div class="vidstack-player-custom" wire:ignore id="target"></div>
+    <p class="text-sm text-gray-600 text-center mt-2">
+        Click to play/pause • Double click for fullscreen
+    </p> 
 </div>
 
 @assets
@@ -10,6 +13,7 @@
     .vidstack-player-custom {
         height: 80vh;
         max-width: calc(80vh * 16/9);
+        margin: 0 auto;
     }
 
     @if (! auth()->user()->is_admin)

@@ -29,8 +29,8 @@ use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
-use Tapp\FilamentLms\Pages\Step;
 use Tapp\FilamentLms\Pages\Reporting;
+use Tapp\FilamentLms\Pages\Step;
 
 class LmsPanelProvider extends PanelProvider
 {

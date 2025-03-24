@@ -3,28 +3,24 @@
 namespace Tapp\FilamentLms\Pages;
 
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Tables;
-use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Actions\ExportAction;
+use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Models\StepUser;
-use Tapp\FilamentLms\Models\Step;
-use Filament\Tables\Actions\ExportBulkAction;
-use Filament\Tables\Actions\ExportAction;
-use Tapp\FilamentLms\Exports\CourseProgressExporter;
-use Tapp\FilamentLms\Exports\CourseProgressExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-
+use Tapp\FilamentLms\Exports\CourseProgressExport;
+use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\StepUser;
 class Reporting extends Page implements Tables\Contracts\HasTable
 {
     use Tables\Concerns\InteractsWithTable;
@@ -38,7 +34,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
     protected static ?string $navigationLabel = 'Reporting';
 
     protected static ?string $slug = 'reporting';
-    
+
     protected static ?string $navigationGroup = 'LMS';
 
     public function getTableRecordKey(array|\Illuminate\Database\Eloquent\Model $record): string
@@ -46,7 +42,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
         if ($record instanceof \Illuminate\Database\Eloquent\Model) {
             $key = $record->getKey();
         }
-        
+
         // For array records, create a unique composite key from user_id and course_id
         return $key ?? "user_{$record['user_id']}_course_{$record['course_id']}";
     }
@@ -88,7 +84,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                                 (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id) 
                                 THEN "Completed" 
                                 ELSE "In Progress" 
-                            END as status')
+                            END as status'),
                     ])
                     ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'lms_courses.id', 'lms_courses.name')
             )
@@ -112,7 +108,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->label('Course')
                     ->searchable()
                     ->sortable(),
-                
+
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -122,7 +118,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     })
                     ->searchable()
                     ->sortable(),
-                
+
                 TextColumn::make('steps_completed')
                     ->label('Progress')
                     ->formatStateUsing(fn ($record) => "{$record['steps_completed']} / {$record['total_steps']}")
@@ -161,11 +157,11 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                         $indicators = [];
 
                         if ($data['completed_from'] ?? null) {
-                            $indicators['completed_from'] = 'Completed from ' . Carbon::parse($data['completed_from'])->toFormattedDateString();
+                            $indicators['completed_from'] = 'Completed from '.Carbon::parse($data['completed_from'])->toFormattedDateString();
                         }
 
                         if ($data['completed_until'] ?? null) {
-                            $indicators['completed_until'] = 'Completed until ' . Carbon::parse($data['completed_until'])->toFormattedDateString();
+                            $indicators['completed_until'] = 'Completed until '.Carbon::parse($data['completed_until'])->toFormattedDateString();
                         }
 
                         return $indicators;
@@ -224,6 +220,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->attribute('user_id'),
             ])
             ->bulkActions([
+<<<<<<< HEAD
                 BulkAction::make('export')
                     ->label('Export')
                     ->icon('heroicon-o-arrow-down-tray')
@@ -238,10 +235,18 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->action(function () {
                         return Excel::download(new CourseProgressExport, 'course-progress.xlsx');
                     })
+=======
+                Tables\Actions\ExportBulkAction::make()
+                    ->exporter(CourseProgressExporter::class),
+            ])
+            ->headerActions([
+                Tables\Actions\ExportAction::make()
+                    ->exporter(CourseProgressExporter::class),
+>>>>>>> 190a62be72eeb6031bbc106511f4473f70d7a518
             ])
             ->defaultSort(function (Builder $query) {
                 // Use raw SQL for ordering to avoid ONLY_FULL_GROUP_BY issues
                 return $query->orderByRaw('MAX(lms_step_user.completed_at) DESC');
             });
     }
-} 
+}

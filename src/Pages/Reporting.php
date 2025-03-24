@@ -5,6 +5,7 @@ namespace Tapp\FilamentLms\Pages;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Tables;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Columns\TextColumn;
@@ -219,15 +220,6 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->searchable()
                     ->attribute('user_id'),
             ])
-            ->bulkActions([
-<<<<<<< HEAD
-                BulkAction::make('export')
-                    ->label('Export')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->action(function () {
-                        return Excel::download(new CourseProgressExport, 'course-progress.xlsx');
-                    })
-            ])
             ->headerActions([
                 Tables\Actions\Action::make('export')
                     ->label('Export')
@@ -235,14 +227,6 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->action(function () {
                         return Excel::download(new CourseProgressExport, 'course-progress.xlsx');
                     })
-=======
-                Tables\Actions\ExportBulkAction::make()
-                    ->exporter(CourseProgressExporter::class),
-            ])
-            ->headerActions([
-                Tables\Actions\ExportAction::make()
-                    ->exporter(CourseProgressExporter::class),
->>>>>>> 190a62be72eeb6031bbc106511f4473f70d7a518
             ])
             ->defaultSort(function (Builder $query) {
                 // Use raw SQL for ordering to avoid ONLY_FULL_GROUP_BY issues

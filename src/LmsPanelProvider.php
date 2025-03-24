@@ -30,6 +30,7 @@ use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step;
+use Tapp\FilamentLms\Pages\Reporting;
 
 class LmsPanelProvider extends PanelProvider
 {
@@ -75,6 +76,7 @@ class LmsPanelProvider extends PanelProvider
                 Dashboard::class,
                 Step::class,
                 CourseCompleted::class,
+                Reporting::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Lms/Widgets'), for: 'App\\Filament\\Lms\\Widgets')
             ->widgets([
@@ -142,6 +144,10 @@ class LmsPanelProvider extends PanelProvider
                 ->icon('heroicon-o-academic-cap')
                 ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
                 ->url(fn (): string => Dashboard::getUrl()),
+            NavigationItem::make('Reporting')
+                ->icon('heroicon-o-chart-bar')
+                ->isActiveWhen(fn (): bool => request()->routeIs(Reporting::getRouteName()))
+                ->url(fn (): string => Reporting::getUrl()),
         ]);
     }
 }

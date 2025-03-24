@@ -10,6 +10,7 @@ use Tapp\FilamentLms\Resources\LessonResource;
 use Tapp\FilamentLms\Resources\LinkResource;
 use Tapp\FilamentLms\Resources\StepResource;
 use Tapp\FilamentLms\Resources\VideoResource;
+use Tapp\FilamentLms\Pages\Reporting;
 
 class Lms implements Plugin
 {
@@ -27,6 +28,10 @@ class Lms implements Plugin
             VideoResource::class,
             DocumentResource::class,
             LinkResource::class,
+        ]);
+
+        $panel->pages([
+            Reporting::class,
         ]);
     }
 

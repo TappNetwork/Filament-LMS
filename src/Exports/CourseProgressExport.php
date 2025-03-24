@@ -2,13 +2,12 @@
 
 namespace Tapp\FilamentLms\Exports;
 
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Illuminate\Database\Eloquent\Builder;
 use Tapp\FilamentLms\Models\StepUser;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
 
 class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -41,7 +40,7 @@ class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
                         (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id) 
                         THEN "Completed" 
                         ELSE "In Progress" 
-                    END as status')
+                    END as status'),
             ])
             ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'lms_courses.id', 'lms_courses.name')
             ->orderByRaw('MAX(lms_step_user.completed_at) DESC');
@@ -58,7 +57,7 @@ class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
             'Progress',
             'Date Started',
             'Date Completed',
-            'Completion Date'
+            'Completion Date',
         ];
     }
 
@@ -76,4 +75,4 @@ class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
             $record->completion_date ? Carbon::parse($record->completion_date)->format('Y-m-d') : null,
         ];
     }
-} 
+}

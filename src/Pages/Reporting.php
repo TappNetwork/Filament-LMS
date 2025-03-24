@@ -5,9 +5,6 @@ namespace Tapp\FilamentLms\Pages;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Tables;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\ExportAction;
-use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -17,11 +14,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tapp\FilamentLms\Exports\CourseProgressExport;
 use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\StepUser;
+
 class Reporting extends Page implements Tables\Contracts\HasTable
 {
     use Tables\Concerns\InteractsWithTable;
@@ -226,7 +222,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(function () {
                         return Excel::download(new CourseProgressExport, 'course-progress.xlsx');
-                    })
+                    }),
             ])
             ->defaultSort(function (Builder $query) {
                 // Use raw SQL for ordering to avoid ONLY_FULL_GROUP_BY issues

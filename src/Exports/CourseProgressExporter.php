@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CourseProgressExporter extends Exporter
 {
-    // This exporter doesn't have a direct model 
+    // This exporter doesn't have a direct model
     // since the reporting data is from a custom query
     protected static ?string $model = null;
 
@@ -42,7 +42,7 @@ class CourseProgressExporter extends Exporter
 
             // ExportColumn::make('completed_at')
             //     ->label('Date Completed'),
-                
+
             // ExportColumn::make('completion_date')
             //     ->label('Completion Date'),
         ];
@@ -50,12 +50,12 @@ class CourseProgressExporter extends Exporter
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-        $body = 'Your course progress export has completed and ' . number_format($export->successful_rows) . ' ' . str('row')->plural($export->successful_rows) . ' exported.';
-        
+        $body = 'Your course progress export has completed and '.number_format($export->successful_rows).' '.str('row')->plural($export->successful_rows).' exported.';
+
         if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' ' . number_format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
+            $body .= ' '.number_format($failedRowsCount).' '.str('row')->plural($failedRowsCount).' failed to export.';
         }
-        
+
         return $body;
     }
 
@@ -70,11 +70,11 @@ class CourseProgressExporter extends Exporter
     //         if (isset($record['steps_completed']) && isset($record['total_steps'])) {
     //             $record['steps_completed'] = "{$record['steps_completed']} / {$record['total_steps']}";
     //         }
-            
+
     //         return $record;
     //     }
 
     //     // For Model records (unlikely in this case), return an empty array
     //     return [];
     // }
-} 
+}

@@ -21,6 +21,9 @@ use Tapp\FilamentLms\Models\Step;
 use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Actions\ExportAction;
 use Tapp\FilamentLms\Exports\CourseProgressExporter;
+use Tapp\FilamentLms\Exports\CourseProgressExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class Reporting extends Page implements Tables\Contracts\HasTable
 {
@@ -66,7 +69,12 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                         'lms_courses.id as course_id',
                         'lms_courses.name as course_name',
                         DB::raw('MIN(lms_step_user.created_at) as started_at'),
-                        DB::raw('MAX(lms_step_user.completed_at) as completed_at'),
+                        DB::raw('CASE 
+                                WHEN COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) = 
+                                (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id) 
+                                THEN MAX(lms_step_user.completed_at) 
+                                ELSE NULL 
+                            END as completed_at'),
                         DB::raw('CASE 
                                 WHEN COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) = 
                                 (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id) 
@@ -163,6 +171,45 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                         return $indicators;
                     }),
 
+                SelectFilter::make('status')
+                    ->options([
+                        'Completed' => 'Completed',
+                        'In Progress' => 'In Progress',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when($data['value'], function ($query, $status) {
+                            if ($status === 'Completed') {
+                                return $query->whereRaw('(SELECT COUNT(DISTINCT s2.step_id) FROM lms_step_user s2 
+                                    WHERE s2.user_id = lms_step_user.user_id 
+                                    AND s2.completed_at IS NOT NULL 
+                                    AND s2.step_id IN (
+                                        SELECT s3.id FROM lms_steps s3 
+                                        JOIN lms_lessons l3 ON s3.lesson_id = l3.id 
+                                        WHERE l3.course_id = lms_courses.id
+                                    )) = (
+                                    SELECT COUNT(DISTINCT s4.id) 
+                                    FROM lms_steps s4 
+                                    JOIN lms_lessons l4 ON s4.lesson_id = l4.id 
+                                    WHERE l4.course_id = lms_courses.id
+                                )');
+                            } else {
+                                return $query->whereRaw('(SELECT COUNT(DISTINCT s2.step_id) FROM lms_step_user s2 
+                                    WHERE s2.user_id = lms_step_user.user_id 
+                                    AND s2.completed_at IS NOT NULL 
+                                    AND s2.step_id IN (
+                                        SELECT s3.id FROM lms_steps s3 
+                                        JOIN lms_lessons l3 ON s3.lesson_id = l3.id 
+                                        WHERE l3.course_id = lms_courses.id
+                                    )) < (
+                                    SELECT COUNT(DISTINCT s4.id) 
+                                    FROM lms_steps s4 
+                                    JOIN lms_lessons l4 ON s4.lesson_id = l4.id 
+                                    WHERE l4.course_id = lms_courses.id
+                                )');
+                            }
+                        });
+                    }),
+
                 SelectFilter::make('course_id')
                     ->label('Course')
                     ->options(fn () => Course::pluck('name', 'id')->toArray())
@@ -177,12 +224,20 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->attribute('user_id'),
             ])
             ->bulkActions([
-                Tables\Actions\ExportBulkAction::make()
-                    ->exporter(CourseProgressExporter::class)
+                BulkAction::make('export')
+                    ->label('Export')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function () {
+                        return Excel::download(new CourseProgressExport, 'course-progress.xlsx');
+                    })
             ])
             ->headerActions([
-                Tables\Actions\ExportAction::make()
-                    ->exporter(CourseProgressExporter::class)
+                Tables\Actions\Action::make('export')
+                    ->label('Export')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function () {
+                        return Excel::download(new CourseProgressExport, 'course-progress.xlsx');
+                    })
             ])
             ->defaultSort(function (Builder $query) {
                 // Use raw SQL for ordering to avoid ONLY_FULL_GROUP_BY issues

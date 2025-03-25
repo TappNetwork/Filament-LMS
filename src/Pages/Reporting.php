@@ -88,22 +88,18 @@ class Reporting extends Page implements Tables\Contracts\HasTable
             ->columns([
                 TextColumn::make('user_first_name')
                     ->label('First Name')
-                    // ->searchable()
                     ->sortable(),
 
                 TextColumn::make('user_last_name')
                     ->label('Last Name')
-                    // ->searchable()
                     ->sortable(),
 
                 TextColumn::make('user_email')
                     ->label('User Email')
-                    // ->searchable()
                     ->sortable(),
 
                 TextColumn::make('course_name')
                     ->label('Course')
-                    // ->searchable()
                     ->sortable(),
 
                 TextColumn::make('status')
@@ -112,8 +108,8 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->color(fn (string $state): string => match ($state) {
                         'Completed' => 'success',
                         'In Progress' => 'warning',
+                        default => 'gray',
                     })
-                    // ->searchable()
                     ->sortable(),
 
                 TextColumn::make('steps_completed')

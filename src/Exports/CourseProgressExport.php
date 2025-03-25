@@ -2,13 +2,11 @@
 
 namespace Tapp\FilamentLms\Exports;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Tapp\FilamentLms\Models\StepUser;
-use Illuminate\Database\Eloquent\Builder;
 
 class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -35,7 +33,7 @@ class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
             'Progress',
             'Date Started',
             'Date Completed',
-            'Completion Date'
+            'Completion Date',
         ];
     }
 

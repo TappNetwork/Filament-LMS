@@ -112,6 +112,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                         if ($state === 'In Progress') {
                             return 'warning';
                         }
+
                         return 'gray';
                     })
                     ->sortable(),

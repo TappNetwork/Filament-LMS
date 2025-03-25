@@ -105,10 +105,14 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'Completed' => 'success',
-                        'In Progress' => 'warning',
-                        default => 'gray',
+                    ->color(function (string $state): string {
+                        if ($state === 'Completed') {
+                            return 'success';
+                        }
+                        if ($state === 'In Progress') {
+                            return 'warning';
+                        }
+                        return 'gray';
                     })
                     ->sortable(),
 

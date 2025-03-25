@@ -223,12 +223,6 @@ parameters:
 			path: src/Models/Video.php
 
 		-
-			message: '#^Match expression does not handle remaining value\: string$#'
-			identifier: match.unhandled
-			count: 1
-			path: src/Pages/Reporting.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
 			identifier: property.notFound
 			count: 1

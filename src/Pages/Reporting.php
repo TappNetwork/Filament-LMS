@@ -88,22 +88,22 @@ class Reporting extends Page implements Tables\Contracts\HasTable
             ->columns([
                 TextColumn::make('user_first_name')
                     ->label('First Name')
-                    ->searchable()
+                    // ->searchable()
                     ->sortable(),
 
                 TextColumn::make('user_last_name')
                     ->label('Last Name')
-                    ->searchable()
+                    // ->searchable()
                     ->sortable(),
 
                 TextColumn::make('user_email')
                     ->label('User Email')
-                    ->searchable()
+                    // ->searchable()
                     ->sortable(),
 
                 TextColumn::make('course_name')
                     ->label('Course')
-                    ->searchable()
+                    // ->searchable()
                     ->sortable(),
 
                 TextColumn::make('status')
@@ -113,7 +113,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                         'Completed' => 'success',
                         'In Progress' => 'warning',
                     })
-                    ->searchable()
+                    // ->searchable()
                     ->sortable(),
 
                 TextColumn::make('steps_completed')
@@ -220,8 +220,21 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                 Tables\Actions\Action::make('export')
                     ->label('Export')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->action(function () {
-                        return Excel::download(new CourseProgressExport, 'course-progress.xlsx');
+                    ->action(function () use ($table) {
+                        $query = $table->getQuery();
+                        
+                        // Apply all active filters
+                        foreach ($table->getFilters() as $filter) {
+                            $state = $filter->getState();
+                            if (!empty($state)) {
+                                $filter->apply($query, $state);
+                            }
+                        }
+
+                        return Excel::download(
+                            new CourseProgressExport($query),
+                            'course-progress-' . now()->format('Y-m-d') . '.xlsx'
+                        );
                     }),
             ])
             ->defaultSort(function (Builder $query) {

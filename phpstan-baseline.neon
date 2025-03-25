@@ -19,6 +19,12 @@ parameters:
 			path: database/factories/VideoFactory.php
 
 		-
+			message: '#^Method Tapp\\FilamentLms\\Exports\\CourseProgressExport\:\:query\(\) has invalid return type Laravel\\Scout\\Builder\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Exports/CourseProgressExport.php
+
+		-
 			message: '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
@@ -215,6 +221,12 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: src/Models/Video.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 1
+			path: src/Pages/Reporting.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'

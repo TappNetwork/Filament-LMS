@@ -23,13 +23,9 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Illuminate\View\View;
-use Tapp\FilamentLms\Livewire\DocumentStep;
-use Tapp\FilamentLms\Livewire\FormStep;
-use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
-use Tapp\FilamentLms\Pages\Reporting;
 use Tapp\FilamentLms\Pages\Step;
 
 class LmsPanelProvider extends PanelProvider

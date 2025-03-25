@@ -222,18 +222,18 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(function () use ($table) {
                         $query = $table->getQuery();
-                        
+
                         // Apply all active filters
                         foreach ($table->getFilters() as $filter) {
                             $state = $filter->getState();
-                            if (!empty($state)) {
+                            if (! empty($state)) {
                                 $filter->apply($query, $state);
                             }
                         }
 
                         return Excel::download(
                             new CourseProgressExport($query),
-                            'course-progress-' . now()->format('Y-m-d') . '.xlsx'
+                            'course-progress-'.now()->format('Y-m-d').'.xlsx'
                         );
                     }),
             ])

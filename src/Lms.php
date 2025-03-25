@@ -4,6 +4,7 @@ namespace Tapp\FilamentLms;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
+use Tapp\FilamentLms\Pages\Reporting;
 use Tapp\FilamentLms\Resources\CourseResource;
 use Tapp\FilamentLms\Resources\DocumentResource;
 use Tapp\FilamentLms\Resources\LessonResource;
@@ -27,6 +28,10 @@ class Lms implements Plugin
             VideoResource::class,
             DocumentResource::class,
             LinkResource::class,
+        ]);
+
+        $panel->pages([
+            Reporting::class,
         ]);
     }
 

@@ -19,6 +19,12 @@ parameters:
 			path: database/factories/VideoFactory.php
 
 		-
+			message: '#^Method Tapp\\FilamentLms\\Exports\\CourseProgressExport\:\:query\(\) has invalid return type Laravel\\Scout\\Builder\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Exports/CourseProgressExport.php
+
+		-
 			message: '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1

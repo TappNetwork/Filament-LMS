@@ -23,9 +23,6 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Illuminate\View\View;
-use Tapp\FilamentLms\Livewire\DocumentStep;
-use Tapp\FilamentLms\Livewire\FormStep;
-use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
@@ -82,12 +79,6 @@ class LmsPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
-            // TODO remove if unnecessary
-            // ->livewireComponents([
-            //     VideoStep::class,
-            //     DocumentStep::class,
-            //     FormStep::class,
-            // ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

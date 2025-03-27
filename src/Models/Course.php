@@ -160,7 +160,7 @@ class Course extends Model implements HasMedia
 
     public function getImageUrlAttribute()
     {
-        $mediaPath = $this->getFirstMediaUrl('courses') ?? null;
+        $mediaPath = $this->getFirstMediaUrl('courses');
 
         return $mediaPath ?: 'https://picsum.photos/200';
     }

@@ -3,7 +3,7 @@
 namespace Tapp\FilamentLms\Resources;
 
 use Filament\Forms;
-use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Form;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
@@ -44,10 +44,9 @@ class CourseResource extends Resource
                 Forms\Components\TextInput::make('slug')
                     ->helperText('Used for urls.')
                     ->required(),
-                FileUpload::make('image')
+                SpatieMediaLibraryFileUpload::make('image')
                     ->helperText('Image will be automatically cropped to a square.')
-                    ->disk('public')
-                    ->directory('courses')
+                    ->collection('courses')
                     ->image()
                     ->imageResizeMode('cover')
                     ->imageResizeTargetWidth('1080')

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
@@ -16,9 +18,10 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
  * @property string|null $award
  * @property array $award_content
  */
-class Course extends Model
+class Course extends Model implements HasMedia
 {
     use HasFactory;
+    use InteractsWithMedia;
 
     protected $guarded = [];
 
@@ -27,6 +30,12 @@ class Course extends Model
     protected $casts = [
         'award_content' => 'array',
     ];
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('courses')
+            ->singleFile();
+    }
 
     /**
      * Scope a query to only include popular users.

@@ -11,7 +11,7 @@
 |
 */
 
-// pest()->extend(Tests\TestCase::class)->in('Feature');
+pest()->extend(Tapp\FilamentLms\Tests\TestCase::class)->in('Feature');
 
 /*
 |--------------------------------------------------------------------------

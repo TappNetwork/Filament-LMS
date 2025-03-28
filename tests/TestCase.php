@@ -1,15 +1,27 @@
 <?php
 
-namespace Tests;
+namespace Tapp\FilamentLms\Tests;
 
-use PHPUnit\Framework\TestCase as BaseTestCase;
+use Livewire\LivewireServiceProvider;
+use Orchestra\Testbench\TestCase as Orchestra;
 use Tapp\FilamentLms\FilamentLmsServiceProvider;
+use Filament\FilamentServiceProvider;
+use Filament\Support\SupportServiceProvider;
+use Livewire\Livewire;
 
-abstract class TestCase extends BaseTestCase
+abstract class TestCase extends Orchestra
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+    }
+
     protected function getPackageProviders($app)
     {
         return [
+            LivewireServiceProvider::class,
+            FilamentServiceProvider::class,
+            SupportServiceProvider::class,
             FilamentLmsServiceProvider::class,
         ];
     }

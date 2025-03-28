@@ -1,17 +1,22 @@
 <?php
 
-use function Pest\Laravel\actingAs;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Gate;
 use Tapp\FilamentLms\Pages\Reporting;
 
+use function Pest\Laravel\actingAs;
+
 test('users without permission cannot access reporting page', function () {
     // Create a mock user
-    $user = new class extends User {
-        public function hasRole($role) {
+    $user = new class extends User
+    {
+        public function hasRole($role)
+        {
             return false;
         }
-        public function hasPermission($permission) {
+
+        public function hasPermission($permission)
+        {
             return false;
         }
     };
@@ -28,18 +33,21 @@ test('users without permission cannot access reporting page', function () {
 
 test('users with permission can access reporting page', function () {
     // Create a mock user with permissions
-    $user = new class extends User {
-        public function hasRole($role) {
+    $user = new class extends User
+    {
+        public function hasRole($role)
+        {
             return $role === 'admin';
         }
-        public function hasPermission($permission) {
+
+        public function hasPermission($permission)
+        {
             return $permission === 'view-lms-reporting';
         }
     };
 
     // Mock the Gate to allow access
-    Gate::define('viewLmsReporting', fn ($user) =>
-        $user->hasRole('admin') || $user->hasPermission('view-lms-reporting')
+    Gate::define('viewLmsReporting', fn ($user) => $user->hasRole('admin') || $user->hasPermission('view-lms-reporting')
     );
 
     // Login the user

@@ -2,12 +2,11 @@
 
 namespace Tapp\FilamentLms\Tests;
 
+use Filament\FilamentServiceProvider;
+use Filament\Support\SupportServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Tapp\FilamentLms\FilamentLmsServiceProvider;
-use Filament\FilamentServiceProvider;
-use Filament\Support\SupportServiceProvider;
-use Livewire\Livewire;
 
 abstract class TestCase extends Orchestra
 {

@@ -46,4 +46,4 @@ class CourseProgressQueryService
             ])
             ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'lms_courses.id', 'lms_courses.name');
     }
-} 
+}

@@ -10,7 +10,6 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +17,6 @@ use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Tapp\FilamentLms\Exports\CourseProgressExport;
 use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Models\StepUser;
 use Tapp\FilamentLms\Services\CourseProgressQueryService;
 
 class Reporting extends Page implements Tables\Contracts\HasTable

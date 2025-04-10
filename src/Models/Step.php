@@ -12,6 +12,7 @@ use Spatie\EloquentSortable\SortableTrait;
 use Tapp\FilamentLms\Database\Factories\StepFactory;
 use Tapp\FilamentLms\Events\CourseCompleted;
 use Tapp\FilamentLms\Events\CourseStarted;
+use Tapp\FilamentLms\Events\StepCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 
 class Step extends Model implements Sortable
@@ -62,11 +63,15 @@ class Step extends Model implements Sortable
             if ($this->first_step) {
                 CourseStarted::dispatch($user, $this->lesson->course);
             }
+
+            StepCompleted::dispatch($user, $this);
         } elseif (! $userStep->completed_at) {
             // a step may have been started but not completed (e.g. video paused)
             $userStep->update([
                 'completed_at' => now(),
             ]);
+
+            StepCompleted::dispatch($user, $this);
         }
 
         if ($nextStep) {
@@ -78,6 +83,7 @@ class Step extends Model implements Sortable
             return $nextStep;
         } else {
             CourseCompleted::dispatch($user, $this->lesson->course);
+            StepCompleted::dispatch($user, $this);
         }
     }
 

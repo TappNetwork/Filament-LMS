@@ -12,7 +12,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Tapp\FilamentLms\Exports\CourseProgressExport;
 use Tapp\FilamentLms\Models\Course;
@@ -34,6 +36,11 @@ class Reporting extends Page implements Tables\Contracts\HasTable
     protected static ?string $slug = 'reporting';
 
     protected static ?string $navigationGroup = 'LMS';
+
+    public static function canAccess(): bool
+    {
+        return Auth::check() && Gate::allows('viewLmsReporting');
+    }
 
     public function getTableRecordKey(array|\Illuminate\Database\Eloquent\Model $record): string
     {
@@ -137,31 +144,31 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when($data['value'], function ($query, $status) {
                             if ($status === 'Completed') {
-                                return $query->whereRaw('(SELECT COUNT(DISTINCT s2.step_id) FROM lms_step_user s2 
-                                    WHERE s2.user_id = lms_step_user.user_id 
-                                    AND s2.completed_at IS NOT NULL 
+                                return $query->whereRaw('(SELECT COUNT(DISTINCT s2.step_id) FROM lms_step_user s2
+                                    WHERE s2.user_id = lms_step_user.user_id
+                                    AND s2.completed_at IS NOT NULL
                                     AND s2.step_id IN (
-                                        SELECT s3.id FROM lms_steps s3 
-                                        JOIN lms_lessons l3 ON s3.lesson_id = l3.id 
+                                        SELECT s3.id FROM lms_steps s3
+                                        JOIN lms_lessons l3 ON s3.lesson_id = l3.id
                                         WHERE l3.course_id = lms_courses.id
                                     )) = (
-                                    SELECT COUNT(DISTINCT s4.id) 
-                                    FROM lms_steps s4 
-                                    JOIN lms_lessons l4 ON s4.lesson_id = l4.id 
+                                    SELECT COUNT(DISTINCT s4.id)
+                                    FROM lms_steps s4
+                                    JOIN lms_lessons l4 ON s4.lesson_id = l4.id
                                     WHERE l4.course_id = lms_courses.id
                                 )');
                             } else {
-                                return $query->whereRaw('(SELECT COUNT(DISTINCT s2.step_id) FROM lms_step_user s2 
-                                    WHERE s2.user_id = lms_step_user.user_id 
-                                    AND s2.completed_at IS NOT NULL 
+                                return $query->whereRaw('(SELECT COUNT(DISTINCT s2.step_id) FROM lms_step_user s2
+                                    WHERE s2.user_id = lms_step_user.user_id
+                                    AND s2.completed_at IS NOT NULL
                                     AND s2.step_id IN (
-                                        SELECT s3.id FROM lms_steps s3 
-                                        JOIN lms_lessons l3 ON s3.lesson_id = l3.id 
+                                        SELECT s3.id FROM lms_steps s3
+                                        JOIN lms_lessons l3 ON s3.lesson_id = l3.id
                                         WHERE l3.course_id = lms_courses.id
                                     )) < (
-                                    SELECT COUNT(DISTINCT s4.id) 
-                                    FROM lms_steps s4 
-                                    JOIN lms_lessons l4 ON s4.lesson_id = l4.id 
+                                    SELECT COUNT(DISTINCT s4.id)
+                                    FROM lms_steps s4
+                                    JOIN lms_lessons l4 ON s4.lesson_id = l4.id
                                     WHERE l4.course_id = lms_courses.id
                                 )');
                             }

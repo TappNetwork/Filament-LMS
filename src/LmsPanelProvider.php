@@ -47,6 +47,10 @@ class LmsPanelProvider extends PanelProvider
 
         if (config('filament-lms.brand_logo')) {
             $panel->brandLogo(asset(config('filament-lms.brand_logo')));
+
+            if (config('filament-lms.brand_logo_height')) {
+                $panel->brandLogoHeight(config('filament-lms.brand_logo_height'));
+            }
         } else {
             $panel->brandName(config('filament-lms.brand_name'));
         }

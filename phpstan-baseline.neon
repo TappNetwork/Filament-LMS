@@ -115,12 +115,6 @@ parameters:
 			path: src/Models/Course.php
 
 		-
-			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$image\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Models/Course.php
-
-		-
 			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$slug\.$#'
 			identifier: property.notFound
 			count: 1

@@ -27,7 +27,7 @@ An opinionated LMS plugin for Filament containing a user facing LMS panel and Re
 },
 ```
 
-### publish 
+### publish
 
 ``` sh
 php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider"
@@ -63,7 +63,7 @@ class AdminPanelProvider extends PanelProvider
 contains the LMS experience for the end user
 ### Course Library
 - user can view courses available to them
-- completion status 
+- completion status
 ### Course UI
 - shown when progressing through a single course
 - left sidebar showing lessons with steps expanding from them
@@ -74,7 +74,7 @@ contains the LMS experience for the end user
 - profile
 - anything else?
 
-## Admin Plugin 
+## Admin Plugin
 (should these be resource groups in existing panel or its own panel?)
 ### LMS resource group contains the following resources:
 #### Course
@@ -98,3 +98,24 @@ contains the LMS experience for the end user
 - Text (Wysiwyg?)
 - Image
 
+## Authorization
+### Gates
+The LMS package uses Laravel Gates for authorization. You'll need to define the following Gates in your application's `AuthServiceProvider`:
+
+```php
+use Illuminate\Support\Facades\Gate;
+
+class AuthServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        Gate::define('viewLmsReporting', function ($user) {
+            // Customize this based on your application's needs
+            return $user->hasRole('admin') || $user->hasPermission('view-lms-reporting');
+        });
+    }
+}
+```
+
+#### Available Gates
+- `viewLmsReporting`: Controls access to the LMS reporting page. Users must pass this Gate check to view the reporting interface.

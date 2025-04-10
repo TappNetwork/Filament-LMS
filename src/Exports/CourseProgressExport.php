@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Tapp\FilamentLms\Services\CourseProgressQueryService;
 
 class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -19,7 +20,7 @@ class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
 
     public function query()
     {
-        return $this->query->orderByRaw('MAX(lms_step_user.completed_at) DESC');
+        return CourseProgressQueryService::buildQuery()->orderByRaw('MAX(lms_step_user.completed_at) DESC');
     }
 
     public function headings(): array

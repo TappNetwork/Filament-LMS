@@ -44,11 +44,6 @@ class CertificateController extends Controller
 
     public function download(Course $course): StreamedResponse
     {
-        if (! auth()->check()) {
-            // TODO login
-            return redirect()->route('login');
-        }
-
         $url = URL::temporarySignedRoute(
             'filament-lms::certificates.show',
             now()->addMinutes(20),

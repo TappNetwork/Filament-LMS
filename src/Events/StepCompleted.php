@@ -23,4 +23,4 @@ class StepCompleted
         $this->user = $user;
         $this->step = $step;
     }
-} 
+}

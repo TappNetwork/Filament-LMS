@@ -40,8 +40,8 @@ class CourseProgressQueryService
                 DB::raw('CASE 
                         WHEN COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) = 
                         (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id) 
-                        THEN "Completed" 
-                        ELSE "In Progress" 
+                        THEN \'Completed\' 
+                        ELSE \'In Progress\' 
                     END as status'),
             ])
             ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'lms_courses.id', 'lms_courses.name');

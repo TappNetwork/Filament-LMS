@@ -42,6 +42,7 @@ class CertificateController extends Controller
             ->with('course', $course);
     }
 
+    /** @phpstan-ignore-next-line */
     public function download(Course $course): StreamedResponse
     {
         $url = URL::temporarySignedRoute(

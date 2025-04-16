@@ -55,12 +55,6 @@ parameters:
 			path: src/Http/Controllers/CertificateController.php
 
 		-
-			message: '#^Method Tapp\\FilamentLms\\Http\\Controllers\\CertificateController\:\:download\(\) should return Symfony\\Component\\HttpFoundation\\StreamedResponse but returns Illuminate\\Http\\RedirectResponse\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Http/Controllers/CertificateController.php
-
-		-
 			message: '#^Method Tapp\\FilamentLms\\Lms\:\:get\(\) should return static\(Tapp\\FilamentLms\\Lms\) but returns Filament\\Contracts\\Plugin\|Filament\\FilamentManager\.$#'
 			identifier: return.type
 			count: 1

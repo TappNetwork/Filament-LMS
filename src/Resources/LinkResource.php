@@ -9,11 +9,14 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Resources\LinkResource\Pages;
 
 class LinkResource extends Resource
 {
+    use HasLmsSlug;
+
     protected static ?string $model = Link::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-paper-clip';

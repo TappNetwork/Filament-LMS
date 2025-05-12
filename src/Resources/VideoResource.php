@@ -8,9 +8,9 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Resources\VideoResource\Pages;
-use Tapp\FilamentLms\Concerns\HasLmsSlug;
 
 class VideoResource extends Resource
 {

@@ -11,10 +11,10 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Resources\CourseResource\Pages;
 use Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
-use Tapp\FilamentLms\Concerns\HasLmsSlug;
 
 class CourseResource extends Resource
 {

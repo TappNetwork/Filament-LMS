@@ -10,12 +10,12 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Resources\StepResource\Pages;
-use Tapp\FilamentLms\Concerns\HasLmsSlug;
 
 class StepResource extends Resource
 {

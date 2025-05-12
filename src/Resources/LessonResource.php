@@ -12,9 +12,12 @@ use Illuminate\Support\Str;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Resources\LessonResource\Pages;
 use Tapp\FilamentLms\Resources\LessonResource\RelationManagers;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 
 class LessonResource extends Resource
 {
+    use HasLmsSlug;
+
     protected static ?string $model = Lesson::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';

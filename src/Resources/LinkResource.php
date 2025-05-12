@@ -11,9 +11,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Resources\LinkResource\Pages;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 
 class LinkResource extends Resource
 {
+    use HasLmsSlug;
+
     protected static ?string $model = Link::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-paper-clip';

@@ -15,9 +15,12 @@ use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Resources\StepResource\Pages;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 
 class StepResource extends Resource
 {
+    use HasLmsSlug;
+
     protected static ?string $model = Step::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-check-circle';

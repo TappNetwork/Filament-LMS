@@ -12,9 +12,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Resources\DocumentResource\Pages;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 
 class DocumentResource extends Resource
 {
+    use HasLmsSlug;
+
     protected static ?string $model = Document::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document';

@@ -36,4 +36,4 @@ class CertificatePolicy
         // For example, you might want to check for specific roles or permissions
         return $user->hasRole('Admin');
     }
-} 
+}

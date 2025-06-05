@@ -14,7 +14,11 @@ use Tapp\FilamentLms\Http\Controllers\CertificateController;
 |
 */
 
-Route::middleware('web', 'auth')->group(function () {
-    Route::get('lms/certificates/{course}/download', [CertificateController::class, 'download'])->name('filament-lms::certificates.download');
-    Route::get('lms/certificates/{course}/{user}', [CertificateController::class, 'show'])->name('filament-lms::certificates.show');
+Route::middleware('web')->group(function () {
+    Route::get('lms/certificates/{course}/download', [CertificateController::class, 'download'])
+        ->name('filament-lms::certificates.download')
+        ->middleware('auth');
+    Route::get('lms/certificates/{course}/{user}', [CertificateController::class, 'show'])
+        ->name('filament-lms::certificates.show')
+        ->middleware('signed');
 });

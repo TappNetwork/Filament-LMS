@@ -12,22 +12,22 @@ use Spatie\Browsershot\Browsershot;
 // TODO get from config
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Policies\CertificatePolicy;
 
 class CertificateController extends Controller
 {
+    public function __construct(
+        protected CertificatePolicy $policy
+    ) {}
+
     // TODO does this need authentication to prevent direct visits?
     public function show($courseId, $userId): View
     {
-        if (! request()->hasValidSignature() && ! (auth()->user() && auth()->user()->hasRole('Admin'))) {
-            abort(403);
-        }
-
         $course = Course::findOrFail($courseId);
+        $user = User::findOrFail($userId);
 
-        $completedAt = $course->completedByUserAt($userId);
-
-        if (! $completedAt && ! (auth()->user() && auth()->user()->hasRole('Admin'))) {
-            abort(403, __('Course is not completed'));
+        if (! request()->hasValidSignature() && ! $this->policy->view(auth()->user(), $course, $user)) {
+            abort(403);
         }
 
         $view = 'filament-lms::certificates.'.$course->award;
@@ -36,14 +36,20 @@ class CertificateController extends Controller
             $view = 'filament-lms::certificates.default';
         }
 
+        $completedAt = $course->completedByUserAt($userId);
+
         return view($view)
-            ->with('dateEarned', Carbon::parse($completedAt)->format(('F j, Y')))
-            ->with('user', User::find($userId))
+            ->with('dateEarned', $completedAt ? Carbon::parse($completedAt)->format(('F j, Y')) : null)
+            ->with('user', $user)
             ->with('course', $course);
     }
 
     public function download(Course $course): StreamedResponse
     {
+        if (! $this->policy->view(auth()->user(), $course)) {
+            abort(403);
+        }
+
         $url = URL::temporarySignedRoute(
             'filament-lms::certificates.show',
             now()->addMinutes(20),

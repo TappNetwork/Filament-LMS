@@ -15,6 +15,7 @@
         "filament/support": "^3.0",
         "illuminate/contracts": "^10.0||^11.0||^12.0",
         "maatwebsite/excel": "^3.1",
+        "spatie/browsershot": "dev-main",
         "spatie/eloquent-sortable": "^4.4.0",
         "tapp/filament-form-builder": "dev-main"
     },

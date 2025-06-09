@@ -70,13 +70,22 @@ class Course extends Model implements HasMedia
     {
         $user = $user ?: auth()->user();
 
-        $userStep = StepUser::whereIn('lms_step_user.step_id', $this->steps()->pluck('lms_steps.id'))
-            ->join('lms_steps', 'lms_step_user.step_id', '=', 'lms_steps.id')
-            ->where('lms_step_user.user_id', $user->id)
-            ->orderBy('lms_steps.order', 'desc')
-            ->first();
+        // Get all steps in order
+        $allSteps = $this->steps()->orderBy('order')->get();
 
-        return $userStep ? $userStep->step : $this->firstStep();
+        // Get all completed steps for this user
+        $completedStepIds = StepUser::whereIn('step_id', $allSteps->pluck('id'))
+            ->where('user_id', $user->id)
+            ->whereNotNull('completed_at')
+            ->pluck('step_id')
+            ->toArray();
+
+        // Find the first step that hasn't been completed
+        $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
+            return ! in_array($step->id, $completedStepIds);
+        });
+
+        return $firstIncompleteStep ?: $allSteps->first();
     }
 
     public function firstStep(): ?Step

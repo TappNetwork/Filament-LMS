@@ -72,7 +72,7 @@ class Course extends Model implements HasMedia
 
         // Get all steps in order
         $allSteps = $this->steps()->orderBy('order')->get();
-        
+
         // Get all completed steps for this user
         $completedStepIds = StepUser::whereIn('step_id', $allSteps->pluck('id'))
             ->where('user_id', $user->id)
@@ -82,7 +82,7 @@ class Course extends Model implements HasMedia
 
         // Find the first step that hasn't been completed
         $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
-            return !in_array($step->id, $completedStepIds);
+            return ! in_array($step->id, $completedStepIds);
         });
 
         return $firstIncompleteStep ?: $allSteps->first();

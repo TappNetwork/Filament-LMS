@@ -5,6 +5,7 @@ namespace Tapp\FilamentLms\Http\Controllers;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -15,19 +16,15 @@ use Tapp\FilamentLms\Models\Course;
 
 class CertificateController extends Controller
 {
-    // TODO does this need authentication to prevent direct visits?
     public function show($courseId, $userId): View
     {
-        if (! request()->hasValidSignature() && ! (auth()->user() && auth()->user()->hasRole('Admin'))) {
-            abort(403);
-        }
-
         $course = Course::findOrFail($courseId);
+        $user = User::findOrFail($userId);
 
-        $completedAt = $course->completedByUserAt($userId);
-
-        if (! $completedAt && ! (auth()->user() && auth()->user()->hasRole('Admin'))) {
-            abort(403, __('Course is not completed'));
+        if (! request()->hasValidSignature() &&
+            ! $course->completedByUserAt($userId) &&
+            ! Auth::user()->can('update', $course)) {
+            abort(403);
         }
 
         $view = 'filament-lms::certificates.'.$course->award;
@@ -36,18 +33,24 @@ class CertificateController extends Controller
             $view = 'filament-lms::certificates.default';
         }
 
+        $completedAt = $course->completedByUserAt($userId) ?? now();
+
         return view($view)
-            ->with('dateEarned', Carbon::parse($completedAt)->format(('F j, Y')))
-            ->with('user', User::find($userId))
+            ->with('dateEarned', $completedAt ? Carbon::parse($completedAt)->format(('F j, Y')) : null)
+            ->with('user', $user)
             ->with('course', $course);
     }
 
     public function download(Course $course): StreamedResponse
     {
+        if (! $course->completedByUserAt(Auth::id()) && ! Auth::user()->can('update', $course)) {
+            abort(403);
+        }
+
         $url = URL::temporarySignedRoute(
             'filament-lms::certificates.show',
             now()->addMinutes(20),
-            ['course' => $course, 'user' => auth()->user()->id]
+            ['course' => $course, 'user' => Auth::id()]
         );
 
         $pdf = Browsershot::url($url)
@@ -56,7 +59,7 @@ class CertificateController extends Controller
             ->landscape()
             ->pdf();
 
-        $filename = Str::slug($course->name).'-'.Str::slug(auth()->user()->name).'-certificate-'.now()->toDateString().'.pdf';
+        $filename = Str::slug($course->name).'-'.Str::slug(Auth::user()->name).'-certificate-'.now()->toDateString().'.pdf';
 
         return response()->stream(function () use ($pdf) {
             echo $pdf;

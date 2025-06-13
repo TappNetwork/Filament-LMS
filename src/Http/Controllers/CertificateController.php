@@ -6,7 +6,6 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -22,8 +21,8 @@ class CertificateController extends Controller
         $course = Course::findOrFail($courseId);
         $user = User::findOrFail($userId);
 
-        if (! request()->hasValidSignature() && 
-            ! $course->completedByUserAt($userId) && 
+        if (! request()->hasValidSignature() &&
+            ! $course->completedByUserAt($userId) &&
             ! Auth::user()->can('update', $course)) {
             abort(403);
         }

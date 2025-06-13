@@ -70,6 +70,7 @@ trait FilamentLmsUser
             if ($progress = $courseProgress->find($course->id)) {
                 // @phpstan-ignore-next-line
                 $completionPercentage = number_format($progress->completed_steps / $course->steps->count(), 2);
+
                 return [$course->external_id => $completionPercentage];
             }
 
@@ -88,4 +89,4 @@ trait FilamentLmsUser
             get: fn (mixed $value, array $attributes) => json_encode($this->lmsCourseProgress())
         );
     }
-} 
+}

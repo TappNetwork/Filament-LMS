@@ -6,7 +6,6 @@ use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
@@ -18,7 +17,6 @@ use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
 use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Policies\CertificatePolicy;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider
 {
@@ -68,8 +66,6 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             'link' => 'Tapp\FilamentLms\Models\Link',
             'form' => 'Tapp\FilamentFormBuilder\Models\FilamentForm',
         ]);
-
-        Gate::policy(Course::class, CertificatePolicy::class);
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
     }

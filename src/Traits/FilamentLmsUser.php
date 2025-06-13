@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Step;
 
-trait HasLmsCourses
+trait FilamentLmsUser
 {
     /**
      * Get all courses the user is enrolled in.

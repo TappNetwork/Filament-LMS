@@ -11,12 +11,15 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Resources\CourseResource\Pages;
 use Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
 
 class CourseResource extends Resource
 {
+    use HasLmsSlug;
+
     protected static ?string $model = Course::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';

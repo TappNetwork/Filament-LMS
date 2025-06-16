@@ -185,7 +185,7 @@ class Step extends Model implements Sortable
                 ->ordered()
                 ->first();
 
-            if (!$previousLesson) {
+            if (! $previousLesson) {
                 return true; // No previous lesson, so this is available
             }
 
@@ -199,7 +199,7 @@ class Step extends Model implements Sortable
             ->ordered()
             ->first();
 
-        if (!$previousStep) {
+        if (! $previousStep) {
             return true; // No previous step, so this is available
         }
 

@@ -52,7 +52,7 @@ class Course extends Model implements HasMedia
 
     public function lessons(): HasMany
     {
-        return $this->hasMany(Lesson::class);
+        return $this->hasMany(Lesson::class)->ordered();
     }
 
     public function linkToCurrentStep(): string

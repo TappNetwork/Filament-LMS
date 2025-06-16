@@ -57,31 +57,48 @@ class Course extends Model implements HasMedia
 
     public function linkToCurrentStep(): string
     {
-        $step = $this->currentStep();
-
-        if ($step && $step->completed_at && $step->last_step) {
-            return $this->certificateUrl();
-        }
-
-        return $step ? StepPage::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]) : '';
-    }
-
-    public function currentStep(?Authenticatable $user = null): ?Step
-    {
-        $user = $user ?: auth()->user();
-
         // Get all steps in order
-        $allSteps = $this->steps()->orderBy('order')->get();
+        $allSteps = $this->steps()->ordered()->get();
 
         // Get all completed steps for this user
         $completedStepIds = StepUser::whereIn('step_id', $allSteps->pluck('id'))
-            ->where('user_id', $user->id)
+            ->where('user_id', auth()->user()->id)
             ->whereNotNull('completed_at')
             ->pluck('step_id')
             ->toArray();
 
         // Find the first step that hasn't been completed
         $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
+            return ! in_array($step->id, $completedStepIds) && $step->available;
+        });
+
+        // If no incomplete step is available, check if course is complete
+        if (!$firstIncompleteStep) {
+            if ($allSteps->every->completed_at) {
+                return $this->certificateUrl();
+            }
+            // If course is not complete but no step is available, find the first incomplete step
+            $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
+                return ! in_array($step->id, $completedStepIds);
+            });
+        }
+
+        return $firstIncompleteStep ? StepPage::getUrl([$firstIncompleteStep->lesson->course->slug, $firstIncompleteStep->lesson->slug, $firstIncompleteStep->slug]) : '';
+    }
+
+    public function currentStep(?Authenticatable $user = null): ?Step
+    {
+        $user = $user ?: auth()->user();
+
+        // Get all completed steps for this user
+        $completedStepIds = StepUser::whereIn('step_id', $this->steps->pluck('id'))
+            ->where('user_id', $user->id)
+            ->whereNotNull('completed_at')
+            ->pluck('step_id')
+            ->toArray();
+
+        // Find the first step that hasn't been completed
+        $firstIncompleteStep = $this->steps->first(function ($step) use ($completedStepIds) {
             return ! in_array($step->id, $completedStepIds);
         });
 

@@ -173,7 +173,37 @@ class Step extends Model implements Sortable
             return false;
         }
 
-        return $this->completed_at || $this->lesson->course->currentStep()->order >= $this->order;
+        // If this is the first step of the first lesson, it's always available
+        if ($this->first_step) {
+            return true;
+        }
+
+        // If this is the first step of a lesson, check if previous lesson is complete
+        if ($this->lesson->steps->first()->is($this)) {
+            $previousLesson = $this->lesson->course->lessons()
+                ->where('order', '<', $this->lesson->order)
+                ->ordered()
+                ->first();
+
+            if (!$previousLesson) {
+                return true; // No previous lesson, so this is available
+            }
+
+            // Check if all steps in previous lesson are complete
+            return $previousLesson->steps->every->completed_at;
+        }
+
+        // For other steps, check if previous step is complete
+        $previousStep = $this->lesson->steps()
+            ->where('order', '<', $this->order)
+            ->ordered()
+            ->first();
+
+        if (!$previousStep) {
+            return true; // No previous step, so this is available
+        }
+
+        return $previousStep->completed_at;
     }
 
     public function getSecondsAttribute()

@@ -32,6 +32,7 @@ class Step extends Page
         $this->course->loadProgress();
         $this->lesson = $this->course->lessons->where('slug', $lessonSlug)->firstOrFail();
         $this->step = $this->lesson->steps->where('slug', $stepSlug)->firstOrFail();
+        // @phpstan-ignore-next-line
         $this->heading = $this->step->name;
 
         if (! $this->step->available) {

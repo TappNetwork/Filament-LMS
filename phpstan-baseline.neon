@@ -49,12 +49,6 @@ parameters:
 			path: src/Http/Controllers/CertificateController.php
 
 		-
-			message: '#^Call to static method url\(\) on an unknown class Spatie\\Browsershot\\Browsershot\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Http/Controllers/CertificateController.php
-
-		-
 			message: '#^Method Tapp\\FilamentLms\\Lms\:\:get\(\) should return static\(Tapp\\FilamentLms\\Lms\) but returns Filament\\Contracts\\Plugin\|Filament\\FilamentManager\.$#'
 			identifier: return.type
 			count: 1
@@ -223,12 +217,6 @@ parameters:
 			path: src/Pages/Step.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$steps\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Pages/Step.php
-
-		-
 			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$slug\.$#'
 			identifier: property.notFound
 			count: 1
@@ -242,6 +230,12 @@ parameters:
 
 		-
 			message: '#^Property Tapp\\FilamentLms\\Pages\\Step\:\:\$lesson \(Tapp\\FilamentLms\\Models\\Lesson\) does not accept Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Pages/Step.php
+
+		-
+			message: '#^Property Tapp\\FilamentLms\\Pages\\Step\:\:\$step \(Tapp\\FilamentLms\\Models\\Step\) does not accept Illuminate\\Database\\Eloquent\\Model\.$#'
 			identifier: assign.propertyType
 			count: 1
 			path: src/Pages/Step.php

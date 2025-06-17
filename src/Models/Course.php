@@ -73,7 +73,7 @@ class Course extends Model implements HasMedia
         });
 
         // If no incomplete step is available, check if course is complete
-        if (!$firstIncompleteStep) {
+        if (! $firstIncompleteStep) {
             if ($allSteps->every->completed_at) {
                 return $this->certificateUrl();
             }

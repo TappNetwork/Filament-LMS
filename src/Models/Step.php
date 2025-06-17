@@ -72,6 +72,8 @@ class Step extends Model implements Sortable
             ]);
 
             StepCompleted::dispatch($user, $this);
+        } else {
+            // step is already completed
         }
 
         if ($nextStep) {
@@ -140,6 +142,10 @@ class Step extends Model implements Sortable
                 'step_id' => $this->id,
                 'seconds' => $seconds,
             ]);
+
+            if ($this->first_step) {
+                CourseStarted::dispatch($user, $this->lesson->course);
+            }
         } else {
             $userStep->update([
                 'seconds' => $seconds,
@@ -173,37 +179,24 @@ class Step extends Model implements Sortable
             return false;
         }
 
-        // If this is the first step of the first lesson, it's always available
-        if ($this->first_step) {
+        // If step is already completed, it's available
+        if ($this->completed_at) {
             return true;
         }
 
-        // If this is the first step of a lesson, check if previous lesson is complete
-        if ($this->lesson->steps->first()->is($this)) {
-            $previousLesson = $this->lesson->course->lessons()
-                ->where('order', '<', $this->lesson->order)
-                ->ordered()
-                ->first();
+        // Get all steps in the course up to this step
+        $previousSteps = $this->lesson->course->steps()
+            ->where(function ($query) {
+                $query->where('lms_lessons.order', '<', $this->lesson->order)
+                    ->orWhere(function ($query) {
+                        $query->where('lms_lessons.order', '=', $this->lesson->order)
+                            ->where('lms_steps.order', '<', $this->order);
+                    });
+            })
+            ->with('progress')
+            ->get();
 
-            if (!$previousLesson) {
-                return true; // No previous lesson, so this is available
-            }
-
-            // Check if all steps in previous lesson are complete
-            return $previousLesson->steps->every->completed_at;
-        }
-
-        // For other steps, check if previous step is complete
-        $previousStep = $this->lesson->steps()
-            ->where('order', '<', $this->order)
-            ->ordered()
-            ->first();
-
-        if (!$previousStep) {
-            return true; // No previous step, so this is available
-        }
-
-        return $previousStep->completed_at;
+        return $previousSteps->every(fn ($step) => $step->completed_at !== null);
     }
 
     public function getSecondsAttribute()

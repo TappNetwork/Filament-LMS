@@ -1,4 +1,4 @@
-<div class="flex flex-col min-h-[80vh]">
+<div class="flex flex-col">
     <x-filament::section
         icon="heroicon-o-document"
         icon-color="primary"
@@ -15,7 +15,8 @@
             <div class="mb-8 flex-1">
                 <iframe 
                     src="{{ $this->getPdfUrl() }}" 
-                    class="w-full h-[75vh] min-h-[500px] rounded-lg border border-gray-300"
+                    class="w-full rounded-lg border border-gray-300"
+                    style="min-height: 50vh;"
                     title="PDF Preview"
                 ></iframe>
             </div>
@@ -26,7 +27,8 @@
     </x-filament::section>
 
     <div class="fixed bottom-0 right-0 p-4 md:p-6 lg:p-8">
-        <x-filament::button color="gray" size="xl" wire:click="$dispatch('complete-step')" :disabled="! $downloaded">
+        <!-- TODO: could disable button if not downloaded. but the preview has an alternative download button we cannot track -->
+        <x-filament::button color="gray" size="xl" wire:click="$dispatch('complete-step')">
             Next
         </x-filament::button>
     </div>

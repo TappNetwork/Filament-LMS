@@ -38,6 +38,7 @@ class DocumentStep extends Component
     public function getPdfUrl()
     {
         $mediaItem = $this->document->getFirstMedia();
+
         return $mediaItem->getUrl();
     }
 }

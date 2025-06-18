@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Resources\LinkResource\Pages;
+use Tapp\FilamentLms\Jobs\GenerateLinkScreenshot;
 
 class LinkResource extends Resource
 {
@@ -32,6 +33,21 @@ class LinkResource extends Resource
                 Forms\Components\TextInput::make('url')
                     ->activeUrl()
                     ->required(),
+                \Filament\Forms\Components\SpatieMediaLibraryFileUpload::make('preview')
+                    ->collection('preview')
+                    ->image()
+                    ->disabled()
+                    ->visible(fn ($livewire) => $livewire->record && $livewire->record->exists),
+                Forms\Components\Actions::make([
+                    Forms\Components\Actions\Action::make('regeneratePreview')
+                        ->icon('heroicon-o-arrow-path')
+                        ->label('Regenerate Preview')
+                        ->visible(fn ($livewire) => $livewire->record && $livewire->record->exists)
+                        ->action(function (Link $record) {
+                            $record->clearMediaCollection('preview');
+                            \Tapp\FilamentLms\Jobs\GenerateLinkScreenshot::dispatch($record);
+                        }),
+                ]),
             ]);
     }
 
@@ -39,6 +55,11 @@ class LinkResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('preview')
+                    ->getStateUsing(fn ($record) => $record->getFirstMediaUrl('preview'))
+                    ->label('Preview')
+                    ->square()
+                    ->height(50),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),

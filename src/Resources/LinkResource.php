@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Resources\LinkResource\Pages;
-use Tapp\FilamentLms\Jobs\GenerateLinkScreenshot;
 
 class LinkResource extends Resource
 {

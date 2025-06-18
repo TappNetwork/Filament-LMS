@@ -7,9 +7,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Spatie\Browsershot\Browsershot;
 use Tapp\FilamentLms\Models\Link;
 
 class GenerateLinkScreenshot implements ShouldQueue
@@ -24,14 +21,14 @@ class GenerateLinkScreenshot implements ShouldQueue
     {
         try {
             // Save screenshot to temp file
-            $tempPath = sys_get_temp_dir() . '/link-preview-' . $this->link->id . '-' . uniqid() . '.jpg';
+            $tempPath = sys_get_temp_dir().'/link-preview-'.$this->link->id.'-'.uniqid().'.jpg';
 
             \Storage::disk('public')->makeDirectory('filament-lms/link-screenshots');
 
             \Spatie\Browsershot\Browsershot::url($this->link->url)
                 ->windowSize(1280, 800)
                 ->waitUntilNetworkIdle()
-                ->setOption('user-data-dir', '/tmp/chrome-data-' . uniqid())
+                ->setOption('user-data-dir', '/tmp/chrome-data-'.uniqid())
                 ->save($tempPath);
 
             $this->link->clearMediaCollection('preview');
@@ -41,9 +38,9 @@ class GenerateLinkScreenshot implements ShouldQueue
 
             @unlink($tempPath);
         } catch (\Exception $e) {
-            \Log::error('Failed to generate screenshot for link: ' . $this->link->url, [
-                'error' => $e->getMessage()
+            \Log::error('Failed to generate screenshot for link: '.$this->link->url, [
+                'error' => $e->getMessage(),
             ]);
         }
     }
-} 
+}

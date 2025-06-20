@@ -4,6 +4,7 @@ namespace Tapp\FilamentLms;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
+use Tapp\FilamentFormBuilder\FilamentFormBuilderPlugin;
 use Tapp\FilamentLms\Pages\CreateRubric;
 use Tapp\FilamentLms\Pages\Reporting;
 use Tapp\FilamentLms\Pages\ViewRubric;
@@ -14,7 +15,6 @@ use Tapp\FilamentLms\Resources\LinkResource;
 use Tapp\FilamentLms\Resources\StepResource;
 use Tapp\FilamentLms\Resources\TestResource;
 use Tapp\FilamentLms\Resources\VideoResource;
-use Tapp\FilamentFormBuilder\FilamentFormBuilderPlugin;
 
 class Lms implements Plugin
 {

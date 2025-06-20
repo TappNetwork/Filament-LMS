@@ -2,8 +2,8 @@
 
 namespace Tapp\FilamentLms\Pages;
 
-use Tapp\FilamentLms\Models\Test;
 use Filament\Pages\Page;
+use Tapp\FilamentLms\Models\Test;
 
 class ViewRubric extends Page
 {
@@ -22,4 +22,4 @@ class ViewRubric extends Page
     {
         $this->test = Test::findOrFail(request()->query('test'));
     }
-} 
+}

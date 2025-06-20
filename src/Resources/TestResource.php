@@ -2,21 +2,17 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Filament\Forms;
-use Tapp\FilamentLms\Models\Test;
-use Filament\Tables;
-use Filament\Forms\Form;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Table;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
+use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Resources\TestResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Tapp\FilamentLms\Resources\TestResource\RelationManagers;
 
 class TestResource extends Resource
 {
@@ -83,7 +79,7 @@ class TestResource extends Resource
                         return redirect(route('filament.admin.pages.create-rubric', ['test' => $record]));
                     })
                     ->visible(function (Test $record) {
-                        return !$record->filament_form_user_id;
+                        return ! $record->filament_form_user_id;
                     }),
                 Action::make('view_rubric')
                     ->color('success')
@@ -116,4 +112,4 @@ class TestResource extends Resource
             'edit' => Pages\EditTest::route('/{record}/edit'),
         ];
     }
-} 
+}

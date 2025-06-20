@@ -2,22 +2,22 @@
 
 namespace Tapp\FilamentLms\Livewire;
 
-use Livewire\Component;
-use Tapp\FilamentLms\Models\Test;
-use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
-use Filament\Infolists\Infolist;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Contracts\HasInfolists;
 use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
-use Tapp\FilamentLms\Livewire\GradedKeyValueEntry;
+use Filament\Infolists\Contracts\HasInfolists;
+use Filament\Infolists\Infolist;
+use Livewire\Component;
+use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
+use Tapp\FilamentLms\Models\Test;
 
-class ViewGradedEntry extends Component implements HasInfolists, HasForms
+class ViewGradedEntry extends Component implements HasForms, HasInfolists
 {
     use InteractsWithForms;
     use InteractsWithInfolists;
 
     public Test $test;
+
     public FilamentFormUser $entry;
 
     public function mount(Test $test, FilamentFormUser $entry)
@@ -47,4 +47,4 @@ class ViewGradedEntry extends Component implements HasInfolists, HasForms
                     }),
             ]);
     }
-} 
+}

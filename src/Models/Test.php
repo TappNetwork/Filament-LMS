@@ -43,7 +43,7 @@ class Test extends Model
 
         for ($i = 0; $i < count($entry->entry); $i++) {
             if ($entry->entry[$i]['type'] == 'Select Multiple') {
-                if (!self::gradeMultiSelectField($entry->entry[$i]['answer'], $this->rubric->entry[$i]['answer'])) {
+                if (! self::gradeMultiSelectField($entry->entry[$i]['answer'], $this->rubric->entry[$i]['answer'])) {
                     $missCount++;
                 }
 
@@ -68,7 +68,7 @@ class Test extends Model
         }
 
         foreach ($answer as $a) {
-            if (!in_array($a, $correctAnswers)) {
+            if (! in_array($a, $correctAnswers)) {
                 return false;
             }
         }
@@ -123,4 +123,4 @@ class Test extends Model
 
         return false;
     }
-} 
+}

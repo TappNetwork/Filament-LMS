@@ -2,9 +2,9 @@
 
 namespace Tapp\FilamentLms\Pages;
 
-use Tapp\FilamentLms\Models\Test;
 use Filament\Pages\Page;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
+use Tapp\FilamentLms\Models\Test;
 
 class CreateRubric extends Page
 {
@@ -38,4 +38,4 @@ class CreateRubric extends Page
 
         return redirect(route('filament.admin.pages.view-rubric', ['test' => $this->test->id]));
     }
-} 
+}

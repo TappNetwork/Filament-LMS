@@ -2,11 +2,10 @@
 
 namespace Tapp\FilamentLms\Pages;
 
-use Tapp\FilamentLms\Models\Test;
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
-use Filament\Notifications\Notification;
+use Livewire\Component;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
+use Tapp\FilamentLms\Models\Test;
 
 class CreateTestEntry extends Component
 {
@@ -24,9 +23,9 @@ class CreateTestEntry extends Component
 
     public function mount($test): void
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             redirect()->route('login', [
-                'redirect' => request()->fullUrl()
+                'redirect' => request()->fullUrl(),
             ]);
             exit;
         }
@@ -60,4 +59,4 @@ class CreateTestEntry extends Component
         $this->percentageCorrect = $this->test->gradeEntry($this->entry);
         $this->questionsCorrect = $this->test->form->filamentFormFields->count() * ($this->percentageCorrect / 100);
     }
-} 
+}

@@ -10,15 +10,15 @@ use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Tapp\FilamentLms\Components\GradedKeyValueEntry;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\LinkStep;
+use Tapp\FilamentLms\Livewire\TestStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
-use Tapp\FilamentLms\Livewire\VimeoVideo;
-use Tapp\FilamentLms\Livewire\TestStep;
 use Tapp\FilamentLms\Livewire\ViewGradedEntry;
-use Tapp\FilamentLms\Components\GradedKeyValueEntry;
+use Tapp\FilamentLms\Livewire\VimeoVideo;
 use Tapp\FilamentLms\Pages\CreateTestEntry;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider

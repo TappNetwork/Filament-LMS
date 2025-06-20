@@ -7,6 +7,7 @@ use Filament\Support\SupportServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Tapp\FilamentLms\FilamentLmsServiceProvider;
+use Tapp\FilamentFormBuilder\FilamentFormBuilderServiceProvider;
 
 abstract class TestCase extends Orchestra
 {
@@ -22,6 +23,7 @@ abstract class TestCase extends Orchestra
             FilamentServiceProvider::class,
             SupportServiceProvider::class,
             FilamentLmsServiceProvider::class,
+            FilamentFormBuilderServiceProvider::class,
         ];
     }
 

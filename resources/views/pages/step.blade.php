@@ -22,6 +22,8 @@
         <livewire:document-step :step="$step"/>
     @elseif ($step->material_type == 'link')
         <livewire:link-step :step="$step"/>
+    @elseif ($step->material_type == 'test')
+        <livewire:test-step :step="$step"/>
     @else
         unsupported material type: {{ $step->material_type }}
     @endif

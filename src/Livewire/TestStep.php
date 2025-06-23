@@ -3,9 +3,9 @@
 namespace Tapp\FilamentLms\Livewire;
 
 use Livewire\Component;
+use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Test;
-use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 
 class TestStep extends Component
 {
@@ -24,7 +24,7 @@ class TestStep extends Component
         $this->step = $step;
         $this->test = $step->material;
         $this->testCompleted = (bool) $step->completed_at;
-        
+
         // Check if user has already taken this test
         $this->entry = FilamentFormUser::where('filament_form_id', $this->test->form->id)
             ->where('user_id', auth()->user()->id)
@@ -42,4 +42,4 @@ class TestStep extends Component
         $this->testCompleted = true;
         $this->step->complete();
     }
-} 
+}

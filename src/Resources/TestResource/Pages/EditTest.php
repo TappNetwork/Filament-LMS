@@ -2,9 +2,9 @@
 
 namespace Tapp\FilamentLms\Resources\TestResource\Pages;
 
-use Tapp\FilamentLms\Resources\TestResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Tapp\FilamentLms\Resources\TestResource;
 
 class EditTest extends EditRecord
 {
@@ -16,4 +16,4 @@ class EditTest extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
-} 
+}

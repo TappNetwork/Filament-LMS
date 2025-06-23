@@ -2,9 +2,9 @@
 
 namespace Tapp\FilamentLms\Resources\TestResource\Pages;
 
-use Tapp\FilamentLms\Resources\TestResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Tapp\FilamentLms\Resources\TestResource;
 
 class ListTests extends ListRecords
 {
@@ -16,4 +16,4 @@ class ListTests extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
-} 
+}

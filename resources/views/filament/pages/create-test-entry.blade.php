@@ -1,3 +1,4 @@
+<div>
 @if($showResults)
     <x-filament::section>
         <h1 class="text-2xl">
@@ -19,3 +20,4 @@
 @else
     @livewire('tapp.filament-form-builder.livewire.filament-form.show', ['form' => $test->form, 'blockRedirect' => true])
 @endif 
+</div>

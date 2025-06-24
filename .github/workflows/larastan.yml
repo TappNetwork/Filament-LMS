@@ -23,6 +23,8 @@ jobs:
 
       - name: Install composer dependencies
         uses: ramsey/composer-install@v3
+        with:
+            dependency-versions: "lowest"
 
       - name: Run PHPStan
         run: ./vendor/bin/phpstan --error-format=github

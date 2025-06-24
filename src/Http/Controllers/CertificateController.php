@@ -2,15 +2,15 @@
 
 namespace Tapp\FilamentLms\Http\Controllers;
 
-use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Spatie\Browsershot\Browsershot;
 // TODO get from config
+use Spatie\Browsershot\Browsershot;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tapp\FilamentLms\Models\Course;
 
@@ -19,7 +19,18 @@ class CertificateController extends Controller
     public function show($courseId, $userId): View
     {
         $course = Course::findOrFail($courseId);
-        $user = User::findOrFail($userId);
+
+        $userModel = config('auth.providers.users.model');
+
+        if (! $userModel) {
+            throw new \InvalidArgumentException('User model not configured');
+        }
+
+        $user = $userModel::findOrFail($userId);
+
+        if (! $user instanceof Authenticatable) {
+            throw new \InvalidArgumentException('User model must implement Authenticatable contract');
+        }
 
         if (! request()->hasValidSignature() &&
             ! $course->completedByUserAt($userId) &&

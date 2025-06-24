@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Tapp\FilamentLms\Models\Link;
 
@@ -39,7 +40,7 @@ class GenerateLinkScreenshot implements ShouldQueue
 
             @unlink($tempPath);
         } catch (\Exception $e) {
-            \Log::error('Failed to generate screenshot for link: '.$this->link->url, [
+            Log::error('Failed to generate screenshot for link: '.$this->link->url, [
                 'error' => $e->getMessage(),
             ]);
         }

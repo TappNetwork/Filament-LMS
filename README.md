@@ -119,3 +119,54 @@ class AuthServiceProvider extends ServiceProvider
 
 #### Available Gates
 - `viewLmsReporting`: Controls access to the LMS reporting page. Users must pass this Gate check to view the reporting interface.
+
+## Course Authorization
+
+### Restricting Course Visibility
+
+To restrict users to only see courses they are assigned to, set the following in your `config/filament-lms.php`:
+
+```php
+'restrict_course_visibility' => true,
+```
+
+When enabled, users will only see courses assigned to them via the `lms_course_user` pivot table.
+
+### User-Course Management in Filament
+
+This package provides a reusable `CoursesRelationManager` and `AssignCoursesBulkAction` for managing user-course assignments. To enable course assignment in your User resource:
+
+1. **Import the Relation Manager and Bulk Action:**
+
+```php
+use Tapp\FilamentLms\RelationManagers\CoursesRelationManager;
+use Tapp\FilamentLms\Actions\AssignCoursesBulkAction;
+```
+
+2. **Register the CoursesRelationManager:**
+
+```php
+// In your UserResource.php
+public static function getRelations(): array
+{
+    return [
+        CoursesRelationManager::class,
+        // ... other relation managers ...
+    ];
+}
+```
+
+3. **Add the AssignCoursesBulkAction to your bulk actions:**
+
+```php
+// In your UserResource.php
+public static function table(Table $table): Table
+{
+    return $table
+        // ...
+        ->bulkActions([
+            AssignCoursesBulkAction::make(),
+            // ... other bulk actions ...
+        ]);
+}
+```

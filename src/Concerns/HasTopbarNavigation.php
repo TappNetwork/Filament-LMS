@@ -2,7 +2,6 @@
 
 namespace Tapp\FilamentLms\Concerns;
 
-use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
 use Illuminate\Support\Arr;
@@ -37,7 +36,7 @@ trait HasTopbarNavigation
                 }
 
                 $registeredGroup = $groups
-                    ->first(function (NavigationGroup | string $registeredGroup, string | int $registeredGroupIndex) use ($groupIndex) {
+                    ->first(function (NavigationGroup|string $registeredGroup, string|int $registeredGroupIndex) use ($groupIndex) {
                         if ($registeredGroupIndex === $groupIndex) {
                             return true;
                         }

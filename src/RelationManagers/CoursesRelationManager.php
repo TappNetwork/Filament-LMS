@@ -3,9 +3,9 @@
 namespace Tapp\FilamentLms\RelationManagers;
 
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Table;
 use Filament\Tables\Actions\AttachAction;
 use Filament\Tables\Actions\DetachAction;
+use Filament\Tables\Table;
 
 class CoursesRelationManager extends RelationManager
 {
@@ -23,8 +23,10 @@ class CoursesRelationManager extends RelationManager
                         $user = $this->getOwnerRecord();
                         if ($user && method_exists($user, 'getCourseProgress')) {
                             $progress = $user->getCourseProgress($record);
-                            return number_format($progress, 0) . '%';
+
+                            return number_format($progress, 0).'%';
                         }
+
                         return 'N/A';
                     }),
             ])
@@ -35,4 +37,4 @@ class CoursesRelationManager extends RelationManager
                 DetachAction::make()->label('Remove'),
             ]);
     }
-} 
+}

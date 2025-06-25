@@ -1,5 +1,5 @@
   <div class="flex overflow-hidden relative flex-col bg-white rounded-lg border border-gray-200 group">
-    <img src="{{ $course->image_url }}" class="aspect-[3/4] w-full bg-gray-200 object-cover group-hover:opacity-75 sm:aspect-auto">
+    <img src="{{ $course->image_url }}" class="object-cover w-full bg-gray-200 group-hover:opacity-75 sm:aspect-auto">
     <div class="flex flex-col flex-1 p-4 space-y-2">
       <h3 class="text-sm font-medium text-gray-900">
         <a href="{{ $course->linkToCurrentStep() }}">

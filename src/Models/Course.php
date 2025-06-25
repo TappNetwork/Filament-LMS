@@ -96,7 +96,7 @@ class Course extends Model implements HasMedia
     public function currentStep(?Authenticatable $user = null): ?Step
     {
         $user = $user ?: Auth::user();
-        if (!$user) {
+        if (! $user) {
             return null;
         }
         $allSteps = $this->steps;

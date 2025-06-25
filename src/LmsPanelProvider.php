@@ -22,27 +22,36 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Illuminate\View\View;
+use Tapp\FilamentLms\Concerns\HasTopbarNavigation;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step;
+use Illuminate\Contracts\View\View;
 
 class LmsPanelProvider extends PanelProvider
 {
+    use HasTopbarNavigation;
+
     public function panel(Panel $panel): Panel
     {
-        FilamentView::registerRenderHook(
-            PanelsRenderHook::USER_MENU_BEFORE,
-            function () {
-                if (Filament::getCurrentPanel()->getId() == 'lms') {
-                    return view('filament-lms::components.exit-lms');
+        if (config('filament-lms.show_exit_lms_link')) {
+            FilamentView::registerRenderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                function () {
+                    if (Filament::getCurrentPanel()->getId() == 'lms') {
+                        return view('filament-lms::components.exit-lms');
+                    }
                 }
-            }
-        );
+            );
+        }
 
         if (config('filament-lms.vite_theme')) {
             $panel->viteTheme(config('filament-lms.vite_theme'));
+        }
+
+        if (config('filament-lms.top_navigation')) {
+            $panel->topNavigation();
         }
 
         if (config('filament-lms.brand_logo')) {
@@ -101,7 +110,30 @@ class LmsPanelProvider extends PanelProvider
 
     public function navigationItems(NavigationBuilder $builder): NavigationBuilder
     {
+        $extraNavigationItems = config('filament-lms.extra_navigation_items');
+
         if (Route::current()->parameter('courseSlug')) {
+            filament()->getCurrentPanel()->topNavigation(false);
+
+            FilamentView::registerRenderHook(
+                PanelsRenderHook::TOPBAR_START,
+                function () use ($extraNavigationItems): View {
+                    $topNavigation = [
+                        ...$extraNavigationItems,
+                        NavigationItem::make('Courses')
+                            ->icon('heroicon-o-academic-cap')
+                            ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
+                            ->url(fn (): string => Dashboard::getUrl()),
+                    ];
+
+                    $groups = collect();
+
+                    $navigation = $this->buildTopbarNavigation($topNavigation, $groups);
+
+                    return view('filament-lms::components.topbar-navigation', ['navigation' => $navigation]);
+                },
+            );
+
             $course = Course::where('slug', Route::current()->parameter('courseSlug'))->firstOrFail();
 
             $navigationGroups = $course->lessons->map(function ($lesson) {
@@ -132,9 +164,7 @@ class LmsPanelProvider extends PanelProvider
         }
 
         return $builder->items([
-            NavigationItem::make('Home')
-                ->icon('heroicon-o-home')
-                ->url(fn (): string => '/'),
+            ...$extraNavigationItems,
             NavigationItem::make('Courses')
                 ->icon('heroicon-o-academic-cap')
                 ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))

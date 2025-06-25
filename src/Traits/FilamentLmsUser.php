@@ -42,7 +42,15 @@ trait FilamentLmsUser
      */
     public function getCourseProgress(Course $course): float
     {
-        return $course->completion_percentage;
+        $totalSteps = $course->steps()->count();
+        if ($totalSteps === 0) {
+            return 0;
+        }
+        $completedSteps = $this->completedSteps()
+            ->whereIn('lms_steps.lesson_id', $course->lessons->pluck('id'))
+            ->count();
+
+        return ($completedSteps / $totalSteps) * 100;
     }
 
     /**

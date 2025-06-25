@@ -12,7 +12,7 @@ class CreateRubric extends Page
 
     protected static string $view = 'filament-lms::filament.pages.create-rubric';
 
-    public Test $test;
+    public $test;
 
     protected $listeners = ['entrySaved'];
 

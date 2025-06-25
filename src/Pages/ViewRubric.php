@@ -11,7 +11,7 @@ class ViewRubric extends Page
 
     protected static string $view = 'filament-lms::filament.pages.view-rubric';
 
-    public Test $test;
+    public $test;
 
     public static function shouldRegisterNavigation(): bool
     {

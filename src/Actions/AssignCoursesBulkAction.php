@@ -2,8 +2,8 @@
 
 namespace Tapp\FilamentLms\Actions;
 
-use Filament\Tables\Actions\BulkAction;
 use Filament\Forms;
+use Filament\Tables\Actions\BulkAction;
 
 class AssignCoursesBulkAction
 {
@@ -27,4 +27,4 @@ class AssignCoursesBulkAction
                     ->required(),
             ]);
     }
-} 
+}

@@ -2,7 +2,8 @@
 An opinionated LMS plugin for Filament containing a user facing LMS panel and Resources for an existing admin panel
 
 ## Installation
-### add the following to composer.json
+
+### Add the following to composer.json
 
 ``` json
 "require": {
@@ -27,7 +28,7 @@ An opinionated LMS plugin for Filament containing a user facing LMS panel and Re
 },
 ```
 
-### publish
+### Publish
 
 ``` sh
 php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider"
@@ -35,7 +36,8 @@ php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvid
 
 run migrations after publishing
 
-### add plugin to admin panel
+### Add plugin to admin panel
+
 This will create resources that allow admin to manage course material.
 
 ``` php
@@ -51,14 +53,14 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
-
-
 # Development Reccomendations
+
 - create the directory {project}/packages
 - from within the packages directory, clone this repo
 - (if necessary) add a type:path repository to project composer.json
 
 # LMS Features
+
 ## Frontend LMS Panel
 contains the LMS experience for the end user
 ### Course Library
@@ -98,7 +100,67 @@ contains the LMS experience for the end user
 - Text (Wysiwyg?)
 - Image
 
+## Configurations
+
+This is the contents of the published config file:
+
+```php
+<?php
+
+use Filament\Navigation\NavigationItem;
+
+return [
+    'theme' => 'default',
+    'font' => 'Poppins',
+    'home_url' => '/lms',
+    'brand_name' => 'LMS',
+    'brand_logo' => '',
+    'brand_logo_height' => null,
+    'vite_theme' => '',
+    'colors' => [],
+    'awards' => [
+        'Default' => 'default',
+    ],
+    'top_navigation' => false,
+    'show_exit_lms_link' => true,
+    'extra_navigation_items' => [
+        NavigationItem::make('Home')
+            ->icon('heroicon-o-home')
+            ->url(fn (): string => '/'),
+    ],
+];
+
+```
+
+### top_navigation
+
+Set it to `true` to use top navigation instead of left sidebar on courses page.
+
+### show_exit_lms_link
+
+Use to display or not the `Exit LMS` link on top bar.
+
+### extra_navigation_items
+
+By default the `Home` extra navigation item is added:
+
+```php
+    'extra_navigation_items' => [
+        NavigationItem::make('Home')
+            ->icon('heroicon-o-home')
+            ->url(fn (): string => '/'),
+    ],
+```
+
+More navigation items can be added using this config if needed.
+If you don't want to display extra menu items, set this config as an empty array:
+
+```php
+'extra_navigation_items' => [],
+```
+
 ## Authorization
+
 ### Gates
 The LMS package uses Laravel Gates for authorization. You'll need to define the following Gates in your application's `AuthServiceProvider`:
 

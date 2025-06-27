@@ -17,7 +17,7 @@
         "maatwebsite/excel": "^3.1",
         "spatie/browsershot": "^5.0",
         "spatie/eloquent-sortable": "^4.4.0",
-        "tapp/filament-form-builder": "*"
+        "tapp/filament-form-builder": "dev-repeater"
     },
     "require-dev": {
         "larastan/larastan": "^2.9||^3.0",

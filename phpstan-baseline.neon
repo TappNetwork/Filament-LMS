@@ -37,16 +37,22 @@ parameters:
 			path: src/Http/Controllers/CertificateController.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:hasRole\(\)\.$#'
-			identifier: method.notFound
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Link\:\:\$url\.$#'
+			identifier: property.notFound
 			count: 2
-			path: src/Http/Controllers/CertificateController.php
+			path: src/Jobs/GenerateLinkScreenshot.php
 
 		-
-			message: '#^Call to static method find\(\) on an unknown class App\\Models\\User\.$#'
-			identifier: class.notFound
+			message: '#^Property Tapp\\FilamentLms\\Livewire\\GradedKeyValueEntry\:\:\$view \(view\-string\) does not accept default value of type string\.$#'
+			identifier: property.defaultValue
 			count: 1
-			path: src/Http/Controllers/CertificateController.php
+			path: src/Livewire/GradedKeyValueEntry.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Livewire/TestStep.php
 
 		-
 			message: '#^Method Tapp\\FilamentLms\\Lms\:\:get\(\) should return static\(Tapp\\FilamentLms\\Lms\) but returns Filament\\Contracts\\Plugin\|Filament\\FilamentManager\.$#'
@@ -79,21 +85,9 @@ parameters:
 			path: src/LmsPanelProvider.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Models/Course.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 1
-			path: src/Models/Course.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
+			count: 2
 			path: src/Models/Course.php
 
 		-
@@ -109,20 +103,20 @@ parameters:
 			path: src/Models/Course.php
 
 		-
-			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Step\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Models/Course.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:steps\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: src/Models/Course.php
 
 		-
-			message: '#^Method Tapp\\FilamentLms\\Models\\Course\:\:currentStep\(\) should return Tapp\\FilamentLms\\Models\\Step\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasManyThrough\:\:ordered\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Models/Course.php
+
+		-
+			message: '#^Undefined variable\: \$allSteps$#'
+			identifier: variable.undefined
 			count: 1
 			path: src/Models/Course.php
 
@@ -147,13 +141,13 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
 			identifier: property.notFound
-			count: 7
+			count: 8
 			path: src/Models/Step.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$order\.$#'
 			identifier: property.notFound
-			count: 1
+			count: 3
 			path: src/Models/Step.php
 
 		-
@@ -199,10 +193,46 @@ parameters:
 			path: src/Models/Step.php
 
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$entry\.$#'
+			identifier: property.notFound
+			count: 7
+			path: src/Models/Test.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$filament_form_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Models/Test.php
+
+		-
+			message: '#^Access to an undefined property Tapp\\FilamentFormBuilder\\Models\\FilamentFormUser\:\:\$filament_form_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Models/Test.php
+
+		-
 			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Video\:\:\$url\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Models/Video.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$filamentFormFields\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Pages/CreateTestEntry.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Pages/CreateTestEntry.php
+
+		-
+			message: '#^Property Tapp\\FilamentLms\\Pages\\CreateTestEntry\:\:\$questionsCorrect \(int\) does not accept float\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Pages/CreateTestEntry.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
@@ -239,3 +269,15 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: src/Pages/Step.php
+
+		-
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Test\:\:\$filament_form_user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Resources/TestResource.php
+
+		-
+			message: '#^Cannot access property \$filament_form_user_id on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Resources/TestResource/Pages/EditTest.php

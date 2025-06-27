@@ -10,6 +10,18 @@
             <p class="mb-8">
                 In order to complete this step, please review the following web page:
             </p>
+
+            @if($link->getFirstMediaUrl('preview'))
+                <div class="mb-8 flex-1">
+                    <img 
+                        src="{{ $link->getFirstMediaUrl('preview') }}" 
+                        class="w-full rounded-lg border border-gray-300"
+                        style="min-height: 50vh; object-fit: contain;"
+                        alt="Preview of {{ $link->name }}"
+                    >
+                </div>
+            @endif
+
             <x-filament::button
                 wire:click="visit"
                 href="{{$link->url}}"
@@ -17,7 +29,7 @@
                 target="_blank"
                 tag="a"
                 >
-                Visit {{$link->name}}
+                Visit
             </x-filament::button>
     </x-filament::section>
 

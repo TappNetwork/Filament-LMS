@@ -10,14 +10,18 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Resources\StepResource\Pages;
 
 class StepResource extends Resource
 {
+    use HasLmsSlug;
+
     protected static ?string $model = Step::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-check-circle';
@@ -49,6 +53,8 @@ class StepResource extends Resource
                         Forms\Components\MorphToSelect\Type::make(Link::class)
                             ->titleAttribute('name'),
                         Forms\Components\MorphToSelect\Type::make(FilamentForm::class)
+                            ->titleAttribute('name'),
+                        Forms\Components\MorphToSelect\Type::make(Test::class)
                             ->titleAttribute('name'),
                     ])
                     ->searchable()

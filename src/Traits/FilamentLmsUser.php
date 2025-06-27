@@ -11,13 +11,11 @@ use Tapp\FilamentLms\Models\Step;
 trait FilamentLmsUser
 {
     /**
-     * Get all courses the user is enrolled in.
+     * Get all courses the user is assigned to (via lms_course_user).
      */
     public function courses(): BelongsToMany
     {
-        return $this->belongsToMany(Course::class, 'lms_step_user', 'user_id', 'step_id')
-            ->withPivot('completed_at')
-            ->withTimestamps();
+        return $this->belongsToMany(Course::class, 'lms_course_user', 'user_id', 'course_id')->withTimestamps();
     }
 
     /**
@@ -44,7 +42,15 @@ trait FilamentLmsUser
      */
     public function getCourseProgress(Course $course): float
     {
-        return $course->completion_percentage;
+        $totalSteps = $course->steps()->count();
+        if ($totalSteps === 0) {
+            return 0;
+        }
+        $completedSteps = $this->completedSteps()
+            ->whereIn('lms_steps.lesson_id', $course->lessons->pluck('id'))
+            ->count();
+
+        return ($completedSteps / $totalSteps) * 100;
     }
 
     /**

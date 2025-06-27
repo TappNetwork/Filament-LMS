@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
@@ -43,6 +44,12 @@ class Course extends Model implements HasMedia
     public function scopeVisible(Builder $query): void
     {
         $query->whereHas('steps')->where('hidden', false);
+
+        if (config('filament-lms.restrict_course_visibility') && Auth::check()) {
+            $query->whereHas('users', function ($q) {
+                $q->where('user_id', Auth::id());
+            });
+        }
     }
 
     protected static function newFactory()
@@ -88,17 +95,21 @@ class Course extends Model implements HasMedia
 
     public function currentStep(?Authenticatable $user = null): ?Step
     {
-        $user = $user ?: auth()->user();
+        $user = $user ?: Auth::user();
+        if (! $user) {
+            return null;
+        }
+        $allSteps = $this->steps;
 
         // Get all completed steps for this user
-        $completedStepIds = StepUser::whereIn('step_id', $this->steps->pluck('id'))
+        $completedStepIds = StepUser::whereIn('step_id', $allSteps->pluck('id'))
             ->where('user_id', $user->id)
             ->whereNotNull('completed_at')
             ->pluck('step_id')
             ->toArray();
 
         // Find the first step that hasn't been completed
-        $firstIncompleteStep = $this->steps->first(function ($step) use ($completedStepIds) {
+        $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
             return ! in_array($step->id, $completedStepIds);
         });
 
@@ -135,7 +146,7 @@ class Course extends Model implements HasMedia
 
     public function getCompletedAtAttribute()
     {
-        if (! auth()->check()) {
+        if (! Auth::check()) {
             return null;
         }
 
@@ -189,5 +200,11 @@ class Course extends Model implements HasMedia
         $mediaPath = $this->getFirstMediaUrl('courses');
 
         return $mediaPath ?: 'https://picsum.photos/200';
+    }
+
+    // Add the users() relationship for the pivot table
+    public function users()
+    {
+        return $this->belongsToMany(\Illuminate\Foundation\Auth\User::class, 'lms_course_user', 'course_id', 'user_id')->withTimestamps();
     }
 }

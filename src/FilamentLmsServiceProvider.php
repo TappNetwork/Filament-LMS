@@ -41,6 +41,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'add_text_to_lms_steps_table',
                 'create_lms_resources_table',
                 'create_lms_tests_table',
+                'create_lms_course_user_table',
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command

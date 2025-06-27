@@ -21,4 +21,6 @@ return [
             ->icon('heroicon-o-home')
             ->url(fn (): string => '/'),
     ],
+    // If true, users only see courses they are assigned to via lms_course_user. If false, all courses are visible.
+    'restrict_course_visibility' => false,
 ];

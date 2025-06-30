@@ -13,12 +13,20 @@
             </p>
 
             <div class="mb-8 flex-1">
-                <iframe 
-                    src="{{ $this->getPdfUrl() }}" 
-                    class="w-full rounded-lg border border-gray-300"
-                    style="min-height: 50vh;"
-                    title="PDF Preview"
-                ></iframe>
+                @if($this->getPreviewImage())
+                    <img 
+                        src="{{ $this->getPreviewImage() }}" 
+                        alt="Document Preview Image" 
+                        class="rounded-lg border border-gray-300"
+                    />
+                @else
+                    <iframe 
+                        src="{{ $this->getPdfUrl() }}" 
+                        class="w-full rounded-lg border border-gray-300"
+                        style="min-height: 48vh;"
+                        title="PDF Preview"
+                    ></iframe>
+                @endif
             </div>
 
             <x-filament::button wire:click="download">

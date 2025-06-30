@@ -17,7 +17,8 @@
                     <img 
                         src="{{ $this->getPreviewImage() }}" 
                         alt="Document Preview Image" 
-                        class="rounded-lg border border-gray-300"
+                        class="rounded-lg border border-gray-300 cursor-pointer"
+                        wire:click="download"
                     />
                 @else
                     <iframe 

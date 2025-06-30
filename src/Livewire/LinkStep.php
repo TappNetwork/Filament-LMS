@@ -30,4 +30,12 @@ class LinkStep extends Component
     {
         $this->visited = true;
     }
+
+    /**
+     * Returns the preview image URL if it exists, otherwise null.
+     */
+    public function getPreviewImage()
+    {
+        return $this->link->getFirstMediaUrl('preview') ?: null;
+    }
 }

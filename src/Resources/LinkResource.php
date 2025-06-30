@@ -34,13 +34,12 @@ class LinkResource extends Resource
                     ->required(),
                 \Filament\Forms\Components\SpatieMediaLibraryFileUpload::make('preview')
                     ->collection('preview')
-                    ->image()
-                    ->disabled()
-                    ->visible(fn ($livewire) => $livewire->record && $livewire->record->exists),
+                    ->helperText('If not provided, the preview will be generated from the URL.')
+                    ->image(),
                 Forms\Components\Actions::make([
                     Forms\Components\Actions\Action::make('regeneratePreview')
                         ->icon('heroicon-o-arrow-path')
-                        ->label('Regenerate Preview')
+                        ->label('Regenerate Preview from Url')
                         ->visible(fn ($livewire) => $livewire->record && $livewire->record->exists)
                         ->action(function (Link $record) {
                             $record->clearMediaCollection('preview');
@@ -54,11 +53,6 @@ class LinkResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('preview')
-                    ->getStateUsing(fn ($record) => $record->getFirstMediaUrl('preview'))
-                    ->label('Preview')
-                    ->square()
-                    ->height(50),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),

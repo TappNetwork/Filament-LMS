@@ -11,14 +11,15 @@
                 In order to complete this step, please review the following web page:
             </p>
 
-            @if($link->getFirstMediaUrl('preview'))
+            @if($this->getPreviewImage())
                 <div class="mb-8 flex-1">
-                    <img 
-                        src="{{ $link->getFirstMediaUrl('preview') }}" 
-                        class="w-full rounded-lg border border-gray-300"
-                        style="min-height: 50vh; object-fit: contain;"
-                        alt="Preview of {{ $link->name }}"
-                    >
+                    <a href="{{ $link->url }}" target="_blank" rel="noopener noreferrer" wire:click="visit">
+                        <img 
+                            src="{{ $this->getPreviewImage() }}" 
+                            class="rounded-lg border border-gray-300 cursor-pointer"
+                            alt="Preview of {{ $link->name }}"
+                        >
+                    </a>
                 </div>
             @endif
 

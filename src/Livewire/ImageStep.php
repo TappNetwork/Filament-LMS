@@ -9,6 +9,7 @@ use Tapp\FilamentLms\Models\Step;
 class ImageStep extends Component
 {
     public Image $image;
+
     public Step $step;
 
     public function mount($step)
@@ -26,4 +27,4 @@ class ImageStep extends Component
     {
         return $this->image->getFirstMediaUrl('image') ?: null;
     }
-} 
+}

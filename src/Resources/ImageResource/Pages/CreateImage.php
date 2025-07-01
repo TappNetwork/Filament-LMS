@@ -8,4 +8,4 @@ use Tapp\FilamentLms\Resources\ImageResource;
 class CreateImage extends CreateRecord
 {
     protected static string $resource = ImageResource::class;
-} 
+}

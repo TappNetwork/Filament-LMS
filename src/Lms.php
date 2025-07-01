@@ -10,12 +10,12 @@ use Tapp\FilamentLms\Pages\Reporting;
 use Tapp\FilamentLms\Pages\ViewRubric;
 use Tapp\FilamentLms\Resources\CourseResource;
 use Tapp\FilamentLms\Resources\DocumentResource;
+use Tapp\FilamentLms\Resources\ImageResource;
 use Tapp\FilamentLms\Resources\LessonResource;
 use Tapp\FilamentLms\Resources\LinkResource;
 use Tapp\FilamentLms\Resources\StepResource;
 use Tapp\FilamentLms\Resources\TestResource;
 use Tapp\FilamentLms\Resources\VideoResource;
-use Tapp\FilamentLms\Resources\ImageResource;
 
 class Lms implements Plugin
 {

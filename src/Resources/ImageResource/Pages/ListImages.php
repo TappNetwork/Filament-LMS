@@ -16,4 +16,4 @@ class ListImages extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
-} 
+}

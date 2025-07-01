@@ -15,4 +15,4 @@ class Image extends Model implements HasMedia
     protected $guarded = [];
 
     protected $table = 'lms_images';
-} 
+}

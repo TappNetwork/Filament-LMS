@@ -10,9 +10,9 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Image;
 use Tapp\FilamentLms\Resources\ImageResource\Pages;
-use Tapp\FilamentLms\Concerns\HasLmsSlug;
 
 class ImageResource extends Resource
 {
@@ -89,4 +89,4 @@ class ImageResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
-} 
+}

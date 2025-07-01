@@ -18,4 +18,4 @@ class EditImage extends EditRecord
             Actions\RestoreAction::make(),
         ];
     }
-} 
+}

@@ -55,6 +55,7 @@ class Document extends Model implements HasMedia
             // If you have a conversion (e.g., 'thumb'), you can use it here
             return $mainMedia->getUrl();
         }
+
         return null;
     }
 }

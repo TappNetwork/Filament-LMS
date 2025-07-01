@@ -32,7 +32,7 @@ class Link extends Model implements HasMedia
     protected static function booted()
     {
         static::saved(function ($link) {
-            if (($link->wasChanged('url') || ! $link->getFirstMedia('preview')) && !$link->getFirstMedia('preview')) {
+            if (($link->wasChanged('url') || ! $link->getFirstMedia('preview')) && ! $link->getFirstMedia('preview')) {
                 GenerateLinkScreenshot::dispatch($link);
             }
         });

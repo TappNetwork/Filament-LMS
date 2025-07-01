@@ -43,6 +43,7 @@ class DocumentStep extends Component
             return $previewUrl;
         }
         $mediaItem = $this->document->getFirstMedia();
+
         return $mediaItem ? $mediaItem->getUrl() : null;
     }
 

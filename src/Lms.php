@@ -15,6 +15,7 @@ use Tapp\FilamentLms\Resources\LinkResource;
 use Tapp\FilamentLms\Resources\StepResource;
 use Tapp\FilamentLms\Resources\TestResource;
 use Tapp\FilamentLms\Resources\VideoResource;
+use Tapp\FilamentLms\Resources\ImageResource;
 
 class Lms implements Plugin
 {
@@ -33,6 +34,7 @@ class Lms implements Plugin
             DocumentResource::class,
             LinkResource::class,
             TestResource::class,
+            ImageResource::class,
         ]);
 
         $panel->pages([

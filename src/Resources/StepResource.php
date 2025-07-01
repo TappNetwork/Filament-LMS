@@ -56,6 +56,8 @@ class StepResource extends Resource
                             ->titleAttribute('name'),
                         Forms\Components\MorphToSelect\Type::make(Test::class)
                             ->titleAttribute('name'),
+                        Forms\Components\MorphToSelect\Type::make(\Tapp\FilamentLms\Models\Image::class)
+                            ->titleAttribute('name'),
                     ])
                     ->searchable()
                     ->required(),

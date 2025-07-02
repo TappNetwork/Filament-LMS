@@ -232,3 +232,33 @@ public static function table(Table $table): Table
         ]);
 }
 ```
+
+## Overriding Course Visibility
+
+If you need custom logic to determine whether a course is visible to a user, you can override the `isCourseVisibleForUser` method provided by the `FilamentLmsUser` trait in your User model. This method is used to filter which courses are shown to the user when course visibility restrictions are enabled.
+
+If you want to call the trait's original method within your override, you can alias it when importing the trait:
+
+```php
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
+
+class User extends Authenticatable
+{
+    use FilamentLmsUser {
+        FilamentLmsUser::isCourseVisibleForUser as filamentLmsIsCourseVisibleForUser;
+    }
+
+    // ...
+
+    public function isCourseVisibleForUser($course): bool
+    {
+        if ($this->hasAnyRole('admin', 'super_admin')) {
+            return true;
+        }
+        // Call the trait's original method
+        return $this->filamentLmsIsCourseVisibleForUser($course);
+    }
+}
+```
+
+This allows you to implement any business rules you need for course visibility, while still leveraging the default logic from the trait if desired.

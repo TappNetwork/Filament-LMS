@@ -44,12 +44,6 @@ class Course extends Model implements HasMedia
     public function scopeVisible(Builder $query): void
     {
         $query->whereHas('steps')->where('hidden', false);
-
-        if (config('filament-lms.restrict_course_visibility') && Auth::check()) {
-            $query->whereHas('users', function ($q) {
-                $q->where('user_id', Auth::id());
-            });
-        }
     }
 
     protected static function newFactory()

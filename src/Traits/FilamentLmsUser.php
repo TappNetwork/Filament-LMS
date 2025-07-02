@@ -95,4 +95,12 @@ trait FilamentLmsUser
             get: fn (mixed $value, array $attributes) => json_encode($this->lmsCourseProgress())
         );
     }
+
+    /**
+     * Determine if a course is visible for the user.
+     */
+    public function isCourseVisibleForUser($course): bool
+    {
+        return $course->users->contains('id', $this->id);
+    }
 }

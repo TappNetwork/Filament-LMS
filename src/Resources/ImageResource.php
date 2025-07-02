@@ -3,6 +3,7 @@
 namespace Tapp\FilamentLms\Resources;
 
 use Filament\Forms;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -10,16 +11,16 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
-use Tapp\FilamentLms\Models\Link;
-use Tapp\FilamentLms\Resources\LinkResource\Pages;
+use Tapp\FilamentLms\Models\Image;
+use Tapp\FilamentLms\Resources\ImageResource\Pages;
 
-class LinkResource extends Resource
+class ImageResource extends Resource
 {
     use HasLmsSlug;
 
-    protected static ?string $model = Link::class;
+    protected static ?string $model = Image::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-paper-clip';
+    protected static ?string $navigationIcon = 'heroicon-o-photo';
 
     protected static ?string $navigationGroup = 'LMS';
 
@@ -29,23 +30,10 @@ class LinkResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required(),
-                Forms\Components\TextInput::make('url')
-                    ->activeUrl()
+                SpatieMediaLibraryFileUpload::make('image')
+                    ->collection('image')
+                    ->image()
                     ->required(),
-                \Filament\Forms\Components\SpatieMediaLibraryFileUpload::make('preview')
-                    ->collection('preview')
-                    ->helperText('If not provided, the preview will be generated from the URL.')
-                    ->image(),
-                Forms\Components\Actions::make([
-                    Forms\Components\Actions\Action::make('regeneratePreview')
-                        ->icon('heroicon-o-arrow-path')
-                        ->label('Regenerate Preview from Url')
-                        ->visible(fn ($livewire) => $livewire->record && $livewire->record->exists)
-                        ->action(function (Link $record) {
-                            $record->clearMediaCollection('preview');
-                            \Tapp\FilamentLms\Jobs\GenerateLinkScreenshot::dispatch($record);
-                        }),
-                ]),
             ]);
     }
 
@@ -54,9 +42,6 @@ class LinkResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('url')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -91,9 +76,9 @@ class LinkResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListLinks::route('/'),
-            'create' => Pages\CreateLink::route('/create'),
-            'edit' => Pages\EditLink::route('/{record}/edit'),
+            'index' => Pages\ListImages::route('/'),
+            'create' => Pages\CreateImage::route('/create'),
+            'edit' => Pages\EditImage::route('/{record}/edit'),
         ];
     }
 

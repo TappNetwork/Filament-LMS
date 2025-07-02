@@ -10,6 +10,7 @@ use Tapp\FilamentLms\Pages\Reporting;
 use Tapp\FilamentLms\Pages\ViewRubric;
 use Tapp\FilamentLms\Resources\CourseResource;
 use Tapp\FilamentLms\Resources\DocumentResource;
+use Tapp\FilamentLms\Resources\ImageResource;
 use Tapp\FilamentLms\Resources\LessonResource;
 use Tapp\FilamentLms\Resources\LinkResource;
 use Tapp\FilamentLms\Resources\StepResource;
@@ -33,6 +34,7 @@ class Lms implements Plugin
             DocumentResource::class,
             LinkResource::class,
             TestResource::class,
+            ImageResource::class,
         ]);
 
         $panel->pages([

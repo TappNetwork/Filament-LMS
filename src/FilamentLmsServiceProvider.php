@@ -42,6 +42,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'create_lms_resources_table',
                 'create_lms_tests_table',
                 'create_lms_course_user_table',
+                'create_lms_images_table',
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
@@ -66,6 +67,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('create-test-entry', CreateTestEntry::class);
         Livewire::component('view-graded-entry', ViewGradedEntry::class);
         Livewire::component('graded-key-value-entry', GradedKeyValueEntry::class);
+        Livewire::component('image-step', \Tapp\FilamentLms\Livewire\ImageStep::class);
 
         FilamentAsset::register([
             Css::make('filament-lms', __DIR__.'/../dist/filament-lms.css'),
@@ -78,6 +80,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             'link' => 'Tapp\FilamentLms\Models\Link',
             'form' => 'Tapp\FilamentFormBuilder\Models\FilamentForm',
             'test' => 'Tapp\FilamentLms\Models\Test',
+            'image' => 'Tapp\FilamentLms\Models\Image',
         ]);
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');

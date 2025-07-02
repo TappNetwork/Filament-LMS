@@ -32,6 +32,12 @@ class DocumentResource extends Resource
                     ->required(),
                 SpatieMediaLibraryFileUpload::make('file')
                     ->required(),
+                SpatieMediaLibraryFileUpload::make('preview')
+                    ->collection('preview')
+                    ->label('Custom Preview Image (optional)')
+                    ->image()
+                    ->maxFiles(1)
+                    ->helperText('If set, this image will be used as the document preview.'),
             ]);
     }
 

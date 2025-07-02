@@ -2,8 +2,8 @@
 
 namespace Tapp\FilamentLms\Pages;
 
-use Tapp\FilamentLms\Models\Course;
 use Illuminate\Support\Facades\Auth;
+use Tapp\FilamentLms\Models\Course;
 
 class Dashboard extends \Filament\Pages\Dashboard
 {

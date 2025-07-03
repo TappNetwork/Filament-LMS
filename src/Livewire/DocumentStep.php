@@ -34,4 +34,24 @@ class DocumentStep extends Component
 
         return response()->download($mediaItem->getPath(), $mediaItem->file_name);
     }
+
+    public function getPdfUrl()
+    {
+        // Use the custom preview image if available, otherwise fallback to the original PDF URL
+        $previewUrl = $this->document->getPreviewImageUrl();
+        if ($previewUrl) {
+            return $previewUrl;
+        }
+        $mediaItem = $this->document->getFirstMedia();
+
+        return $mediaItem ? $mediaItem->getUrl() : null;
+    }
+
+    /**
+     * Returns the preview image URL if it exists, otherwise null.
+     */
+    public function getPreviewImage()
+    {
+        return $this->document->getFirstMediaUrl('preview') ?: null;
+    }
 }

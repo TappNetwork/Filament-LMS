@@ -8,11 +8,14 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Resources\VideoResource\Pages;
 
 class VideoResource extends Resource
 {
+    use HasLmsSlug;
+
     protected static ?string $model = Video::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-film';

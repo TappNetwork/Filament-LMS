@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Pages;
 
+use Illuminate\Support\Facades\Auth;
 use Tapp\FilamentLms\Models\Course;
 
 class Dashboard extends \Filament\Pages\Dashboard
@@ -18,6 +19,16 @@ class Dashboard extends \Filament\Pages\Dashboard
 
     public function mount()
     {
-        $this->courses = Course::visible()->get();
+        $courses = Course::visible()->get();
+        if (config('filament-lms.restrict_course_visibility') && Auth::check()) {
+            $user = Auth::user();
+            if (method_exists($user, 'isCourseVisibleForUser')) {
+                // @phpstan-ignore-next-line
+                $courses = $courses->filter(function ($course) use ($user) {
+                    return $user->isCourseVisibleForUser($course);
+                })->values();
+            }
+        }
+        $this->courses = $courses;
     }
 }

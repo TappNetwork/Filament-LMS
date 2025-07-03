@@ -72,6 +72,8 @@ class Step extends Model implements Sortable
             ]);
 
             StepCompleted::dispatch($user, $this);
+        } else {
+            // step is already completed
         }
 
         if ($nextStep) {
@@ -140,6 +142,10 @@ class Step extends Model implements Sortable
                 'step_id' => $this->id,
                 'seconds' => $seconds,
             ]);
+
+            if ($this->first_step) {
+                CourseStarted::dispatch($user, $this->lesson->course);
+            }
         } else {
             $userStep->update([
                 'seconds' => $seconds,
@@ -173,7 +179,24 @@ class Step extends Model implements Sortable
             return false;
         }
 
-        return $this->completed_at || $this->lesson->course->currentStep()->order >= $this->order;
+        // If step is already completed, it's available
+        if ($this->completed_at) {
+            return true;
+        }
+
+        // Get all steps in the course up to this step
+        $previousSteps = $this->lesson->course->steps()
+            ->where(function ($query) {
+                $query->where('lms_lessons.order', '<', $this->lesson->order)
+                    ->orWhere(function ($query) {
+                        $query->where('lms_lessons.order', '=', $this->lesson->order)
+                            ->where('lms_steps.order', '<', $this->order);
+                    });
+            })
+            ->with('progress')
+            ->get();
+
+        return $previousSteps->every(fn ($step) => $step->completed_at !== null);
     }
 
     public function getSecondsAttribute()

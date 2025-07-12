@@ -1,7 +1,7 @@
 <div class="relative" style="padding-top:56.25%">
     <!-- https://codepen.io/danfascia/pen/zYxXXXM?editors=1011 -->
     <iframe
-        class="bg-black mx-auto w-full h-full inset-0 absolute"
+        class="absolute inset-0 mx-auto w-full h-full bg-black"
         style="max-height:80vh"
         src="{{$video->url}}"
         width="800"
@@ -25,7 +25,9 @@
      player.setCurrentTime(seconds);
  }
 
- player.play();
+ // Disable autoplay due to starting muted
+ // https://help.vimeo.com/hc/en-us/articles/29677068222737-Troubleshooting-Autoplay-restrictions
+ // player.play();
 
  // events
  player.on('timeupdate', time => {

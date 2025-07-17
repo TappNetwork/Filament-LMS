@@ -31,7 +31,8 @@ class DocumentResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required(),
                 SpatieMediaLibraryFileUpload::make('file')
-                    ->required(),
+                    ->required()
+                    ->preserveFilenames(),
                 SpatieMediaLibraryFileUpload::make('preview')
                     ->collection('preview')
                     ->label('Custom Preview Image (optional)')

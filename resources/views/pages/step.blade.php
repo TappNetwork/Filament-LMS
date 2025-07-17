@@ -1,9 +1,9 @@
 <div>
     <div class="py-5">
         <div class="sm:flex sm:items-center sm:justify-between">
-            <h3 class="text-xl font-semibold text-white">
+                <h1 class="fi-header-heading text-2xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-3xl" >
                 {{ $step->name }}
-            </h3>
+            </h1>
             <div>
                 <a href="{{\Tapp\FilamentLms\Pages\Dashboard::getUrl()}}">
                     <x-filament::button color="gray">

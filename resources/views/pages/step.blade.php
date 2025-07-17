@@ -21,7 +21,7 @@
                     <div class="text-red-600 text-lg font-semibold mb-4">
                         The material for this step is missing or has been deleted.
                     </div>
-                    <x-filament::button color="gray" size="md" class="w-auto" wire:click="$dispatch('complete-step')">
+                    <x-filament::button color="primary" size="md" class="w-auto" wire:click="$dispatch('complete-step')">
                         Next
                     </x-filament::button>
                 </div>
@@ -40,6 +40,17 @@
     @elseif ($step->material_type == 'image')
         <livewire:image-step :step="$step"/>
     @else
-        unsupported material type: {{ $step->material_type }}
+        <div class="flex items-center justify-center min-h-[60vh]">
+            <x-filament::card class="max-w-md w-full py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="text-red-600 text-lg font-semibold mb-4">
+                        Unsupported material type: {{ $step->material_type }}
+                    </div>
+                    <x-filament::button color="primary" size="md" class="w-auto" wire:click="$dispatch('complete-step')">
+                        Next
+                    </x-filament::button>
+                </div>
+            </x-filament::card>
+        </div>
     @endif
 </div>

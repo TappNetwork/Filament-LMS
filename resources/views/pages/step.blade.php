@@ -21,7 +21,7 @@
                     <div class="text-red-600 text-lg font-semibold mb-4">
                         The material for this step is missing or has been deleted.
                     </div>
-                    <x-filament::button color="gray" size="md" class="w-auto" wire:click="$dispatch('complete-step')">
+                    <x-filament::button color="gray" size="md" class="w-auto next-button" wire:click="$dispatch('complete-step')">
                         Next
                     </x-filament::button>
                 </div>

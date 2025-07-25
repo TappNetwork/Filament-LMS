@@ -5,10 +5,6 @@
     icon="heroicon-o-check"
     icon-color="primary"
 >
-            <x-slot name="heading">
-                Form Completed!
-            </x-slot>
-
             Click "Next" (at the bottom of the page) to continue the course.
         </x-filament::section>
             </div>

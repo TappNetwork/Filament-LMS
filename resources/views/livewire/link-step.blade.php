@@ -3,10 +3,6 @@
         icon="heroicon-o-link"
         icon-color="primary"
         >
-            <x-slot name="heading">
-                External Link
-            </x-slot>
-
             <p class="mb-8">
                 In order to complete this step, please review the following web page:
             </p>

@@ -4,10 +4,6 @@
         icon-color="primary"
         class="flex-1 flex flex-col"
     >
-        <x-slot name="heading">
-            Image Step
-        </x-slot>
-
         <p class="mb-8">
             Please review the following image:
         </p>

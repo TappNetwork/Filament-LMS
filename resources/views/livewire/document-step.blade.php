@@ -4,10 +4,6 @@
         icon-color="primary"
         class="flex-1 flex flex-col"
         >
-            <x-slot name="heading">
-                File Download
-            </x-slot>
-
             <p class="mb-8">
                 In order to complete this step, please download and review the following document:
             </p>

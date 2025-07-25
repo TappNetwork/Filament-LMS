@@ -2,9 +2,9 @@
 
 namespace Tapp\FilamentLms\Pages;
 
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
-use Filament\Actions\Action;
 use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Models\Course;
@@ -49,7 +49,7 @@ class Step extends Page
             Action::make('viewAllCourses')
                 ->label('View All Courses')
                 ->color('gray')
-                ->url(Dashboard::getUrl())
+                ->url(Dashboard::getUrl()),
         ];
     }
 

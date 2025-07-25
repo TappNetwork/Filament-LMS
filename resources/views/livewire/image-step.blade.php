@@ -16,7 +16,7 @@
             @if($this->getImageUrl())
                 <img 
                     src="{{ $this->getImageUrl() }}" 
-                    class="rounded-lg border border-gray-300"
+                    class="step-material-container rounded-lg border border-gray-300"
                     alt="Step Image"
                 />
             @endif

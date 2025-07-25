@@ -1,10 +1,8 @@
 <x-filament-panels::page>
     @if($step->text)
-        <div class="mb-6">
             <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                 {{ $step->text }}
             </p>
-        </div>
     @endif
 
     @if (is_null($step->material))

@@ -1,8 +1,7 @@
-<div class="relative" style="padding-top:56.25%">
+<div class="step-material-container">
     <!-- https://codepen.io/danfascia/pen/zYxXXXM?editors=1011 -->
     <iframe
-        class="bg-black mx-auto w-full h-full inset-0 absolute"
-        style="max-height:80vh"
+        class="bg-black w-full h-full"
         src="{{$video->url}}"
         width="800"
         height="450"

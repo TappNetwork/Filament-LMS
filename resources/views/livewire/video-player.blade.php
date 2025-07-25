@@ -11,9 +11,7 @@
 
 <style>
     .vidstack-player-custom {
-        height: 80vh;
-        max-width: calc(80vh * 16/9);
-        margin: 0 auto;
+        @apply step-material-container;
     }
 
     @if (! auth()->user()->is_admin)

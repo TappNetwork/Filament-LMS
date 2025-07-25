@@ -17,14 +17,13 @@
                     <img 
                         src="{{ $this->getPreviewImage() }}" 
                         alt="Document Preview Image" 
-                        class="rounded-lg border border-gray-300 cursor-pointer"
+                        class="step-material-container rounded-lg border border-gray-300 cursor-pointer"
                         wire:click="download"
                     />
                 @else
                     <iframe 
                         src="{{ $this->getPdfUrl() }}" 
-                        class="w-full rounded-lg border border-gray-300"
-                        style="min-height: 48vh;"
+                        class="step-material-container rounded-lg border border-gray-300"
                         title="PDF Preview"
                     ></iframe>
                 @endif

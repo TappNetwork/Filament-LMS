@@ -16,7 +16,7 @@
                     <a href="{{ $link->url }}" target="_blank" rel="noopener noreferrer" wire:click="visit">
                         <img 
                             src="{{ $this->getPreviewImage() }}" 
-                            class="rounded-lg border border-gray-300 cursor-pointer"
+                            class="step-material-container rounded-lg border border-gray-300 cursor-pointer"
                             alt="Preview of {{ $link->name }}"
                         >
                     </a>

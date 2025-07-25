@@ -61,6 +61,11 @@ class StepResource extends Resource
                     ])
                     ->searchable()
                     ->required(),
+                Forms\Components\Textarea::make('text')
+                    ->label('Text Content')
+                    ->placeholder('Enter step text content...')
+                    ->rows(4)
+                    ->columnSpanFull(),
 
             ]);
     }

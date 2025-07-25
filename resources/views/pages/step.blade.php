@@ -1,18 +1,11 @@
-<div>
-    <div class="py-5">
-        <div class="sm:flex sm:items-center sm:justify-between">
-            <h3 class="text-xl font-semibold text-white">
-                {{ $step->name }}
-            </h3>
-            <div>
-                <a href="{{\Tapp\FilamentLms\Pages\Dashboard::getUrl()}}">
-                    <x-filament::button color="gray">
-                        View All Courses
-                    </x-filament::button>
-                </a>
-            </div>
+<x-filament-panels::page>
+    @if($step->text)
+        <div class="mb-6">
+            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                {{ $step->text }}
+            </p>
         </div>
-    </div>
+    @endif
 
     @if (is_null($step->material))
         <div class="flex items-center justify-center min-h-[60vh]">
@@ -42,4 +35,4 @@
     @else
         unsupported material type: {{ $step->material_type }}
     @endif
-</div>
+</x-filament-panels::page>

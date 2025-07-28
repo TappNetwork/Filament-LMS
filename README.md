@@ -262,3 +262,51 @@ class User extends Authenticatable
 ```
 
 This allows you to implement any business rules you need for course visibility, while still leveraging the default logic from the trait if desired.
+
+## Step Access Control
+
+### Customizing Step Access
+
+The LMS package provides a flexible way to control which steps users can access through the `canAccessStep` method. This method is available on any model that uses the `FilamentLmsUser` trait and can be overridden to implement custom access control logic.
+
+#### Default Behavior
+
+By default, the `canAccessStep` method checks if the step is available based on the completion of previous steps in the course. This ensures users must complete steps in the proper sequence.
+
+#### Overriding Step Access Control
+
+To implement custom step access logic, override the `canAccessStep` method in your User model:
+
+```php
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
+
+class User extends Authenticatable
+{
+    use FilamentLmsUser;
+
+    // ...
+
+    public function canAccessStep(Step $step): bool
+    {
+        // Allow admins to access all steps
+        if ($this->hasRole('admin')) {
+            return true;
+        }
+
+        // Fall back to default behavior (sequential step completion)
+        return parent::canAccessStep($step);
+    }
+}
+```
+
+#### Where Step Access is Enforced
+
+The `canAccessStep` method is automatically used in the following places:
+
+1. **Step Page Access**: When users try to access a step directly via URL
+2. **Navigation Links**: Determines which step links are clickable in the course navigation
+3. **Current Step Detection**: Used when determining which step to redirect users to
+
+#### Integration with Existing Logic
+
+The `canAccessStep` method works alongside the existing `getAvailableAttribute()` method in the Step model. While `getAvailableAttribute()` handles the basic sequential completion logic, `canAccessStep` provides an additional layer of access control that can be customized per user.

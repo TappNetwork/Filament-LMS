@@ -1,13 +1,5 @@
 <div>
     @if($entry)
-        <div class="mb-8">
-            <x-filament::section
-                icon="heroicon-o-check"
-                icon-color="primary"
-            >
-                Click "Next" (at the bottom of the page) to continue the course.
-            </x-filament::section>
-        </div>
         @livewire('view-graded-entry', ['test' => $test, 'entry' => $entry])
     @else
         @livewire('create-test-entry', ['test' => $test])

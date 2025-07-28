@@ -31,6 +31,10 @@ class Test extends Model
     {
         $this->load(['rubric']);
 
+        if (!$this->rubric) {
+            return new Exception('No rubric (answer key) has been set up for this test. Please create a rubric first.');
+        }
+
         $totalQuestions = count($this->rubric->entry);
 
         $exception = $this->checkRubricMismatch($entry);
@@ -80,6 +84,10 @@ class Test extends Model
     {
         $this->load(['rubric']);
 
+        if (!$this->rubric) {
+            return new Exception('No rubric (answer key) has been set up for this test. Please create a rubric first.');
+        }
+
         $exception = $this->checkRubricMismatch($entry);
 
         if ($exception) {
@@ -110,6 +118,10 @@ class Test extends Model
     private function checkRubricMismatch(FilamentFormUser $entry): bool|Exception
     {
         $this->load(['rubric']);
+
+        if (!$this->rubric) {
+            return new Exception('No rubric (answer key) has been set up for this test. Please create a rubric first.');
+        }
 
         $totalQuestions = count($this->rubric->entry);
 

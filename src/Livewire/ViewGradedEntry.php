@@ -6,6 +6,8 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Livewire\Component;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
@@ -34,17 +36,62 @@ class ViewGradedEntry extends Component implements HasForms, HasInfolists
     public function gradedTestInfolist(Infolist $infolist): Infolist
     {
         $test = $this->test;
+        $grade = null;
+        
+        try {
+            $gradeResult = $test->gradeEntry($this->entry);
+            if ($gradeResult instanceof \Exception) {
+                $grade = null;
+            } else {
+                $grade = $gradeResult;
+            }
+        } catch (\Exception $e) {
+            // Grade calculation failed, but we'll still show the form
+        }
 
         return $infolist
             ->record($this->entry)
             ->schema([
-                GradedKeyValueEntry::make('graded_entry')
-                    ->label('Graded Entry')
-                    ->keyLabel('Question')
-                    ->valueLabel('Answer')
-                    ->getStateUsing(function (FilamentFormUser $record) use ($test) {
-                        return $test->gradedKeyValueEntry($record);
-                    }),
+                Section::make('Test Results')
+                    ->schema([
+                        TextEntry::make('test_name')
+                            ->label('Test')
+                            ->state($test->name),
+                        TextEntry::make('grade')
+                            ->label('Grade')
+                            ->state($grade !== null ? $grade . '%' : 'N/A')
+                            ->color(fn ($state) => $grade !== null ? ($grade >= 70 ? 'success' : ($grade >= 50 ? 'warning' : 'danger')) : 'gray'),
+                        TextEntry::make('submission_status')
+                            ->label('Status')
+                            ->state('Completed')
+                            ->color('success'),
+                        TextEntry::make('submitted_at')
+                            ->label('Submitted')
+                            ->state($this->entry->created_at->format('M j, Y g:i A')),
+                    ])
+                    ->columns(2),
+                
+                Section::make('Detailed Results')
+                    ->schema([
+                        GradedKeyValueEntry::make('graded_entry')
+                            ->label('Question Details')
+                            ->keyLabel('Question')
+                            ->valueLabel('Answer')
+                            ->getStateUsing(function (FilamentFormUser $record) use ($test) {
+                                try {
+                                    $result = $test->gradedKeyValueEntry($record);
+                                    if ($result instanceof \Exception) {
+                                        return [];
+                                    }
+                                    return $result;
+                                } catch (\Exception $e) {
+                                    return [];
+                                }
+                            }),
+                    ])
+                    ->collapsible()
+                    ->collapsed()
+                    ->description('Click to view detailed question-by-question results'),
             ]);
     }
 }

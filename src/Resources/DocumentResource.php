@@ -32,6 +32,11 @@ class DocumentResource extends Resource
                     ->required(),
                 SpatieMediaLibraryFileUpload::make('file')
                     ->required(),
+                Forms\Components\TextInput::make('media_name')
+                    ->label('File Display Name')
+                    ->helperText('Custom name for the uploaded file (optional). Leave empty to use original filename.')
+                    ->visible(fn ($livewire) => $livewire->record && $livewire->record->exists)
+                    ->dehydrated(false),
                 SpatieMediaLibraryFileUpload::make('preview')
                     ->collection('preview')
                     ->label('Custom Preview Image (optional)')

@@ -36,7 +36,8 @@ class Step extends Page
         // @phpstan-ignore-next-line
         $this->heading = $this->step->name;
 
-        if (! $this->step->available) {
+        $user = auth()->user();
+        if (! $user || ! $user->canAccessStep($this->step)) {
             return redirect()->to($this->course->linkToCurrentStep());
         }
 

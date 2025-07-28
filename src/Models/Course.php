@@ -70,7 +70,7 @@ class Course extends Model implements HasMedia
 
         // Find the first step that hasn't been completed
         $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
-            return ! in_array($step->id, $completedStepIds) && $step->available;
+            return ! in_array($step->id, $completedStepIds) && auth()->user()?->canAccessStep($step);
         });
 
         // If no incomplete step is available, check if course is complete

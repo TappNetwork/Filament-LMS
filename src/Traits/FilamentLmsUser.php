@@ -54,6 +54,19 @@ trait FilamentLmsUser
     }
 
     /**
+     * Determine if the user can access a specific step.
+     * This method can be overridden in the User model to provide custom access control logic.
+     * 
+     * @param Step $step The step to check access for
+     * @return bool True if the user can access the step, false otherwise
+     */
+    public function canAccessStep(Step $step): bool
+    {
+        // Default implementation: check if the step is available (based on completion of previous steps)
+        return $step->available;
+    }
+
+    /**
      * Get progress for all courses, including courses the user hasn't started.
      * Returns a collection keyed by course external_id with completion percentages.
      */

@@ -147,7 +147,7 @@ class LmsPanelProvider extends PanelProvider
                         return NavigationItem::make($step->name)
                             ->icon(fn (): string => $step->completed_at ? 'heroicon-o-check-circle' : '')
                             ->isActiveWhen(fn (): bool => $step->isActive())
-                            ->url(fn (): string => $step->available ? $step->url : '');
+                            ->url(fn (): string => auth()->user()?->canAccessStep($step) ? $step->url : '');
                     })->toArray());
             })->toArray();
 

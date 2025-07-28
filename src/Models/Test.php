@@ -31,7 +31,7 @@ class Test extends Model
     {
         $this->load(['rubric']);
 
-        if (!$this->rubric) {
+        if (! $this->rubric) {
             return new Exception('No rubric (answer key) has been set up for this test. Please create a rubric first.');
         }
 
@@ -84,7 +84,7 @@ class Test extends Model
     {
         $this->load(['rubric']);
 
-        if (!$this->rubric) {
+        if (! $this->rubric) {
             return new Exception('No rubric (answer key) has been set up for this test. Please create a rubric first.');
         }
 
@@ -119,7 +119,7 @@ class Test extends Model
     {
         $this->load(['rubric']);
 
-        if (!$this->rubric) {
+        if (! $this->rubric) {
             return new Exception('No rubric (answer key) has been set up for this test. Please create a rubric first.');
         }
 

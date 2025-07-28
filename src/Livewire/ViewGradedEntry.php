@@ -4,10 +4,10 @@ namespace Tapp\FilamentLms\Livewire;
 
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Concerns\InteractsWithInfolists;
-use Filament\Infolists\Contracts\HasInfolists;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Concerns\InteractsWithInfolists;
+use Filament\Infolists\Contracts\HasInfolists;
 use Filament\Infolists\Infolist;
 use Livewire\Component;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
@@ -37,7 +37,7 @@ class ViewGradedEntry extends Component implements HasForms, HasInfolists
     {
         $test = $this->test;
         $grade = null;
-        
+
         try {
             $gradeResult = $test->gradeEntry($this->entry);
             if ($gradeResult instanceof \Exception) {
@@ -59,7 +59,7 @@ class ViewGradedEntry extends Component implements HasForms, HasInfolists
                             ->state($test->name),
                         TextEntry::make('grade')
                             ->label('Grade')
-                            ->state($grade !== null ? $grade . '%' : 'N/A')
+                            ->state($grade !== null ? $grade.'%' : 'N/A')
                             ->color(fn ($state) => $grade !== null ? ($grade >= 70 ? 'success' : ($grade >= 50 ? 'warning' : 'danger')) : 'gray'),
                         TextEntry::make('submission_status')
                             ->label('Status')
@@ -70,7 +70,7 @@ class ViewGradedEntry extends Component implements HasForms, HasInfolists
                             ->state($this->entry->created_at->format('M j, Y g:i A')),
                     ])
                     ->columns(2),
-                
+
                 Section::make('Detailed Results')
                     ->schema([
                         GradedKeyValueEntry::make('graded_entry')
@@ -83,6 +83,7 @@ class ViewGradedEntry extends Component implements HasForms, HasInfolists
                                     if ($result instanceof \Exception) {
                                         return [];
                                     }
+
                                     return $result;
                                 } catch (\Exception $e) {
                                     return [];

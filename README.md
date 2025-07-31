@@ -310,3 +310,58 @@ The `canAccessStep` method is automatically used in the following places:
 #### Integration with Existing Logic
 
 The `canAccessStep` method works alongside the existing `getAvailableAttribute()` method in the Step model. While `getAvailableAttribute()` handles the basic sequential completion logic, `canAccessStep` provides an additional layer of access control that can be customized per user.
+
+### Customizing Step Edit Permissions
+
+The LMS package also provides a way to control which users can edit steps through the `canEditStep` method. This method is separate from `canAccessStep` and specifically controls edit permissions.
+
+#### Default Behavior
+
+By default, the `canEditStep` method returns `false`, meaning no users have edit permissions. This ensures that step editing is disabled by default and must be explicitly enabled.
+
+#### Overriding Step Edit Permissions
+
+To implement custom step edit logic, override the `canEditStep` method in your User model:
+
+```php
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
+
+class User extends Authenticatable
+{
+    use FilamentLmsUser;
+
+    // ...
+
+    public function canEditStep(Step $step): bool
+    {
+        // Allow admins to edit all steps
+        if ($this->hasRole('admin') || $this->hasRole('super_admin')) {
+            return true;
+        }
+
+        // Allow course creators to edit their own courses
+        if ($this->hasRole('instructor') && $step->lesson->course->created_by === $this->id) {
+            return true;
+        }
+
+        // No edit permissions for other users
+        return false;
+    }
+}
+```
+
+#### Where Step Edit Permissions are Used
+
+The `canEditStep` method is used in the following places:
+
+1. **Edit Button Visibility**: Controls whether the "Edit" button appears on step pages
+2. **Admin Interface**: Can be used to control access to step editing in the Filament admin panel
+3. **API Endpoints**: Can be used to secure step editing API endpoints
+
+#### Separation of Concerns
+
+Note that `canEditStep` is separate from `canAccessStep`:
+- **`canAccessStep`**: Controls whether a user can view/access a step
+- **`canEditStep`**: Controls whether a user can edit/modify a step
+
+This separation allows for fine-grained control over user permissions, where users might be able to view steps but not edit them.

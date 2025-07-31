@@ -1,15 +1,15 @@
 <x-filament-panels::page>
     @if($step->text)
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
                 {{ $step->text }}
             </p>
     @endif
 
     @if (is_null($step->material))
         <div class="flex items-center justify-center min-h-[60vh]">
-            <x-filament::card class="max-w-md w-full py-12">
-                <div class="flex flex-col items-center justify-center text-center">
-                    <div class="text-red-600 text-lg font-semibold mb-4">
+            <x-filament::card class="py-12 w-full max-w-md">
+                <div class="flex flex-col justify-center items-center text-center">
+                    <div class="mb-4 text-lg font-semibold text-red-600">
                         The material for this step is missing or has been deleted.
                     </div>
                     <x-filament::button color="gray" size="md" class="w-auto next-button" wire:click="$dispatch('complete-step')">

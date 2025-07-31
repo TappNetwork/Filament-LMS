@@ -6,7 +6,7 @@
     <x-slot name="headerEnd">
     </x-slot>
 
-    Download your certficate below.
+    Download your certificate below.
 
     <div class="mt-4">
     <a href="{{\Tapp\FilamentLms\Pages\Dashboard::getUrl()}}">

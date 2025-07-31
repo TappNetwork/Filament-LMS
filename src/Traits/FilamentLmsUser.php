@@ -67,6 +67,19 @@ trait FilamentLmsUser
     }
 
     /**
+     * Determine if the user can edit a specific step.
+     * This method can be overridden in the User model to provide custom edit permission logic.
+     *
+     * @param  Step  $step  The step to check edit permissions for
+     * @return bool True if the user can edit the step, false otherwise
+     */
+    public function canEditStep(Step $step): bool
+    {
+        // Default implementation: no editing permissions
+        return false;
+    }
+
+    /**
      * Get progress for all courses, including courses the user hasn't started.
      * Returns a collection keyed by course external_id with completion percentages.
      */

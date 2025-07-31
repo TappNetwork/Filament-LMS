@@ -5,6 +5,8 @@ namespace Tapp\FilamentLms\Pages;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Models\Course;
@@ -36,7 +38,8 @@ class Step extends Page
         // @phpstan-ignore-next-line
         $this->heading = $this->step->name;
 
-        $user = auth()->user();
+        $user = Auth::user();
+        // @phpstan-ignore-next-line
         if (! $user || ! $user->canAccessStep($this->step)) {
             return redirect()->to($this->course->linkToCurrentStep());
         }
@@ -46,12 +49,27 @@ class Step extends Page
 
     protected function getHeaderActions(): array
     {
-        return [
+        $actions = [
             Action::make('viewAllCourses')
                 ->label('View All Courses')
                 ->color('gray')
                 ->url(Dashboard::getUrl()),
         ];
+
+        // Add Edit button for users who can edit the step
+        if (Auth::check()) {
+            $user = Auth::user();
+            // @phpstan-ignore-next-line
+            if ($user && $user->canEditStep($this->step)) {
+                $actions[] = Action::make('edit')
+                    ->label('Edit')
+                    ->color('primary')
+                    ->url(route('filament.admin.resources.lms.steps.edit', $this->step))
+                    ->icon('heroicon-o-pencil');
+            }
+        }
+
+        return $actions;
     }
 
     #[On('complete-step')]

@@ -6,7 +6,6 @@ use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Models\Course;

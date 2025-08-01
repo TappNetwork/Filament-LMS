@@ -21,7 +21,7 @@ class CoursesRelationManager extends RelationManager
                     ->label('Progress')
                     ->getStateUsing(function ($record) {
                         $user = $this->getOwnerRecord();
-                        if ($user && method_exists($user, 'getCourseProgress')) {
+                        if (is_callable([$user, 'getCourseProgress'])) {
                             $progress = $user->getCourseProgress($record);
 
                             return number_format($progress, 0).'%';

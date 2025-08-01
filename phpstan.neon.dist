@@ -11,5 +11,4 @@ parameters:
     checkOctaneCompatibility: true
     checkModelProperties: true
     ignoreErrors:
-        - '#Static property .* \(view-string\) does not accept#'
         - '#Trait .+ is used zero times and is not analysed#'

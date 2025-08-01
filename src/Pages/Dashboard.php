@@ -23,7 +23,6 @@ class Dashboard extends \Filament\Pages\Dashboard
         if (config('filament-lms.restrict_course_visibility') && Auth::check()) {
             $user = Auth::user();
             if (method_exists($user, 'isCourseVisibleForUser')) {
-                // @phpstan-ignore-next-line
                 $courses = $courses->filter(function ($course) use ($user) {
                     return $user->isCourseVisibleForUser($course);
                 })->values();

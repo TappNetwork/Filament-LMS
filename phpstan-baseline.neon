@@ -43,16 +43,22 @@ parameters:
 			path: src/Jobs/GenerateLinkScreenshot.php
 
 		-
-			message: '#^Property Tapp\\FilamentLms\\Livewire\\GradedKeyValueEntry\:\:\$view \(view\-string\) does not accept default value of type string\.$#'
-			identifier: property.defaultValue
-			count: 1
-			path: src/Livewire/GradedKeyValueEntry.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Livewire/TestStep.php
+
+		-
+			message: '#^Access to an undefined property Tapp\\FilamentFormBuilder\\Models\\FilamentFormUser\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Livewire/ViewGradedEntry.php
+
+		-
+			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Test\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Livewire/ViewGradedEntry.php
 
 		-
 			message: '#^Method Tapp\\FilamentLms\\Lms\:\:get\(\) should return static\(Tapp\\FilamentLms\\Lms\) but returns Filament\\Contracts\\Plugin\|Filament\\FilamentManager\.$#'
@@ -81,6 +87,18 @@ parameters:
 		-
 			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Step\:\:\$name\.$#'
 			identifier: property.notFound
+			count: 1
+			path: src/LmsPanelProvider.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:canAccessStep\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/LmsPanelProvider.php
+
+		-
+			message: '#^Call to an undefined method Tapp\\FilamentLms\\LmsPanelProvider\:\:getNavigationGroups\(\)\.$#'
+			identifier: method.notFound
 			count: 1
 			path: src/LmsPanelProvider.php
 
@@ -115,8 +133,14 @@ parameters:
 			path: src/Models/Course.php
 
 		-
-			message: '#^Undefined variable\: \$allSteps$#'
-			identifier: variable.undefined
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:canAccessStep\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Models/Course.php
+
+		-
+			message: '#^Method Tapp\\FilamentLms\\Models\\Course\:\:currentStep\(\) should return Tapp\\FilamentLms\\Models\\Step\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Models/Course.php
 
@@ -269,6 +293,12 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: src/Pages/Step.php
+
+		-
+			message: '#^Cannot call method getFirstMedia\(\) on Illuminate\\Database\\Eloquent\\Model\|int\<min, \-1\>\|int\<1, max\>\|string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Resources/DocumentResource/Pages/EditDocument.php
 
 		-
 			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Test\:\:\$filament_form_user_id\.$#'

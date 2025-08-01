@@ -18,8 +18,7 @@ class GenerateLinkScreenshot implements ShouldQueue
 
     public function __construct(
         protected Link $link
-    ) {
-    }
+    ) {}
 
     public function handle(): void
     {

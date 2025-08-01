@@ -12,8 +12,7 @@
         </h3>
         @if($entry)
             <div class="mt-4">
-                {{-- TODO: Create or update this component to show graded entry details --}}
-                @livewire('tests.view-graded-entry', ['test' => $test, 'entry' => $entry])
+                @livewire('view-graded-entry', ['test' => $test, 'entry' => $entry])
             </div>
         @endif
     </x-filament::section>

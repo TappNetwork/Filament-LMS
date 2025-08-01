@@ -4,10 +4,6 @@
         icon-color="primary"
         class="flex-1 flex flex-col"
         >
-            <x-slot name="heading">
-                File Download
-            </x-slot>
-
             <p class="mb-8">
                 In order to complete this step, please download and review the following document:
             </p>
@@ -17,14 +13,13 @@
                     <img 
                         src="{{ $this->getPreviewImage() }}" 
                         alt="Document Preview Image" 
-                        class="rounded-lg border border-gray-300 cursor-pointer"
+                        class="step-material-container rounded-lg border border-gray-300 cursor-pointer"
                         wire:click="download"
                     />
                 @else
                     <iframe 
                         src="{{ $this->getPdfUrl() }}" 
-                        class="w-full rounded-lg border border-gray-300"
-                        style="min-height: 48vh;"
+                        class="step-material-container rounded-lg border border-gray-300"
                         title="PDF Preview"
                     ></iframe>
                 @endif
@@ -37,7 +32,7 @@
 
     <div class="fixed bottom-0 right-0 p-4 md:p-6 lg:p-8">
         <!-- TODO: could disable button if not downloaded. but the preview has an alternative download button we cannot track -->
-        <x-filament::button color="primary" size="xl" wire:click="$dispatch('complete-step')">
+        <x-filament::button color="gray" size="xl" wire:click="$dispatch('complete-step')" class="next-button">
             Next
         </x-filament::button>
     </div>

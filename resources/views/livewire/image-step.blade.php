@@ -4,10 +4,6 @@
         icon-color="primary"
         class="flex-1 flex flex-col"
     >
-        <x-slot name="heading">
-            Image Step
-        </x-slot>
-
         <p class="mb-8">
             Please review the following image:
         </p>
@@ -16,7 +12,7 @@
             @if($this->getImageUrl())
                 <img 
                     src="{{ $this->getImageUrl() }}" 
-                    class="rounded-lg border border-gray-300"
+                    class="step-material-container rounded-lg border border-gray-300"
                     alt="Step Image"
                 />
             @endif
@@ -24,7 +20,7 @@
     </x-filament::section>
 
     <div class="fixed bottom-0 right-0 p-4 md:p-6 lg:p-8">
-        <x-filament::button color="primary" size="xl" wire:click="$dispatch('complete-step')">
+        <x-filament::button color="gray" size="xl" wire:click="$dispatch('complete-step')" class="next-button">
             Next
         </x-filament::button>
     </div>

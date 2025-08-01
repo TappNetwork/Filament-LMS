@@ -61,6 +61,10 @@ class StepResource extends Resource
                     ])
                     ->searchable()
                     ->required(),
+                Forms\Components\MarkdownEditor::make('text')
+                    ->label('Text Content')
+                    ->placeholder('Enter step text content...')
+                    ->columnSpanFull(),
 
             ]);
     }

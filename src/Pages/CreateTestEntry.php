@@ -27,7 +27,8 @@ class CreateTestEntry extends Component
             redirect()->route('login', [
                 'redirect' => request()->fullUrl(),
             ]);
-            exit;
+
+            return;
         }
 
         $this->test = $test->load('form');

@@ -1,7 +1,7 @@
 <div class="step-material-container">
     <!-- https://codepen.io/danfascia/pen/zYxXXXM?editors=1011 -->
     <iframe
-        class="bg-black w-full h-full"
+        class="w-full h-full bg-black"
         src="{{$video->url}}"
         width="800"
         height="450"
@@ -24,7 +24,9 @@
      player.setCurrentTime(seconds);
  }
 
- player.play();
+ // Disable autoplay due to starting muted
+ // https://help.vimeo.com/hc/en-us/articles/29677068222737-Troubleshooting-Autoplay-restrictions
+ // player.play();
 
  // events
  player.on('timeupdate', time => {

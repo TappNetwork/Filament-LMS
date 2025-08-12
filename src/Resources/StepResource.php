@@ -40,6 +40,7 @@ class StepResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('slug')
                     ->helperText('Used for urls.')
+                    ->unique(ignoreRecord: true)
                     ->required(),
                 Forms\Components\Select::make('lesson_id')
                     ->relationship(name: 'lesson', titleAttribute: 'name')

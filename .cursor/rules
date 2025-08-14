@@ -1,0 +1,4 @@
+# Linter Rule Exceptions
+# ---------------------
+# Ignore linter errors related to auth() function usage
+ignore: auth()

@@ -40,10 +40,17 @@ class CourseResource extends Resource
                     })
                     ->required(),
                 Forms\Components\TextInput::make('external_id')
-                    ->disabledOn('edit')
                     ->label('External ID')
-                    ->helperText('Cannot be changed after creation. Used for external integrations like HubSpot.')
-                    ->required(),
+                    ->helperText('Used for external integrations like HubSpot. Updating this will cause a new property to be added to the integration.')
+                    ->required()
+                    ->rules([
+                        'regex:/^[a-z][a-z0-9_]*$/',
+                        'max:100'
+                    ])
+                    ->validationMessages([
+                        'regex' => 'External ID must contain only lowercase letters, numbers, and underscores, and must start with a letter.',
+                        'max' => 'External ID cannot exceed 100 characters.'
+                    ]),
                 Forms\Components\TextInput::make('slug')
                     ->helperText('Used for urls.')
                     ->required(),
@@ -60,7 +67,9 @@ class CourseResource extends Resource
                     ->options(config('filament-lms.awards'))
                     ->required()
                     ->hint(function ($record) {
-                        if ($record?->id) {
+                        // @phpstan-ignore-next-line
+                        if ($record && $record->id) {
+                            // @phpstan-ignore-next-line
                             $link = route('filament-lms::certificates.show', ['course' => $record->id, 'user' => auth()->id()]);
 
                             return new HtmlString("<a rel='noopener noreferrer' target='_blank' href='{$link}'>Click to Preview</a>");

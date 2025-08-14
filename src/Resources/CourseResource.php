@@ -32,11 +32,14 @@ class CourseResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->live(onBlur: true)
-                    ->afterStateUpdated(function (Set $set, ?string $state, string $operation) {
-                        if ($operation === 'create') {
+                    ->afterStateUpdated(function (Set $set, ?string $state, string $operation, $get) {
+                        // Always update slug when name changes
+                        $set('slug', Str::slug($state));
+                        
+                        // Only auto-generate external_id on create or if it's empty
+                        if ($operation === 'create' || empty($get('external_id'))) {
                             $set('external_id', Str::snake($state));
                         }
-                        $set('slug', Str::slug($state));
                     })
                     ->required(),
                 Forms\Components\TextInput::make('external_id')

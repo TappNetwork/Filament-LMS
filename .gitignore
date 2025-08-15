@@ -5,3 +5,4 @@ composer.lock
 build/*
 .DS_Store
 .phpunit.cache/
+bin/run-laravel-mcp.sh

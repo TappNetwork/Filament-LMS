@@ -35,7 +35,7 @@ class CourseResource extends Resource
                     ->afterStateUpdated(function (Set $set, ?string $state, string $operation, $get) {
                         // Always update slug when name changes
                         $set('slug', Str::slug($state));
-                        
+
                         // Only auto-generate external_id on create or if it's empty
                         if ($operation === 'create' || empty($get('external_id'))) {
                             $set('external_id', Str::snake($state));
@@ -48,11 +48,11 @@ class CourseResource extends Resource
                     ->required()
                     ->rules([
                         'regex:/^[a-z][a-z0-9_]*$/',
-                        'max:100'
+                        'max:100',
                     ])
                     ->validationMessages([
                         'regex' => 'External ID must contain only lowercase letters, numbers, and underscores, and must start with a letter.',
-                        'max' => 'External ID cannot exceed 100 characters.'
+                        'max' => 'External ID cannot exceed 100 characters.',
                     ]),
                 Forms\Components\TextInput::make('slug')
                     ->helperText('Used for urls.')

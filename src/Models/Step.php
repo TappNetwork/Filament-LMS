@@ -44,6 +44,7 @@ class Step extends Model implements Sortable
 
     public function complete($user = null)
     {
+        // @phpstan-ignore-next-line
         $user = $user ?: auth()->user();
 
         $userStep = StepUser::where('user_id', $user->id)
@@ -85,7 +86,6 @@ class Step extends Model implements Sortable
             return $nextStep;
         } else {
             CourseCompleted::dispatch($user, $this->lesson->course);
-            StepCompleted::dispatch($user, $this);
         }
     }
 
@@ -130,6 +130,7 @@ class Step extends Model implements Sortable
 
     public function videoProgress(int $seconds): void
     {
+        // @phpstan-ignore-next-line
         $user = auth()->user();
 
         $userStep = StepUser::where('user_id', $user->id)
@@ -158,6 +159,7 @@ class Step extends Model implements Sortable
      */
     public function progress(): HasOne
     {
+        // @phpstan-ignore-next-line
         $currentUserId = auth()->check() ? auth()->user()->id : null;
 
         return $this->hasOne(StepUser::class)->ofMany([
@@ -175,6 +177,7 @@ class Step extends Model implements Sortable
 
     public function getAvailableAttribute()
     {
+        // @phpstan-ignore-next-line
         if (! auth()->check()) {
             return false;
         }

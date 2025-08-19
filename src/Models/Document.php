@@ -30,7 +30,13 @@ class Document extends Model implements HasMedia
 
     public function getTypeAttribute()
     {
-        $mime = $this->getFirstMedia()->mime_type;
+        $media = $this->getFirstMedia();
+
+        if (! $media) {
+            return 'Unknown';
+        }
+
+        $mime = $media->mime_type;
 
         // TODO also create mime2icon and put in an enum
         $mime2label = [

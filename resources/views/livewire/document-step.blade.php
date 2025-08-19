@@ -30,10 +30,5 @@
             </x-filament::button>
     </x-filament::section>
 
-    <div class="fixed bottom-0 right-0 p-4 md:p-6 lg:p-8">
-        <!-- TODO: could disable button if not downloaded. but the preview has an alternative download button we cannot track -->
-        <x-filament::button color="gray" size="xl" wire:click="$dispatch('complete-step')" class="next-button">
-            Next
-        </x-filament::button>
-    </div>
+    <x-filament-lms::next-button />
 </div>

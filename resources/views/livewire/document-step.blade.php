@@ -10,22 +10,18 @@
 
             <div class="mb-8 flex-1">
                 @if($this->getPreviewImage())
-                    <div class="step-material-wrapper">
-                        <img 
-                            src="{{ $this->getPreviewImage() }}" 
-                            alt="Document Preview Image" 
-                            class="step-material-container rounded-lg border border-gray-300 cursor-pointer"
-                            wire:click="download"
-                        />
-                    </div>
+                    <img 
+                        src="{{ $this->getPreviewImage() }}" 
+                        alt="Document Preview Image" 
+                        class="step-material-container rounded-lg border border-gray-300 cursor-pointer"
+                        wire:click="download"
+                    />
                 @else
-                    <div class="step-material-wrapper">
-                        <iframe 
-                            src="{{ $this->getPdfUrl() }}" 
-                            class="step-material-container rounded-lg border border-gray-300"
-                            title="PDF Preview"
-                        ></iframe>
-                    </div>
+                    <iframe 
+                        src="{{ $this->getPdfUrl() }}" 
+                        class="step-material-container rounded-lg border border-gray-300"
+                        title="PDF Preview"
+                    ></iframe>
                 @endif
             </div>
 

@@ -1,13 +1,7 @@
-<div class="flex flex-col">
+<div>
     <x-filament::section
-        icon="heroicon-o-document"
-        icon-color="primary"
         class="flex-1 flex flex-col"
         >
-            <p class="mb-8">
-                In order to complete this step, please download and review the following document:
-            </p>
-
             <div class="mb-8 flex-1">
                 @if($this->getPreviewImage())
                     <img 
@@ -30,5 +24,9 @@
             </x-filament::button>
     </x-filament::section>
 
-    <x-filament-lms::next-button />
+    <div class="fixed bottom-0 right-0 p-4 md:p-6 lg:p-8">
+        <x-filament::button color="gray" wire:click="$dispatch('complete-step')" class="next-button">
+            Next
+        </x-filament::button>
+    </div>
 </div>

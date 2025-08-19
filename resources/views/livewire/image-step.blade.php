@@ -10,11 +10,13 @@
 
         <div class="mb-8 flex-1">
             @if($this->getImageUrl())
-                <img 
-                    src="{{ $this->getImageUrl() }}" 
-                    class="step-material-container rounded-lg border border-gray-300"
-                    alt="Step Image"
-                />
+                <div class="step-material-wrapper">
+                    <img 
+                        src="{{ $this->getImageUrl() }}" 
+                        class="step-material-container rounded-lg border border-gray-300"
+                        alt="Step Image"
+                    />
+                </div>
             @endif
         </div>
     </x-filament::section>

@@ -57,6 +57,10 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             __DIR__.'/../resources/views' => resource_path('views/vendor/filament-lms'),
         ], 'filament-lms-views');
 
+        $this->publishes([
+            __DIR__.'/../dist' => public_path('vendor/filament-lms'),
+        ], 'filament-lms-assets');
+
         Livewire::component('video-step', VideoStep::class);
         Livewire::component('document-step', DocumentStep::class);
         Livewire::component('link-step', LinkStep::class);
@@ -72,7 +76,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         FilamentAsset::register([
             Css::make('filament-lms', __DIR__.'/../dist/filament-lms.css'),
             Js::make('filament-lms', __DIR__.'/../dist/filament-lms.js'),
-        ], package: 'tapp/filament-lms');
+        ]);
 
         Relation::morphMap([
             'video' => 'Tapp\FilamentLms\Models\Video',

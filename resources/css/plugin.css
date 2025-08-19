@@ -12,21 +12,60 @@
 
 /* LMS Plugin Styles */
 
+/* Responsive wrapper to prevent overflow */
+.step-material-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    height: 60vh;
+    max-height: 60vh;
+}
+
 /* Centralized step material sizing */
 .step-material-container {
-    height: 60vh;
-    max-width: calc(60vh * 16/9);
-    margin: 0 auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100%;
+    max-height: 100%;
 }
 
 .step-material-container img,
 .step-material-container iframe {
-    width: 100%;
+    width: 100% !important;
     height: 100%;
+    max-width: 100% !important;
+    max-height: 100%;
     object-fit: contain;
+}
+
+/* More specific selectors to override any conflicting styles */
+.step-material-wrapper .step-material-container {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.step-material-wrapper .step-material-container img,
+.step-material-wrapper .step-material-container iframe {
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
 /* Ensure PDFs and documents fit properly */
 .step-material-container iframe[src*=".pdf"] {
     min-height: 60vh;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .step-material-wrapper {
+        height: 50vh;
+        max-height: 50vh;
+    }
+}
+
+@media (max-width: 640px) {
+    .step-material-wrapper {
+        height: 40vh;
+        max-height: 40vh;
+    }
 }

@@ -75,6 +75,7 @@ class Course extends Model implements HasMedia
 
         // If no incomplete step is available, check if course is complete
         if (! $firstIncompleteStep) {
+            // @phpstan-ignore-next-line
             if ($allSteps->every->completed_at) {
                 return $this->certificateUrl();
             }
@@ -122,20 +123,34 @@ class Course extends Model implements HasMedia
         return $this->hasManyThrough(Step::class, Lesson::class)->orderBy('lms_steps.order');
     }
 
+    public function startedByUserAt($userId): ?string
+    {
+        return StepUser::whereIn('step_id', $this->steps()->pluck('lms_steps.id'))
+            ->where('user_id', $userId)
+            ->min('created_at');
+    }
+
     public function completedByUserAt($userId): ?string
     {
-        $userSteps = StepUser::whereIn('lms_step_user.step_id', $this->steps()->pluck('lms_steps.id'))
-            ->where('lms_step_user.user_id', $userId)
-            ->whereNotNull('lms_step_user.completed_at')
-            ->get();
+        // Get all steps for this course
+        $steps = $this->steps()->get();
 
-        foreach ($this->steps as $step) {
-            if (! $userSteps->contains('step_id', $step->id)) {
-                return null;
-            }
+        if ($steps->isEmpty()) {
+            return null;
         }
 
-        return $userSteps->max('completed_at');
+        // Get all completed steps for this specific user
+        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+            ->where('user_id', $userId)
+            ->whereNotNull('completed_at')
+            ->get();
+
+        // Check if all steps are completed
+        if ($completedStepUsers->count() === $steps->count()) {
+            return $completedStepUsers->max('completed_at');
+        }
+
+        return null;
     }
 
     public function getCompletedAtAttribute()
@@ -144,11 +159,7 @@ class Course extends Model implements HasMedia
             return null;
         }
 
-        if ($this->steps->every->completed_at) {
-            return $this->steps->pluck('completed_at')->max();
-        }
-
-        return null;
+        return $this->completedByUserAt(Auth::id());
     }
 
     /**
@@ -173,15 +184,28 @@ class Course extends Model implements HasMedia
 
     public function getCompletionPercentageAttribute()
     {
+        if (! Auth::check()) {
+            return 0;
+        }
+
+        return $this->getCompletionPercentageForUser(Auth::id());
+    }
+
+    public function getCompletionPercentageForUser($userId): float
+    {
         if ($this->steps->isEmpty()) {
             return 0;
         }
 
-        $this->loadProgress();
+        // Load steps with progress for the specific user
+        $steps = $this->steps()->with(['progress' => function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        }])->get();
 
-        $completedSteps = $this->steps->filter->completed_at;
+        // @phpstan-ignore-next-line
+        $completedSteps = $steps->filter->completed_at;
 
-        return $completedSteps->count() / $this->steps->count() * 100;
+        return $completedSteps->count() / $steps->count() * 100;
     }
 
     public function certificateUrl(): string

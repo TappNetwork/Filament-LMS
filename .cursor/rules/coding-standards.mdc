@@ -16,3 +16,7 @@
 - Use proper dependency injection
 - Use Eloquent relationships appropriately
 - Follow PSR-12 coding standards
+description:
+globs:
+alwaysApply: false
+---

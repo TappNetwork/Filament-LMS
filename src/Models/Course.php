@@ -125,7 +125,7 @@ class Course extends Model implements HasMedia
 
     public function startedByUserAt($userId): ?string
     {
-        return StepUser::whereIn('step_id', $this->steps()->pluck('id'))
+        return StepUser::whereIn('step_id', $this->steps()->pluck('lms_steps.id'))
             ->where('user_id', $userId)
             ->min('created_at');
     }

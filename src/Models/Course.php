@@ -132,17 +132,22 @@ class Course extends Model implements HasMedia
 
     public function completedByUserAt($userId): ?string
     {
-        // Load steps with progress for the specific user
-        // required because user may not be logged in
-        $steps = $this->steps()->with(['progress' => function ($query) use ($userId) {
-            $query->where('user_id', $userId);
-        }])->get();
+        // Get all steps for this course
+        $steps = $this->steps()->get();
+
+        if ($steps->isEmpty()) {
+            return null;
+        }
+
+        // Get all completed steps for this specific user
+        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+            ->where('user_id', $userId)
+            ->whereNotNull('completed_at')
+            ->get();
 
         // Check if all steps are completed
-        // @phpstan-ignore-next-line
-        if ($steps->every->completed_at) {
-            // @phpstan-ignore-next-line
-            return $steps->pluck('completed_at')->max();
+        if ($completedStepUsers->count() === $steps->count()) {
+            return $completedStepUsers->max('completed_at');
         }
 
         return null;

@@ -138,11 +138,6 @@ return [
     ],
     'top_navigation' => false,
     'show_exit_lms_link' => true,
-    'extra_navigation_items' => [
-        NavigationItem::make('Home')
-            ->icon('heroicon-o-home')
-            ->url(fn (): string => '/'),
-    ],
 ];
 
 ```
@@ -155,23 +150,22 @@ Set it to `true` to use top navigation instead of left sidebar on courses page.
 
 Use to display or not the `Exit LMS` link on top bar.
 
-### extra_navigation_items
+## Adding extra navigation items
 
-By default the `Home` extra navigation item is added:
+To register new navigation items in the LMS panel, use the `boot()` method of your `AppPanelProvider.php` file:
 
 ```php
-    'extra_navigation_items' => [
+use Tapp\FilamentLms\LmsNavigation;
+use Filament\Navigation\NavigationItem;
+
+public function boot(): void
+{
+    LmsNavigation::addNavigation('lms',
         NavigationItem::make('Home')
             ->icon('heroicon-o-home')
             ->url(fn (): string => '/'),
-    ],
-```
-
-More navigation items can be added using this config if needed.
-If you don't want to display extra menu items, set this config as an empty array:
-
-```php
-'extra_navigation_items' => [],
+    );
+}
 ```
 
 ## Authorization

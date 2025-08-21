@@ -39,7 +39,15 @@ class Lesson extends Model implements Sortable
 
     public function isActive()
     {
-        return request()->is('*'.$this->slug.'*');
+        // First check if we're on a lesson URL pattern
+        if (request()->is('*/'.$this->course->slug.'/'.$this->slug.'*')) {
+            return true;
+        }
+
+        // Then check if any step in this lesson is currently active
+        return $this->steps->contains(function ($step) {
+            return $step->isActive();
+        });
     }
 
     public function getCompletedAtAttribute()

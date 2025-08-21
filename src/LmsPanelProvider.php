@@ -139,9 +139,8 @@ class LmsPanelProvider extends PanelProvider
             $navigationGroups = $course->lessons->map(function ($lesson) {
                 /** @var \Tapp\FilamentLms\Models\Lesson $lesson */
                 return NavigationGroup::make($lesson->name)
-                    // TODO collapsed is not working
-                    // ->collapsed(fn (): bool => ! $lesson->isActive())
-                    // ->collapsible(true)
+                    ->collapsed(fn (): bool => ! $lesson->isActive())
+                    //->collapsible(true)
                     ->items($lesson->steps->map(function ($step) {
                         /** @var \Tapp\FilamentLms\Models\Step $step */
                         return NavigationItem::make($step->name)
@@ -151,12 +150,15 @@ class LmsPanelProvider extends PanelProvider
                     })->toArray());
             })->toArray();
 
-            $navigationGroups[] = NavigationGroup::make('Course Completed')->items([
-                NavigationItem::make('Certificate')
-                    ->icon('heroicon-o-trophy')
-                    ->url(fn (): string => CourseCompleted::getUrl([$course->slug]))
-                    ->isActiveWhen(fn (): bool => request()->routeIs(CourseCompleted::getRouteName())),
-            ]);
+            $navigationGroups[] = NavigationGroup::make('Course Completed')
+                ->collapsed(fn (): bool => ! request()->routeIs(CourseCompleted::getRouteName()))
+                ->collapsible(true)
+                ->items([
+                    NavigationItem::make('Certificate')
+                        ->icon('heroicon-o-trophy')
+                        ->url(fn (): string => CourseCompleted::getUrl([$course->slug]))
+                        ->isActiveWhen(fn (): bool => request()->routeIs(CourseCompleted::getRouteName())),
+                ]);
 
             $builder->groups($navigationGroups);
 

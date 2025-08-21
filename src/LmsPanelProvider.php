@@ -110,16 +110,16 @@ class LmsPanelProvider extends PanelProvider
 
     public function navigationItems(NavigationBuilder $builder): NavigationBuilder
     {
-        $extraNavigationItems = config('filament-lms.extra_navigation_items');
+        $hookedNavigationItems = LmsNavigation::getNavigation('lms');
 
         if (Route::current()->parameter('courseSlug')) {
             filament()->getCurrentPanel()->topNavigation(false);
 
             FilamentView::registerRenderHook(
                 PanelsRenderHook::TOPBAR_START,
-                function () use ($extraNavigationItems): View {
+                function () use ($hookedNavigationItems): View {
                     $topNavigation = [
-                        ...$extraNavigationItems,
+                        ...$hookedNavigationItems,
                         NavigationItem::make('Courses')
                             ->icon('heroicon-o-academic-cap')
                             ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
@@ -164,7 +164,7 @@ class LmsPanelProvider extends PanelProvider
         }
 
         return $builder->items([
-            ...$extraNavigationItems,
+            ...$hookedNavigationItems,
             NavigationItem::make('Courses')
                 ->icon('heroicon-o-academic-cap')
                 ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))

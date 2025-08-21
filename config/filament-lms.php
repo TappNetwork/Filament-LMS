@@ -1,7 +1,5 @@
 <?php
 
-use Filament\Navigation\NavigationItem;
-
 return [
     'theme' => 'default',
     'font' => 'Poppins',

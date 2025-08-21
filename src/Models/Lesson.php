@@ -43,7 +43,7 @@ class Lesson extends Model implements Sortable
         if (request()->is('*/'.$this->course->slug.'/'.$this->slug.'*')) {
             return true;
         }
-        
+
         // Then check if any step in this lesson is currently active
         return $this->steps->contains(function ($step) {
             return $step->isActive();

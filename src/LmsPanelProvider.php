@@ -140,7 +140,7 @@ class LmsPanelProvider extends PanelProvider
                 /** @var \Tapp\FilamentLms\Models\Lesson $lesson */
                 return NavigationGroup::make($lesson->name)
                     ->collapsed(fn (): bool => ! $lesson->isActive())
-                    //->collapsible(true)
+                    // ->collapsible(true)
                     ->items($lesson->steps->map(function ($step) {
                         /** @var \Tapp\FilamentLms\Models\Step $step */
                         return NavigationItem::make($step->name)

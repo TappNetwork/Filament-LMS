@@ -10,6 +10,11 @@ use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 use Tapp\FilamentLms\Database\Factories\LessonFactory;
 
+/**
+ * @property string $slug
+ * @property-read Course $course
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Step> $steps
+ */
 class Lesson extends Model implements Sortable
 {
     use HasFactory, SortableTrait;

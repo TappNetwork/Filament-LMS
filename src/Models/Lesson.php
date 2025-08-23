@@ -12,6 +12,7 @@ use Tapp\FilamentLms\Database\Factories\LessonFactory;
 
 /**
  * @property string $slug
+ * @property int $order
  * @property-read Course $course
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Step> $steps
  */

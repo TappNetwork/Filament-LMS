@@ -1,5 +1,6 @@
 includes:
     - phpstan-baseline.neon
+    - ./vendor/larastan/larastan/extension.neon
 
 parameters:
     level: 4
@@ -8,8 +9,6 @@ parameters:
         - config
         - database
     tmpDir: build/phpstan
-    checkOctaneCompatibility: true
-    checkModelProperties: true
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         - '#Trait .+ is used zero times and is not analysed#'

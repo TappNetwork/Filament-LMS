@@ -9,3 +9,24 @@
   .fb-form-user-container {
     @apply bg-white px-8 py-16;
   }
+
+/* LMS Plugin Styles */
+
+/* Centralized step material sizing */
+.step-material-container {
+    height: 60vh;
+    max-width: calc(60vh * 16/9);
+    margin: 0 auto;
+}
+
+.step-material-container img,
+.step-material-container iframe {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Ensure PDFs and documents fit properly */
+.step-material-container iframe[src*=".pdf"] {
+    min-height: 60vh;
+}

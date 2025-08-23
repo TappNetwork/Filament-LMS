@@ -30,7 +30,13 @@ class Document extends Model implements HasMedia
 
     public function getTypeAttribute()
     {
-        $mime = $this->getFirstMedia()->mime_type;
+        $media = $this->getFirstMedia();
+
+        if (! $media) {
+            return 'Unknown';
+        }
+
+        $mime = $media->mime_type;
 
         // TODO also create mime2icon and put in an enum
         $mime2label = [
@@ -38,5 +44,24 @@ class Document extends Model implements HasMedia
         ];
 
         return $mime2label[$mime] ?? $mime;
+    }
+
+    /**
+     * Get the preview image URL, using the 'preview' collection if available, otherwise fallback to the generated preview.
+     */
+    public function getPreviewImageUrl(): ?string
+    {
+        $previewMedia = $this->getFirstMedia('preview');
+        if ($previewMedia) {
+            return $previewMedia->getUrl();
+        }
+        // Fallback: use the generated preview from the main file collection (assumed to be 'file')
+        $mainMedia = $this->getFirstMedia();
+        if ($mainMedia && method_exists($mainMedia, 'getGeneratedConversionUrl')) {
+            // If you have a conversion (e.g., 'thumb'), you can use it here
+            return $mainMedia->getUrl();
+        }
+
+        return null;
     }
 }

@@ -19,6 +19,5 @@ Route::middleware('web')->group(function () {
         ->name('filament-lms::certificates.download')
         ->middleware('auth');
     Route::get('lms/certificates/{course}/{user}', [CertificateController::class, 'show'])
-        ->name('filament-lms::certificates.show')
-        ->middleware('signed');
+        ->name('filament-lms::certificates.show');
 });

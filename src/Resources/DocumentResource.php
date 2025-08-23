@@ -10,11 +10,14 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Resources\DocumentResource\Pages;
 
 class DocumentResource extends Resource
 {
+    use HasLmsSlug;
+
     protected static ?string $model = Document::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document';
@@ -29,6 +32,17 @@ class DocumentResource extends Resource
                     ->required(),
                 SpatieMediaLibraryFileUpload::make('file')
                     ->required(),
+                Forms\Components\TextInput::make('media_name')
+                    ->label('File Display Name')
+                    ->helperText('Custom name for the uploaded file (optional). Leave empty to use original filename.')
+                    ->visible(fn ($livewire) => $livewire->record && $livewire->record->exists)
+                    ->dehydrated(false),
+                SpatieMediaLibraryFileUpload::make('preview')
+                    ->collection('preview')
+                    ->label('Custom Preview Image (optional)')
+                    ->image()
+                    ->maxFiles(1)
+                    ->helperText('If set, this image will be used as the document preview.'),
             ]);
     }
 

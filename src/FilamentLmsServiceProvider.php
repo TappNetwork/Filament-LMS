@@ -12,10 +12,14 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
+use Tapp\FilamentLms\Livewire\GradedKeyValueEntry;
 use Tapp\FilamentLms\Livewire\LinkStep;
+use Tapp\FilamentLms\Livewire\TestStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
+use Tapp\FilamentLms\Livewire\ViewGradedEntry;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
+use Tapp\FilamentLms\Pages\CreateTestEntry;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider
 {
@@ -23,7 +27,6 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('filament-lms')
-            // TODO how do we get the views working without making them publishable?
             ->hasViews()
             ->hasAssets()
             ->hasConfigFile('filament-lms')
@@ -35,6 +38,11 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'create_lms_steps_table',
                 'create_lms_step_user_table',
                 'create_lms_videos_table',
+                'add_text_to_lms_steps_table',
+                'create_lms_resources_table',
+                'create_lms_tests_table',
+                'create_lms_course_user_table',
+                'create_lms_images_table',
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
@@ -45,12 +53,21 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
 
     public function packageBooted()
     {
+        $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/filament-lms'),
+        ], 'filament-lms-views');
+
         Livewire::component('video-step', VideoStep::class);
         Livewire::component('document-step', DocumentStep::class);
         Livewire::component('link-step', LinkStep::class);
         Livewire::component('form-step', FormStep::class);
+        Livewire::component('test-step', TestStep::class);
         Livewire::component('vimeo-video', VimeoVideo::class);
         Livewire::component('video-player', VideoPlayer::class);
+        Livewire::component('create-test-entry', CreateTestEntry::class);
+        Livewire::component('view-graded-entry', ViewGradedEntry::class);
+        Livewire::component('graded-key-value-entry', GradedKeyValueEntry::class);
+        Livewire::component('image-step', \Tapp\FilamentLms\Livewire\ImageStep::class);
 
         FilamentAsset::register([
             Css::make('filament-lms', __DIR__.'/../dist/filament-lms.css'),
@@ -62,6 +79,8 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             'document' => 'Tapp\FilamentLms\Models\Document',
             'link' => 'Tapp\FilamentLms\Models\Link',
             'form' => 'Tapp\FilamentFormBuilder\Models\FilamentForm',
+            'test' => 'Tapp\FilamentLms\Models\Test',
+            'image' => 'Tapp\FilamentLms\Models\Image',
         ]);
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');

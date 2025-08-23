@@ -11,12 +11,15 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Resources\CourseResource\Pages;
 use Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
 
 class CourseResource extends Resource
 {
+    use HasLmsSlug;
+
     protected static ?string $model = Course::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
@@ -29,18 +32,28 @@ class CourseResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->live(onBlur: true)
-                    ->afterStateUpdated(function (Set $set, ?string $state, string $operation) {
-                        if ($operation === 'create') {
+                    ->afterStateUpdated(function (Set $set, ?string $state, string $operation, $get) {
+                        // Always update slug when name changes
+                        $set('slug', Str::slug($state));
+
+                        // Only auto-generate external_id on create or if it's empty
+                        if ($operation === 'create' || empty($get('external_id'))) {
                             $set('external_id', Str::snake($state));
                         }
-                        $set('slug', Str::slug($state));
                     })
                     ->required(),
                 Forms\Components\TextInput::make('external_id')
-                    ->disabledOn('edit')
                     ->label('External ID')
-                    ->helperText('Cannot be changed after creation. Used for external integrations like HubSpot.')
-                    ->required(),
+                    ->helperText('Used for external integrations like HubSpot. Updating this will cause a new property to be added to the integration.')
+                    ->required()
+                    ->rules([
+                        'regex:/^[a-z][a-z0-9_]*$/',
+                        'max:100',
+                    ])
+                    ->validationMessages([
+                        'regex' => 'External ID must contain only lowercase letters, numbers, and underscores, and must start with a letter.',
+                        'max' => 'External ID cannot exceed 100 characters.',
+                    ]),
                 Forms\Components\TextInput::make('slug')
                     ->helperText('Used for urls.')
                     ->required(),
@@ -57,7 +70,9 @@ class CourseResource extends Resource
                     ->options(config('filament-lms.awards'))
                     ->required()
                     ->hint(function ($record) {
-                        if ($record?->id) {
+                        // @phpstan-ignore-next-line
+                        if ($record && $record->id) {
+                            // @phpstan-ignore-next-line
                             $link = route('filament-lms::certificates.show', ['course' => $record->id, 'user' => auth()->id()]);
 
                             return new HtmlString("<a rel='noopener noreferrer' target='_blank' href='{$link}'>Click to Preview</a>");

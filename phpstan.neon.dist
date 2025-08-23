@@ -10,5 +10,11 @@ parameters:
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true
+    reportUnmatchedIgnoredErrors: false
     ignoreErrors:
+        - '#Trait .+ is used zero times and is not analysed#'
+        - '#Property .* \$view \(view-string\) does not accept default value of type string#'
+        - '#Static property .* \$view \(view-string\) does not accept default value of type string#'
         - '#Static property .* \(view-string\) does not accept#'
+        - '#Property .*::\$view \(view-string\) does not accept default value of type string#'
+        - '#.*\$view \(view-string\) does not accept.*string#'

@@ -2,7 +2,8 @@
 An opinionated LMS plugin for Filament containing a user facing LMS panel and Resources for an existing admin panel
 
 ## Installation
-### add the following to composer.json
+
+### Add the following to composer.json
 
 ``` json
 "require": {
@@ -27,7 +28,7 @@ An opinionated LMS plugin for Filament containing a user facing LMS panel and Re
 },
 ```
 
-### publish
+### Publish
 
 ``` sh
 php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider"
@@ -35,7 +36,8 @@ php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvid
 
 run migrations after publishing
 
-### add plugin to admin panel
+### Add plugin to admin panel
+
 This will create resources that allow admin to manage course material.
 
 ``` php
@@ -51,14 +53,29 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
+### Tailwind Configuration
 
+Add the following paths to your `tailwind.config.js` file to ensure proper styling:
+
+```javascript
+export default {
+    content: [
+        // ... existing paths ...
+        './vendor/tapp/filament-lms/resources/**/*.blade.php',
+        './vendor/tapp/filament-form-builder/resources/**/*.blade.php',
+    ],
+    // ... rest of config
+}
+```
 
 # Development Reccomendations
+
 - create the directory {project}/packages
 - from within the packages directory, clone this repo
 - (if necessary) add a type:path repository to project composer.json
 
 # LMS Features
+
 ## Frontend LMS Panel
 contains the LMS experience for the end user
 ### Course Library
@@ -98,7 +115,61 @@ contains the LMS experience for the end user
 - Text (Wysiwyg?)
 - Image
 
+## Configurations
+
+This is the contents of the published config file:
+
+```php
+<?php
+
+use Filament\Navigation\NavigationItem;
+
+return [
+    'theme' => 'default',
+    'font' => 'Poppins',
+    'home_url' => '/lms',
+    'brand_name' => 'LMS',
+    'brand_logo' => '',
+    'brand_logo_height' => null,
+    'vite_theme' => '',
+    'colors' => [],
+    'awards' => [
+        'Default' => 'default',
+    ],
+    'top_navigation' => false,
+    'show_exit_lms_link' => true,
+];
+
+```
+
+### top_navigation
+
+Set it to `true` to use top navigation instead of left sidebar on courses page.
+
+### show_exit_lms_link
+
+Use to display or not the `Exit LMS` link on top bar.
+
+## Adding extra navigation items
+
+To register new navigation items in the LMS panel, use the `boot()` method of your `AppPanelProvider.php` file:
+
+```php
+use Tapp\FilamentLms\LmsNavigation;
+use Filament\Navigation\NavigationItem;
+
+public function boot(): void
+{
+    LmsNavigation::addNavigation('lms',
+        NavigationItem::make('Home')
+            ->icon('heroicon-o-home')
+            ->url(fn (): string => '/'),
+    );
+}
+```
+
 ## Authorization
+
 ### Gates
 The LMS package uses Laravel Gates for authorization. You'll need to define the following Gates in your application's `AuthServiceProvider`:
 
@@ -119,3 +190,187 @@ class AuthServiceProvider extends ServiceProvider
 
 #### Available Gates
 - `viewLmsReporting`: Controls access to the LMS reporting page. Users must pass this Gate check to view the reporting interface.
+
+## Course Authorization
+
+### Restricting Course Visibility
+
+To restrict users to only see courses they are assigned to, set the following in your `config/filament-lms.php`:
+
+```php
+'restrict_course_visibility' => true,
+```
+
+When enabled, users will only see courses assigned to them via the `lms_course_user` pivot table.
+
+### User-Course Management in Filament
+
+This package provides a reusable `CoursesRelationManager` and `AssignCoursesBulkAction` for managing user-course assignments. To enable course assignment in your User resource:
+
+1. **Import the Relation Manager and Bulk Action:**
+
+```php
+use Tapp\FilamentLms\RelationManagers\CoursesRelationManager;
+use Tapp\FilamentLms\Actions\AssignCoursesBulkAction;
+```
+
+2. **Register the CoursesRelationManager:**
+
+```php
+// In your UserResource.php
+public static function getRelations(): array
+{
+    return [
+        CoursesRelationManager::class,
+        // ... other relation managers ...
+    ];
+}
+```
+
+3. **Add the AssignCoursesBulkAction to your bulk actions:**
+
+```php
+// In your UserResource.php
+public static function table(Table $table): Table
+{
+    return $table
+        // ...
+        ->bulkActions([
+            AssignCoursesBulkAction::make(),
+            // ... other bulk actions ...
+        ]);
+}
+```
+
+## Overriding Course Visibility
+
+If you need custom logic to determine whether a course is visible to a user, you can override the `isCourseVisibleForUser` method provided by the `FilamentLmsUser` trait in your User model. This method is used to filter which courses are shown to the user when course visibility restrictions are enabled.
+
+If you want to call the trait's original method within your override, you can alias it when importing the trait:
+
+```php
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
+
+class User extends Authenticatable
+{
+    use FilamentLmsUser {
+        FilamentLmsUser::isCourseVisibleForUser as filamentLmsIsCourseVisibleForUser;
+    }
+
+    // ...
+
+    public function isCourseVisibleForUser($course): bool
+    {
+        if ($this->hasAnyRole('admin', 'super_admin')) {
+            return true;
+        }
+        // Call the trait's original method
+        return $this->filamentLmsIsCourseVisibleForUser($course);
+    }
+}
+```
+
+This allows you to implement any business rules you need for course visibility, while still leveraging the default logic from the trait if desired.
+
+## Step Access Control
+
+### Customizing Step Access
+
+The LMS package provides a flexible way to control which steps users can access through the `canAccessStep` method. This method is available on any model that uses the `FilamentLmsUser` trait and can be overridden to implement custom access control logic.
+
+#### Default Behavior
+
+By default, the `canAccessStep` method checks if the step is available based on the completion of previous steps in the course. This ensures users must complete steps in the proper sequence.
+
+#### Overriding Step Access Control
+
+To implement custom step access logic, override the `canAccessStep` method in your User model:
+
+```php
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
+
+class User extends Authenticatable
+{
+    use FilamentLmsUser;
+
+    // ...
+
+    public function canAccessStep(Step $step): bool
+    {
+        // Allow admins to access all steps
+        if ($this->hasRole('admin')) {
+            return true;
+        }
+
+        // Fall back to default behavior (sequential step completion)
+        return parent::canAccessStep($step);
+    }
+}
+```
+
+#### Where Step Access is Enforced
+
+The `canAccessStep` method is automatically used in the following places:
+
+1. **Step Page Access**: When users try to access a step directly via URL
+2. **Navigation Links**: Determines which step links are clickable in the course navigation
+3. **Current Step Detection**: Used when determining which step to redirect users to
+
+#### Integration with Existing Logic
+
+The `canAccessStep` method works alongside the existing `getAvailableAttribute()` method in the Step model. While `getAvailableAttribute()` handles the basic sequential completion logic, `canAccessStep` provides an additional layer of access control that can be customized per user.
+
+### Customizing Step Edit Permissions
+
+The LMS package also provides a way to control which users can edit steps through the `canEditStep` method. This method is separate from `canAccessStep` and specifically controls edit permissions.
+
+#### Default Behavior
+
+By default, the `canEditStep` method returns `false`, meaning no users have edit permissions. This ensures that step editing is disabled by default and must be explicitly enabled.
+
+#### Overriding Step Edit Permissions
+
+To implement custom step edit logic, override the `canEditStep` method in your User model:
+
+```php
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
+
+class User extends Authenticatable
+{
+    use FilamentLmsUser;
+
+    // ...
+
+    public function canEditStep(Step $step): bool
+    {
+        // Allow admins to edit all steps
+        if ($this->hasRole('admin') || $this->hasRole('super_admin')) {
+            return true;
+        }
+
+        // Allow course creators to edit their own courses
+        if ($this->hasRole('instructor') && $step->lesson->course->created_by === $this->id) {
+            return true;
+        }
+
+        // No edit permissions for other users
+        return false;
+    }
+}
+```
+
+#### Where Step Edit Permissions are Used
+
+The `canEditStep` method is used in the following places:
+
+1. **Edit Button Visibility**: Controls whether the "Edit" button appears on step pages
+2. **Admin Interface**: Can be used to control access to step editing in the Filament admin panel
+3. **API Endpoints**: Can be used to secure step editing API endpoints
+
+#### Separation of Concerns
+
+Note that `canEditStep` is separate from `canAccessStep`:
+- **`canAccessStep`**: Controls whether a user can view/access a step
+- **`canEditStep`**: Controls whether a user can edit/modify a step
+
+This separation allows for fine-grained control over user permissions, where users might be able to view steps but not edit them.

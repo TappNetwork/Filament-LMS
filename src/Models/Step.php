@@ -15,6 +15,13 @@ use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Events\StepCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 
+/**
+ * @property string $slug
+ * @property int $order
+ * @property string|null $completed_at
+ * @property-read Lesson $lesson
+ * @property-read StepUser|null $progress
+ */
 class Step extends Model implements Sortable
 {
     use HasFactory, SortableTrait;

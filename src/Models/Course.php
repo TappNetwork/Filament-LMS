@@ -18,6 +18,7 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
 /**
  * @property string|null $award
  * @property array $award_content
+ * @property string $slug
  */
 class Course extends Model implements HasMedia
 {

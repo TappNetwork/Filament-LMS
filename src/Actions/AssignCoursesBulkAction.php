@@ -2,7 +2,7 @@
 
 namespace Tapp\FilamentLms\Actions;
 
-use Filament\Actions\BulkAction;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Forms\Components\Select;
 use Tapp\FilamentLms\Models\Course;
 
@@ -18,7 +18,7 @@ class AssignCoursesBulkAction
                     $user->courses()->syncWithoutDetaching($courseIds);
                 }
             })
-            ->form([
+            ->schema([
                 Select::make('courses')
                     ->preload()
                     ->multiple()

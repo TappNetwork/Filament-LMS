@@ -197,15 +197,16 @@ class Course extends Model implements HasMedia
             return 0;
         }
 
-        // Load steps with progress for the specific user
-        $steps = $this->steps()->with(['progress' => function ($query) use ($userId) {
-            $query->where('user_id', $userId);
-        }])->get();
+        // Get all steps for this course
+        $steps = $this->steps()->get();
 
-        // @phpstan-ignore-next-line
-        $completedSteps = $steps->filter->completed_at;
+        // Get all completed steps for this specific user
+        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+            ->where('user_id', $userId)
+            ->whereNotNull('completed_at')
+            ->get();
 
-        return $completedSteps->count() / $steps->count() * 100;
+        return $completedStepUsers->count() / $steps->count() * 100;
     }
 
     public function certificateUrl(): string

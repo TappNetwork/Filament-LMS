@@ -2,31 +2,28 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Utilities\Set;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Checkbox;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Tapp\FilamentLms\Resources\CourseResource\RelationManagers\LessonsRelationManager;
-use Tapp\FilamentLms\Resources\CourseResource\Pages\ListCourses;
-use Tapp\FilamentLms\Resources\CourseResource\Pages\CreateCourse;
-use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
+use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Resources\CourseResource\Pages;
-use Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
+use Tapp\FilamentLms\Resources\CourseResource\Pages\CreateCourse;
+use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
+use Tapp\FilamentLms\Resources\CourseResource\Pages\ListCourses;
+use Tapp\FilamentLms\Resources\CourseResource\RelationManagers\LessonsRelationManager;
 
 class CourseResource extends Resource
 {
@@ -34,9 +31,9 @@ class CourseResource extends Resource
 
     protected static ?string $model = Course::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-academic-cap';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
     public static function form(Schema $schema): Schema
     {

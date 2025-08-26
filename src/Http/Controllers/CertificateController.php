@@ -2,7 +2,6 @@
 
 namespace Tapp\FilamentLms\Http\Controllers;
 
-use InvalidArgumentException;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Routing\Controller;
@@ -10,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use InvalidArgumentException;
 // TODO get from config
 use Spatie\Browsershot\Browsershot;
 use Symfony\Component\HttpFoundation\StreamedResponse;

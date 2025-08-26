@@ -2,7 +2,6 @@
 
 namespace Tapp\FilamentLms\Jobs;
 
-use Spatie\Browsershot\Browsershot;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,6 +11,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\Browsershot\Browsershot;
 use Tapp\FilamentLms\Models\Link;
 
 class GenerateLinkScreenshot implements ShouldQueue

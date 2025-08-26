@@ -3,7 +3,6 @@
 namespace Tapp\FilamentLms\Resources\VideoResource\Pages;
 
 use Filament\Actions\DeleteAction;
-use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Tapp\FilamentLms\Resources\VideoResource;
 

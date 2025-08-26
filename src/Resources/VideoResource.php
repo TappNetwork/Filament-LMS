@@ -2,23 +2,20 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Tapp\FilamentLms\Resources\VideoResource\Pages\ListVideos;
-use Tapp\FilamentLms\Resources\VideoResource\Pages\CreateVideo;
-use Tapp\FilamentLms\Resources\VideoResource\Pages\EditVideo;
-use Filament\Forms;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Video;
-use Tapp\FilamentLms\Resources\VideoResource\Pages;
+use Tapp\FilamentLms\Resources\VideoResource\Pages\CreateVideo;
+use Tapp\FilamentLms\Resources\VideoResource\Pages\EditVideo;
+use Tapp\FilamentLms\Resources\VideoResource\Pages\ListVideos;
 
 class VideoResource extends Resource
 {
@@ -26,9 +23,9 @@ class VideoResource extends Resource
 
     protected static ?string $model = Video::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-film';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-film';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
     public static function form(Schema $schema): Schema
     {

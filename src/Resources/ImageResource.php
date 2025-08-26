@@ -2,28 +2,25 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
-use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
-use Tapp\FilamentLms\Resources\ImageResource\Pages\ListImages;
-use Tapp\FilamentLms\Resources\ImageResource\Pages\CreateImage;
-use Tapp\FilamentLms\Resources\ImageResource\Pages\EditImage;
-use Filament\Forms;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Image;
-use Tapp\FilamentLms\Resources\ImageResource\Pages;
+use Tapp\FilamentLms\Resources\ImageResource\Pages\CreateImage;
+use Tapp\FilamentLms\Resources\ImageResource\Pages\EditImage;
+use Tapp\FilamentLms\Resources\ImageResource\Pages\ListImages;
 
 class ImageResource extends Resource
 {
@@ -31,9 +28,9 @@ class ImageResource extends Resource
 
     protected static ?string $model = Image::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-photo';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-photo';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
     public static function form(Schema $schema): Schema
     {

@@ -2,7 +2,6 @@
 
 namespace Tapp\FilamentLms;
 
-use Tapp\FilamentLms\Livewire\ImageStep;
 use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
@@ -14,6 +13,7 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\GradedKeyValueEntry;
+use Tapp\FilamentLms\Livewire\ImageStep;
 use Tapp\FilamentLms\Livewire\LinkStep;
 use Tapp\FilamentLms\Livewire\TestStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;

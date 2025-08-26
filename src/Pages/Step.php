@@ -2,9 +2,9 @@
 
 namespace Tapp\FilamentLms\Pages;
 
-use Filament\Support\Enums\Width;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
+use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;

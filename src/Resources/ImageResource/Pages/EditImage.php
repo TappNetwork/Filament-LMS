@@ -5,7 +5,6 @@ namespace Tapp\FilamentLms\Resources\ImageResource\Pages;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
-use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Tapp\FilamentLms\Resources\ImageResource;
 

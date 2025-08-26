@@ -3,7 +3,6 @@
 namespace Tapp\FilamentLms\Resources\LessonResource\Pages;
 
 use Filament\Actions\CreateAction;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Tapp\FilamentLms\Resources\LessonResource;
 

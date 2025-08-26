@@ -16,8 +16,19 @@ use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 
 /**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string $external_id
+ * @property string|null $image
  * @property string|null $award
  * @property array $award_content
+ * @property string|null $description
+ * @property bool $hidden
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
+ * @property-read \Illuminate\Database\Eloquent\Collection|Step[] $steps
  */
 class Course extends Model implements HasMedia
 {

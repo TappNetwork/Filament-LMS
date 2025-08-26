@@ -8,9 +8,7 @@ parameters:
         - config
         - database
     tmpDir: build/phpstan
-    checkOctaneCompatibility: true
-    checkModelProperties: true
-    reportUnmatchedIgnoredErrors: false
+    reportUnmatchedIgnoredError: false
     ignoreErrors:
         - '#Trait .+ is used zero times and is not analysed#'
         - '#Property .* \$view \(view-string\) does not accept default value of type string#'

@@ -2,6 +2,8 @@
 
 namespace Tapp\FilamentLms\Jobs;
 
+use Spatie\Browsershot\Browsershot;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -28,7 +30,7 @@ class GenerateLinkScreenshot implements ShouldQueue
 
             Storage::disk('public')->makeDirectory('filament-lms/link-screenshots');
 
-            \Spatie\Browsershot\Browsershot::url($this->link->url)
+            Browsershot::url($this->link->url)
                 ->windowSize(1280, 800)
                 ->waitUntilNetworkIdle()
                 ->setOption('user-data-dir', '/tmp/chrome-data-'.Str::uuid())
@@ -40,7 +42,7 @@ class GenerateLinkScreenshot implements ShouldQueue
                 ->toMediaCollection('preview');
 
             @unlink($tempPath);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to generate screenshot for link: '.$this->link->url, [
                 'error' => $e->getMessage(),
             ]);

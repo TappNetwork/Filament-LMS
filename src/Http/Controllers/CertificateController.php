@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Http\Controllers;
 
+use InvalidArgumentException;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Routing\Controller;
@@ -23,13 +24,13 @@ class CertificateController extends Controller
         $userModel = config('auth.providers.users.model');
 
         if (! $userModel) {
-            throw new \InvalidArgumentException('User model not configured');
+            throw new InvalidArgumentException('User model not configured');
         }
 
         $user = $userModel::findOrFail($userId);
 
         if (! $user instanceof Authenticatable) {
-            throw new \InvalidArgumentException('User model must implement Authenticatable contract');
+            throw new InvalidArgumentException('User model must implement Authenticatable contract');
         }
 
         if (! request()->hasValidSignature() &&

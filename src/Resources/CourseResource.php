@@ -2,10 +2,22 @@
 
 namespace Tapp\FilamentLms\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Checkbox;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Tapp\FilamentLms\Resources\CourseResource\RelationManagers\LessonsRelationManager;
+use Tapp\FilamentLms\Resources\CourseResource\Pages\ListCourses;
+use Tapp\FilamentLms\Resources\CourseResource\Pages\CreateCourse;
+use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
 use Filament\Forms;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
-use Filament\Forms\Form;
-use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -22,15 +34,15 @@ class CourseResource extends Resource
 
     protected static ?string $model = Course::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static ?string $navigationGroup = 'LMS';
+    protected static string | \UnitEnum | null $navigationGroup = 'LMS';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
+        return $schema
+            ->components([
+                TextInput::make('name')
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Set $set, ?string $state, string $operation, $get) {
                         // Always update slug when name changes
@@ -42,7 +54,7 @@ class CourseResource extends Resource
                         }
                     })
                     ->required(),
-                Forms\Components\TextInput::make('external_id')
+                TextInput::make('external_id')
                     ->label('External ID')
                     ->helperText('Used for external integrations like HubSpot. Updating this will cause a new property to be added to the integration.')
                     ->required()
@@ -54,7 +66,7 @@ class CourseResource extends Resource
                         'regex' => 'External ID must contain only lowercase letters, numbers, and underscores, and must start with a letter.',
                         'max' => 'External ID cannot exceed 100 characters.',
                     ]),
-                Forms\Components\TextInput::make('slug')
+                TextInput::make('slug')
                     ->helperText('Used for urls.')
                     ->required(),
                 SpatieMediaLibraryFileUpload::make('image')
@@ -65,8 +77,8 @@ class CourseResource extends Resource
                     ->imageResizeTargetWidth('1080')
                     ->imageResizeTargetHeight('1080')
                     ->imageCropAspectRatio('1:1'),
-                Forms\Components\Textarea::make('description'),
-                Forms\Components\Select::make('award')
+                Textarea::make('description'),
+                Select::make('award')
                     ->options(config('filament-lms.awards'))
                     ->required()
                     ->hint(function ($record) {
@@ -81,7 +93,7 @@ class CourseResource extends Resource
                         return null;
                     })
                     ->helperText('Form must be saved before previewing.'),
-                Forms\Components\Checkbox::make('hidden'),
+                Checkbox::make('hidden'),
 
                 /*
                      * TODO: Implement award layout and content
@@ -96,26 +108,26 @@ class CourseResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('external_id')
+                TextColumn::make('external_id')
                     ->label('External ID')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('slug')
+                TextColumn::make('slug')
                     ->searchable()
                     ->sortable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -123,16 +135,16 @@ class CourseResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\LessonsRelationManager::make(),
+            LessonsRelationManager::make(),
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCourses::route('/'),
-            'create' => Pages\CreateCourse::route('/create'),
-            'edit' => Pages\EditCourse::route('/{record}/edit'),
+            'index' => ListCourses::route('/'),
+            'create' => CreateCourse::route('/create'),
+            'edit' => EditCourse::route('/{record}/edit'),
         ];
     }
 }

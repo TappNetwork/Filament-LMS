@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms;
 
+use Tapp\FilamentLms\Livewire\ImageStep;
 use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
@@ -67,7 +68,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('create-test-entry', CreateTestEntry::class);
         Livewire::component('view-graded-entry', ViewGradedEntry::class);
         Livewire::component('graded-key-value-entry', GradedKeyValueEntry::class);
-        Livewire::component('image-step', \Tapp\FilamentLms\Livewire\ImageStep::class);
+        Livewire::component('image-step', ImageStep::class);
 
         FilamentAsset::register([
             Css::make('filament-lms', __DIR__.'/../dist/filament-lms.css'),

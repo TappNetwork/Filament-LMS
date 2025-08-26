@@ -2,6 +2,9 @@
 
 namespace Tapp\FilamentLms;
 
+use Filament\Widgets\AccountWidget;
+use Filament\Widgets\FilamentInfoWidget;
+use Tapp\FilamentLms\Models\Lesson;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -39,7 +42,7 @@ class LmsPanelProvider extends PanelProvider
             FilamentView::registerRenderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,
                 function () {
-                    if (Filament::getCurrentPanel()->getId() == 'lms') {
+                    if (Filament::getCurrentOrDefaultPanel()->getId() == 'lms') {
                         return view('filament-lms::components.exit-lms');
                     }
                 }
@@ -88,9 +91,9 @@ class LmsPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Lms/Widgets'), for: 'App\\Filament\\Lms\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                AccountWidget::class,
+                AccountWidget::class,
+                FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -113,7 +116,7 @@ class LmsPanelProvider extends PanelProvider
         $hookedNavigationItems = LmsNavigation::getNavigation('lms');
 
         if (Route::current()->parameter('courseSlug')) {
-            filament()->getCurrentPanel()->topNavigation(false);
+            filament()->getCurrentOrDefaultPanel()->topNavigation(false);
 
             FilamentView::registerRenderHook(
                 PanelsRenderHook::TOPBAR_START,
@@ -137,7 +140,7 @@ class LmsPanelProvider extends PanelProvider
             $course = Course::where('slug', Route::current()->parameter('courseSlug'))->firstOrFail();
 
             $navigationGroups = $course->lessons->map(function ($lesson) {
-                /** @var \Tapp\FilamentLms\Models\Lesson $lesson */
+                /** @var Lesson $lesson */
                 return NavigationGroup::make($lesson->name)
                     ->collapsed(fn (): bool => ! $lesson->isActive())
                     // ->collapsible(true)

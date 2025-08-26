@@ -2,9 +2,17 @@
 
 namespace Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\CreateAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Forms\Set;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -16,21 +24,21 @@ class LessonsRelationManager extends RelationManager
 {
     protected static string $relationship = 'lessons';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
+        return $schema
+            ->components([
+                TextInput::make('name')
                     ->live(onBlur: true)
                     ->required()
                     ->afterStateUpdated(function (Set $set, ?string $state) {
                         $set('slug', Str::slug($state));
                     })
                     ->maxLength(255),
-                Forms\Components\TextInput::make('slug')
+                TextInput::make('slug')
                     ->helperText('Used for urls.')
                     ->required(),
-                Forms\Components\Select::make('course_id')
+                Select::make('course_id')
                     ->relationship(name: 'course', titleAttribute: 'name')
                     ->required(),
             ]);
@@ -43,24 +51,24 @@ class LessonsRelationManager extends RelationManager
             ->reorderable('order')
             ->recordTitleAttribute('name')
             ->columns([
-                Tables\Columns\TextColumn::make('order'),
-                Tables\Columns\TextColumn::make('name'),
+                TextColumn::make('order'),
+                TextColumn::make('name'),
             ])
             ->filters([
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                CreateAction::make()
                     ->url(fn () => CreateLesson::getUrl(['course_id' => $this->ownerRecord])),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
+            ->recordActions([
+                EditAction::make()
                     ->url(fn ($record) => EditLesson::getUrl([$record])),
-                Tables\Actions\DeleteAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

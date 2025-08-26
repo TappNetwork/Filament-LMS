@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Resources\TestResource\Pages;
 
+use Filament\Actions\DeleteAction;
 use Filament\Actions;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\EditRecord;
@@ -14,7 +15,7 @@ class EditTest extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            DeleteAction::make(),
             Action::make('create_rubric')
                 ->color('success')
                 ->action(function () {

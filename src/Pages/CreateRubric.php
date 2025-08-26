@@ -8,9 +8,9 @@ use Tapp\FilamentLms\Models\Test;
 
 class CreateRubric extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string $view = 'filament-lms::filament.pages.create-rubric';
+    protected string $view = 'filament-lms::filament.pages.create-rubric';
 
     public $test;
 

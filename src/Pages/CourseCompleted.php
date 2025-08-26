@@ -10,9 +10,9 @@ class CourseCompleted extends Page
 {
     use CourseLayout;
 
-    protected static ?string $navigationIcon = 'heroicon-o-trophy';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-trophy';
 
-    protected static string $view = 'filament-lms::pages.course-completed';
+    protected string $view = 'filament-lms::pages.course-completed';
 
     protected static bool $shouldRegisterNavigation = false;
 

@@ -2,8 +2,23 @@
 
 namespace Tapp\FilamentLms\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Schemas\Components\Actions;
+use Filament\Actions\Action;
+use Tapp\FilamentLms\Jobs\GenerateLinkScreenshot;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreBulkAction;
+use Tapp\FilamentLms\Resources\LinkResource\Pages\ListLinks;
+use Tapp\FilamentLms\Resources\LinkResource\Pages\CreateLink;
+use Tapp\FilamentLms\Resources\LinkResource\Pages\EditLink;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -19,31 +34,31 @@ class LinkResource extends Resource
 
     protected static ?string $model = Link::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-paper-clip';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-paper-clip';
 
-    protected static ?string $navigationGroup = 'LMS';
+    protected static string | \UnitEnum | null $navigationGroup = 'LMS';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
+        return $schema
+            ->components([
+                TextInput::make('name')
                     ->required(),
-                Forms\Components\TextInput::make('url')
+                TextInput::make('url')
                     ->activeUrl()
                     ->required(),
-                \Filament\Forms\Components\SpatieMediaLibraryFileUpload::make('preview')
+                SpatieMediaLibraryFileUpload::make('preview')
                     ->collection('preview')
                     ->helperText('If not provided, the preview will be generated from the URL.')
                     ->image(),
-                Forms\Components\Actions::make([
-                    Forms\Components\Actions\Action::make('regeneratePreview')
+                Actions::make([
+                    Action::make('regeneratePreview')
                         ->icon('heroicon-o-arrow-path')
                         ->label('Regenerate Preview from Url')
                         ->visible(fn ($livewire) => $livewire->record && $livewire->record->exists)
                         ->action(function (Link $record) {
                             $record->clearMediaCollection('preview');
-                            \Tapp\FilamentLms\Jobs\GenerateLinkScreenshot::dispatch($record);
+                            GenerateLinkScreenshot::dispatch($record);
                         }),
                 ]),
             ]);
@@ -53,30 +68,30 @@ class LinkResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('url')
+                TextColumn::make('url')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->searchable()
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
+                TrashedFilter::make(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    ForceDeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
                 ]),
             ]);
     }
@@ -91,9 +106,9 @@ class LinkResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListLinks::route('/'),
-            'create' => Pages\CreateLink::route('/create'),
-            'edit' => Pages\EditLink::route('/{record}/edit'),
+            'index' => ListLinks::route('/'),
+            'create' => CreateLink::route('/create'),
+            'edit' => EditLink::route('/{record}/edit'),
         ];
     }
 

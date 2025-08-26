@@ -224,6 +224,6 @@ class Course extends Model implements HasMedia
     // Add the users() relationship for the pivot table
     public function users()
     {
-        return $this->belongsToMany(\Illuminate\Foundation\Auth\User::class, 'lms_course_user', 'course_id', 'user_id')->withTimestamps();
+        return $this->belongsToMany(Authenticatable::class, 'lms_course_user', 'course_id', 'user_id')->withTimestamps();
     }
 }

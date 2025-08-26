@@ -2,8 +2,16 @@
 
 namespace Tapp\FilamentLms\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Tapp\FilamentLms\Resources\VideoResource\Pages\ListVideos;
+use Tapp\FilamentLms\Resources\VideoResource\Pages\CreateVideo;
+use Tapp\FilamentLms\Resources\VideoResource\Pages\EditVideo;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,17 +26,17 @@ class VideoResource extends Resource
 
     protected static ?string $model = Video::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-film';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-film';
 
-    protected static ?string $navigationGroup = 'LMS';
+    protected static string | \UnitEnum | null $navigationGroup = 'LMS';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
+        return $schema
+            ->components([
+                TextInput::make('name')
                     ->required(),
-                Forms\Components\TextInput::make('url')
+                TextInput::make('url')
                     ->helperText(new HtmlString('https://www.youtube.com/embed/xxxxxxxxxxx <br/> https://player.vimeo.com/video/xxxxxxxxx'))
                     // regex validation to match youtube and vimeo urls
                     // https://www.youtube.com/embed/xxxxxxxxxxx
@@ -43,22 +51,22 @@ class VideoResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('url')
+                TextColumn::make('url')
                     ->searchable()
                     ->sortable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -73,9 +81,9 @@ class VideoResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListVideos::route('/'),
-            'create' => Pages\CreateVideo::route('/create'),
-            'edit' => Pages\EditVideo::route('/{record}/edit'),
+            'index' => ListVideos::route('/'),
+            'create' => CreateVideo::route('/create'),
+            'edit' => EditVideo::route('/{record}/edit'),
         ];
     }
 }

@@ -73,12 +73,6 @@ parameters:
 			path: src/Lms.php
 
 		-
-			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/LmsPanelProvider.php
-
-		-
 			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Lesson\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
@@ -104,18 +98,6 @@ parameters:
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Models/Course.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Support\\HigherOrderCollectionProxy\<string, Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\>\:\:\$completed_at\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Models/Course.php
-
-		-
-			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$slug\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Models/Course.php
@@ -145,61 +127,7 @@ parameters:
 			path: src/Models/Course.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Support\\HigherOrderCollectionProxy\<string, Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\>\:\:\$completed_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Models/Lesson.php
-
-		-
-			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Lesson\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Models/Lesson.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$completed_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Models/Step.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
-			identifier: property.notFound
-			count: 8
-			path: src/Models/Step.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$order\.$#'
-			identifier: property.notFound
-			count: 3
-			path: src/Models/Step.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Models/Step.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$steps\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Models/Step.php
-
-		-
-			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Step\:\:\$order\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Models/Step.php
-
-		-
-			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Step\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Models/Step.php
-
-		-
-			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\StepUser\:\:\$completed_at\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Models/Step.php
@@ -259,37 +187,7 @@ parameters:
 			path: src/Pages/CreateTestEntry.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Pages/Step.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Pages/Step.php
-
-		-
-			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Course\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Pages/Step.php
-
-		-
-			message: '#^Access to an undefined property Tapp\\FilamentLms\\Models\\Step\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Pages/Step.php
-
-		-
 			message: '#^Property Tapp\\FilamentLms\\Pages\\Step\:\:\$lesson \(Tapp\\FilamentLms\\Models\\Lesson\) does not accept Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/Pages/Step.php
-
-		-
-			message: '#^Property Tapp\\FilamentLms\\Pages\\Step\:\:\$step \(Tapp\\FilamentLms\\Models\\Step\) does not accept Illuminate\\Database\\Eloquent\\Model\.$#'
 			identifier: assign.propertyType
 			count: 1
 			path: src/Pages/Step.php

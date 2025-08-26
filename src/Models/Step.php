@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\Auth;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 use Tapp\FilamentLms\Database\Factories\StepFactory;
@@ -61,7 +62,7 @@ class Step extends Model implements Sortable
     public function complete($user = null)
     {
         // @phpstan-ignore-next-line
-        $user = $user ?: auth()->user();
+        $user = $user ?: Auth::user();
 
         $userStep = StepUser::where('user_id', $user->id)
             ->where('step_id', $this->id)
@@ -147,7 +148,7 @@ class Step extends Model implements Sortable
     public function videoProgress(int $seconds): void
     {
         // @phpstan-ignore-next-line
-        $user = auth()->user();
+        $user = Auth::user();
 
         $userStep = StepUser::where('user_id', $user->id)
             ->where('step_id', $this->id)
@@ -176,7 +177,7 @@ class Step extends Model implements Sortable
     public function progress(): HasOne
     {
         // @phpstan-ignore-next-line
-        $currentUserId = auth()->check() ? auth()->user()->id : null;
+        $currentUserId = Auth::check() ? Auth::user()->id : null;
 
         return $this->hasOne(StepUser::class)->ofMany([
             // TODO is this started_at => max needed?
@@ -194,7 +195,7 @@ class Step extends Model implements Sortable
     public function getAvailableAttribute()
     {
         // @phpstan-ignore-next-line
-        if (! auth()->check()) {
+        if (! Auth::check()) {
             return false;
         }
 

@@ -74,14 +74,15 @@ class Course extends Model implements HasMedia
 
         // Get all completed steps for this user
         $completedStepIds = StepUser::whereIn('step_id', $allSteps->pluck('id'))
-            ->where('user_id', auth()->user()->id)
+            ->where('user_id', Auth::user()->id)
             ->whereNotNull('completed_at')
             ->pluck('step_id')
             ->toArray();
 
         // Find the first step that hasn't been completed
         $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
-            return ! in_array($step->id, $completedStepIds) && auth()->user()?->canAccessStep($step);
+            // @phpstan-ignore-next-line
+            return ! in_array($step->id, $completedStepIds) && Auth::user()?->canAccessStep($step);
         });
 
         // If no incomplete step is available, check if course is complete

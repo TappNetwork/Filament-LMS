@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
+/**
+ * @property string|null $completed_at
+ * @property int|null $seconds
+ */
 class StepUser extends Pivot
 {
     use HasFactory;

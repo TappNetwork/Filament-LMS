@@ -2,9 +2,8 @@
 
 namespace Tapp\FilamentLms\Resources\TestResource\Pages;
 
-use Filament\Actions\DeleteAction;
-use Filament\Actions;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Tapp\FilamentLms\Resources\TestResource;
 

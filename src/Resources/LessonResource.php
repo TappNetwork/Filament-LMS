@@ -2,27 +2,23 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Utilities\Set;
-use Filament\Forms\Components\Select;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Tapp\FilamentLms\Resources\LessonResource\RelationManagers\StepsRelationManager;
-use Tapp\FilamentLms\Resources\LessonResource\Pages\ListLessons;
-use Tapp\FilamentLms\Resources\LessonResource\Pages\CreateLesson;
-use Tapp\FilamentLms\Resources\LessonResource\Pages\EditLesson;
-use Filament\Forms;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Lesson;
-use Tapp\FilamentLms\Resources\LessonResource\Pages;
-use Tapp\FilamentLms\Resources\LessonResource\RelationManagers;
+use Tapp\FilamentLms\Resources\LessonResource\Pages\CreateLesson;
+use Tapp\FilamentLms\Resources\LessonResource\Pages\EditLesson;
+use Tapp\FilamentLms\Resources\LessonResource\Pages\ListLessons;
+use Tapp\FilamentLms\Resources\LessonResource\RelationManagers\StepsRelationManager;
 
 class LessonResource extends Resource
 {
@@ -30,9 +26,9 @@ class LessonResource extends Resource
 
     protected static ?string $model = Lesson::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-book-open';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-book-open';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
     public static function form(Schema $schema): Schema
     {

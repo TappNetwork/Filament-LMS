@@ -2,24 +2,22 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Tapp\FilamentLms\Resources\TestResource\Pages\ListTests;
-use Tapp\FilamentLms\Resources\TestResource\Pages\CreateTest;
-use Tapp\FilamentLms\Resources\TestResource\Pages\EditTest;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Test;
-use Tapp\FilamentLms\Resources\TestResource\Pages;
+use Tapp\FilamentLms\Resources\TestResource\Pages\CreateTest;
+use Tapp\FilamentLms\Resources\TestResource\Pages\EditTest;
+use Tapp\FilamentLms\Resources\TestResource\Pages\ListTests;
 
 class TestResource extends Resource
 {
@@ -27,9 +25,9 @@ class TestResource extends Resource
 
     protected static ?string $model = Test::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
     public static function form(Schema $schema): Schema
     {

@@ -2,10 +2,10 @@
 
 namespace Tapp\FilamentLms\RelationManagers;
 
-use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\AttachAction;
 use Filament\Actions\DetachAction;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class CoursesRelationManager extends RelationManager

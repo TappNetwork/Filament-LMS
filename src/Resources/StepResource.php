@@ -2,34 +2,31 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Utilities\Set;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\MorphToSelect;
-use Filament\Forms\Components\MorphToSelect\Type;
-use Tapp\FilamentLms\Models\Image;
-use Filament\Forms\Components\MarkdownEditor;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Tapp\FilamentLms\Resources\StepResource\Pages\ListSteps;
-use Tapp\FilamentLms\Resources\StepResource\Pages\CreateStep;
-use Tapp\FilamentLms\Resources\StepResource\Pages\EditStep;
-use Filament\Forms;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\MorphToSelect;
+use Filament\Forms\Components\MorphToSelect\Type;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Document;
+use Tapp\FilamentLms\Models\Image;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Models\Video;
-use Tapp\FilamentLms\Resources\StepResource\Pages;
+use Tapp\FilamentLms\Resources\StepResource\Pages\CreateStep;
+use Tapp\FilamentLms\Resources\StepResource\Pages\EditStep;
+use Tapp\FilamentLms\Resources\StepResource\Pages\ListSteps;
 
 class StepResource extends Resource
 {
@@ -37,9 +34,9 @@ class StepResource extends Resource
 
     protected static ?string $model = Step::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-check-circle';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-circle';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
     public static function form(Schema $schema): Schema
     {

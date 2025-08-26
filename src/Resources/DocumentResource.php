@@ -2,28 +2,25 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
-use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
-use Tapp\FilamentLms\Resources\DocumentResource\Pages\ListDocuments;
-use Tapp\FilamentLms\Resources\DocumentResource\Pages\CreateDocument;
-use Tapp\FilamentLms\Resources\DocumentResource\Pages\EditDocument;
-use Filament\Forms;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Document;
-use Tapp\FilamentLms\Resources\DocumentResource\Pages;
+use Tapp\FilamentLms\Resources\DocumentResource\Pages\CreateDocument;
+use Tapp\FilamentLms\Resources\DocumentResource\Pages\EditDocument;
+use Tapp\FilamentLms\Resources\DocumentResource\Pages\ListDocuments;
 
 class DocumentResource extends Resource
 {
@@ -31,9 +28,9 @@ class DocumentResource extends Resource
 
     protected static ?string $model = Document::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
     public static function form(Schema $schema): Schema
     {

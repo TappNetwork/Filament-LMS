@@ -2,21 +2,31 @@
 
 namespace Tapp\FilamentLms\Resources;
 
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Forms\Set;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\MorphToSelect;
+use Filament\Forms\Components\MorphToSelect\Type;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Document;
+use Tapp\FilamentLms\Models\Image;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Models\Video;
-use Tapp\FilamentLms\Resources\StepResource\Pages;
+use Tapp\FilamentLms\Resources\StepResource\Pages\CreateStep;
+use Tapp\FilamentLms\Resources\StepResource\Pages\EditStep;
+use Tapp\FilamentLms\Resources\StepResource\Pages\ListSteps;
 
 class StepResource extends Resource
 {
@@ -24,45 +34,45 @@ class StepResource extends Resource
 
     protected static ?string $model = Step::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-check-circle';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-circle';
 
-    protected static ?string $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
+        return $schema
+            ->components([
+                TextInput::make('name')
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Set $set, ?string $state) {
                         $set('slug', Str::slug($state));
                     })
                     ->required(),
-                Forms\Components\TextInput::make('slug')
+                TextInput::make('slug')
                     ->helperText('Used for urls.')
                     ->unique(ignoreRecord: true)
                     ->required(),
-                Forms\Components\Select::make('lesson_id')
+                Select::make('lesson_id')
                     ->relationship(name: 'lesson', titleAttribute: 'name')
                     ->required(),
-                Forms\Components\MorphToSelect::make('material')
+                MorphToSelect::make('material')
                     ->types([
-                        Forms\Components\MorphToSelect\Type::make(Video::class)
+                        Type::make(Video::class)
                             ->titleAttribute('name'),
-                        Forms\Components\MorphToSelect\Type::make(Document::class)
+                        Type::make(Document::class)
                             ->titleAttribute('name'),
-                        Forms\Components\MorphToSelect\Type::make(Link::class)
+                        Type::make(Link::class)
                             ->titleAttribute('name'),
-                        Forms\Components\MorphToSelect\Type::make(FilamentForm::class)
+                        Type::make(FilamentForm::class)
                             ->titleAttribute('name'),
-                        Forms\Components\MorphToSelect\Type::make(Test::class)
+                        Type::make(Test::class)
                             ->titleAttribute('name'),
-                        Forms\Components\MorphToSelect\Type::make(\Tapp\FilamentLms\Models\Image::class)
+                        Type::make(Image::class)
                             ->titleAttribute('name'),
                     ])
                     ->searchable()
                     ->required(),
-                Forms\Components\MarkdownEditor::make('text')
+                MarkdownEditor::make('text')
                     ->label('Text Content')
                     ->placeholder('Enter step text content...')
                     ->columnSpanFull(),
@@ -74,28 +84,28 @@ class StepResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('slug')
+                TextColumn::make('slug')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('lesson.course.name')
+                TextColumn::make('lesson.course.name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('lesson.name')
+                TextColumn::make('lesson.name')
                     ->searchable()
                     ->sortable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -110,9 +120,9 @@ class StepResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSteps::route('/'),
-            'create' => Pages\CreateStep::route('/create'),
-            'edit' => Pages\EditStep::route('/{record}/edit'),
+            'index' => ListSteps::route('/'),
+            'create' => CreateStep::route('/create'),
+            'edit' => EditStep::route('/{record}/edit'),
         ];
     }
 }

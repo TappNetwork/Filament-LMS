@@ -2,14 +2,17 @@
 
 namespace Tapp\FilamentLms\Pages;
 
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,13 +22,13 @@ use Tapp\FilamentLms\Exports\CourseProgressExport;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Services\CourseProgressQueryService;
 
-class Reporting extends Page implements Tables\Contracts\HasTable
+class Reporting extends Page implements HasTable
 {
-    use Tables\Concerns\InteractsWithTable;
+    use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar';
 
-    protected static string $view = 'filament-lms::pages.reporting';
+    protected string $view = 'filament-lms::pages.reporting';
 
     protected static ?string $title = 'Reports';
 
@@ -33,16 +36,16 @@ class Reporting extends Page implements Tables\Contracts\HasTable
 
     protected static ?string $slug = 'reporting';
 
-    protected static ?string $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
     public static function canAccess(): bool
     {
         return Auth::check() && Gate::allows('viewLmsReporting');
     }
 
-    public function getTableRecordKey(array|\Illuminate\Database\Eloquent\Model $record): string
+    public function getTableRecordKey(Model|array $record): string
     {
-        if ($record instanceof \Illuminate\Database\Eloquent\Model) {
+        if ($record instanceof Model) {
             $key = $record->getKey();
         }
 
@@ -103,7 +106,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
             ])
             ->filters([
                 Filter::make('date_range')
-                    ->form([
+                    ->schema([
                         DatePicker::make('completed_from')
                             ->label('Completed From'),
                         DatePicker::make('completed_until')
@@ -187,7 +190,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->attribute('user_id'),
             ])
             ->headerActions([
-                Tables\Actions\Action::make('export')
+                Action::make('export')
                     ->label('Export')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(function () use ($table) {

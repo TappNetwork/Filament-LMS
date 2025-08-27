@@ -10,29 +10,35 @@
     "minimum-stability": "dev",
     "require": {
         "php": "^8.3",
-        "filament/filament": "^3.2",
-        "filament/spatie-laravel-media-library-plugin": "^3.2",
-        "filament/support": "^3.0",
-        "illuminate/contracts": "^10.0||^11.0||^12.0",
+        "filament/filament": "^4.0",
+        "filament/spatie-laravel-media-library-plugin": "^4.0",
+        "illuminate/contracts": "^12.0||^11.0",
         "maatwebsite/excel": "^3.1",
         "spatie/browsershot": "^5.0",
         "spatie/eloquent-sortable": "^4.4.0",
-        "tapp/filament-form-builder": "*"
+        "tapp/filament-form-builder": "^4.0"
     },
     "require-dev": {
-        "larastan/larastan": "^2.9||^3.0",
+        "filament/upgrade": "^4.0",
+        "larastan/larastan": "^3.0||^2.9",
         "laravel/pint": "^1.14",
         "nunomaduro/collision": "^8.1.1||^7.10.0",
-        "orchestra/testbench": "^10.0.0||^9.0.0||^8.22.0",
-        "pestphp/pest": "^3.0||^2.34",
-        "pestphp/pest-plugin-arch": "^3.0||^2.7",
-        "pestphp/pest-plugin-laravel": "^3.0||^2.3",
-        "pestphp/pest-plugin-livewire": "3.x-dev",
+        "orchestra/testbench": "^10.0.0||^9.0.0",
+        "pestphp/pest": "^4.0||^3.0",
+        "pestphp/pest-plugin-arch": "^4.0||^3.0",
+        "pestphp/pest-plugin-laravel": "^4.0||^3.0",
+        "pestphp/pest-plugin-livewire": "^4.0||^3.0",
         "phpstan/extension-installer": "^1.3||^2.0",
         "phpstan/phpstan-deprecation-rules": "^1.1||^2.0",
         "phpstan/phpstan-phpunit": "^1.3||^2.0",
         "spatie/laravel-ray": "^1.35"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/TappNetwork/Filament-Form-Builder"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Tapp\\FilamentLms\\": "src/",
@@ -43,12 +49,6 @@
         "psr-4": {
             "Tapp\\FilamentLms\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
-        }
-    },
-    "repositories": {
-        "tapp/filament-form-builder": {
-            "type": "vcs",
-            "url": "https://github.com/tappnetwork/filament-form-builder"
         }
     },
     "scripts": {

@@ -2,7 +2,7 @@
 
 namespace Tapp\FilamentLms\Resources\StepResource\Pages;
 
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Tapp\FilamentLms\Resources\StepResource;
 
@@ -13,7 +13,7 @@ class EditStep extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            DeleteAction::make(),
         ];
     }
 }

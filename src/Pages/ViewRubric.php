@@ -7,9 +7,9 @@ use Tapp\FilamentLms\Models\Test;
 
 class ViewRubric extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string $view = 'filament-lms::filament.pages.view-rubric';
+    protected string $view = 'filament-lms::filament.pages.view-rubric';
 
     public $test;
 

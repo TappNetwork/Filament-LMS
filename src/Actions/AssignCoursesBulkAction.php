@@ -2,8 +2,9 @@
 
 namespace Tapp\FilamentLms\Actions;
 
-use Filament\Forms;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\BulkAction;
+use Tapp\FilamentLms\Models\Course;
 
 class AssignCoursesBulkAction
 {
@@ -17,13 +18,13 @@ class AssignCoursesBulkAction
                     $user->courses()->syncWithoutDetaching($courseIds);
                 }
             })
-            ->form([
-                Forms\Components\Select::make('courses')
+            ->schema([
+                Select::make('courses')
                     ->preload()
                     ->multiple()
                     // TODO: relationship is not working
                     // ->relationship('courses', 'name')
-                    ->options(\Tapp\FilamentLms\Models\Course::pluck('name', 'id')->toArray())
+                    ->options(Course::pluck('name', 'id')->toArray())
                     ->required(),
             ]);
     }

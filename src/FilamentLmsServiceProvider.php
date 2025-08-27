@@ -13,6 +13,7 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\GradedKeyValueEntry;
+use Tapp\FilamentLms\Livewire\ImageStep;
 use Tapp\FilamentLms\Livewire\LinkStep;
 use Tapp\FilamentLms\Livewire\TestStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;
@@ -67,7 +68,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('create-test-entry', CreateTestEntry::class);
         Livewire::component('view-graded-entry', ViewGradedEntry::class);
         Livewire::component('graded-key-value-entry', GradedKeyValueEntry::class);
-        Livewire::component('image-step', \Tapp\FilamentLms\Livewire\ImageStep::class);
+        Livewire::component('image-step', ImageStep::class);
 
         FilamentAsset::register([
             Css::make('filament-lms', __DIR__.'/../dist/filament-lms.css'),

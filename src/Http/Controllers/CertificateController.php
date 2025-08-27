@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use InvalidArgumentException;
 // TODO get from config
 use Spatie\Browsershot\Browsershot;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -23,13 +24,13 @@ class CertificateController extends Controller
         $userModel = config('auth.providers.users.model');
 
         if (! $userModel) {
-            throw new \InvalidArgumentException('User model not configured');
+            throw new InvalidArgumentException('User model not configured');
         }
 
         $user = $userModel::findOrFail($userId);
 
         if (! $user instanceof Authenticatable) {
-            throw new \InvalidArgumentException('User model must implement Authenticatable contract');
+            throw new InvalidArgumentException('User model must implement Authenticatable contract');
         }
 
         if (! request()->hasValidSignature() &&

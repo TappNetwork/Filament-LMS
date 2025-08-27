@@ -2,17 +2,22 @@
 
 namespace Tapp\FilamentLms\Resources;
 
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Actions\Action;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Test;
-use Tapp\FilamentLms\Resources\TestResource\Pages;
+use Tapp\FilamentLms\Resources\TestResource\Pages\CreateTest;
+use Tapp\FilamentLms\Resources\TestResource\Pages\EditTest;
+use Tapp\FilamentLms\Resources\TestResource\Pages\ListTests;
 
 class TestResource extends Resource
 {
@@ -20,14 +25,14 @@ class TestResource extends Resource
 
     protected static ?string $model = Test::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -47,18 +52,18 @@ class TestResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('form.name')
+                TextColumn::make('form.name')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable(),
                 IconColumn::make('filament_form_user_id')
                     ->label('Rubric Created?')
@@ -71,8 +76,8 @@ class TestResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
                 Action::make('create_rubric')
                     ->color('success')
                     ->action(function (Test $record) {
@@ -90,9 +95,9 @@ class TestResource extends Resource
                         return $record->filament_form_user_id;
                     }),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -107,9 +112,9 @@ class TestResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTests::route('/'),
-            'create' => Pages\CreateTest::route('/create'),
-            'edit' => Pages\EditTest::route('/{record}/edit'),
+            'index' => ListTests::route('/'),
+            'create' => CreateTest::route('/create'),
+            'edit' => EditTest::route('/{record}/edit'),
         ];
     }
 }

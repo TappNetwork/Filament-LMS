@@ -86,17 +86,11 @@ class AdminPanelProvider extends PanelProvider
 
 ### Tailwind Configuration
 
-Add the following paths to your `tailwind.config.js` file to ensure proper styling:
+Add the following to your Filament `theme.css` file to ensure proper styling:
 
-```javascript
-export default {
-    content: [
-        // ... existing paths ...
-        './vendor/tapp/filament-lms/resources/**/*.blade.php',
-        './vendor/tapp/filament-form-builder/resources/**/*.blade.php',
-    ],
-    // ... rest of config
-}
+```css
+@source '../../../../vendor/tapp/filament-lms';
+@source '../../../../vendor/tapp/filament-form-builder';
 ```
 
 # Development Reccomendations

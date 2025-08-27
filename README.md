@@ -49,9 +49,7 @@ or
 
 ### For Filament 3
 
-```bash
-composer require tapp/filament-lms:"^1.0"
-```
+Please check the docs for [Filament 3 here](https://github.com/TappNetwork/Filament-LMS/tree/main)
 
 ### For Filament 4
 
@@ -86,17 +84,11 @@ class AdminPanelProvider extends PanelProvider
 
 ### Tailwind Configuration
 
-Add the following paths to your `tailwind.config.js` file to ensure proper styling:
+Add the following to your Filament `theme.css` file to ensure proper styling:
 
-```javascript
-export default {
-    content: [
-        // ... existing paths ...
-        './vendor/tapp/filament-lms/resources/**/*.blade.php',
-        './vendor/tapp/filament-form-builder/resources/**/*.blade.php',
-    ],
-    // ... rest of config
-}
+```css
+@source '../../../../vendor/tapp/filament-lms';
+@source '../../../../vendor/tapp/filament-form-builder';
 ```
 
 # Development Reccomendations

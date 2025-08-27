@@ -1,15 +1,17 @@
 # Filament LMS
+
 An opinionated LMS plugin for Filament containing a user facing LMS panel and Resources for an existing admin panel
+
+## Version Compatibility
+
+ Filament | Filament LMS
+:---------|:------------
+ 3.x      | 1.x
+ 4.x      | 4.x
 
 ## Installation
 
-### Add the following to composer.json
-
-``` json
-"require": {
-    "tapp/filament-lms": "*",
-}
-```
+### Add the following to `composer.json`
 
 ``` json
 "minimum-stability": "dev"
@@ -27,6 +29,33 @@ An opinionated LMS plugin for Filament containing a user facing LMS panel and Re
     }
 },
 ```
+
+or
+
+```json
+{
+"repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/tappnetwork/filament-lms"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/TappNetwork/Filament-Form-Builder"
+        }
+    ],
+}
+```
+
+### For Filament 3
+
+```bash
+composer require tapp/filament-lms:"^1.0"
+```
+
+### For Filament 4
+
+Please check the docs for [Filament 4 here](https://github.com/TappNetwork/Filament-LMS/tree/4.x)
 
 ### Publish
 

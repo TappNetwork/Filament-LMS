@@ -1,2 +1,40 @@
-/*! tailwindcss v4.1.12 | MIT License | https://tailwindcss.com */
-@layer properties{@supports (((-webkit-hyphens:none)) and (not (margin-trim:inline))) or ((-moz-orient:inline) and (not (color:rgb(from red r g b)))){*,:before,:after,::backdrop{--tw-font-weight:initial;--tw-shadow:0 0 #0000;--tw-shadow-color:initial;--tw-shadow-alpha:100%;--tw-inset-shadow:0 0 #0000;--tw-inset-shadow-color:initial;--tw-inset-shadow-alpha:100%;--tw-ring-color:initial;--tw-ring-shadow:0 0 #0000;--tw-inset-ring-color:initial;--tw-inset-ring-shadow:0 0 #0000;--tw-ring-inset:initial;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-offset-shadow:0 0 #0000}}}.fb-form-submit-button{margin-top:calc(var(--spacing,.25rem)*10);border-radius:var(--radius-lg,.5rem);background-color:var(--color-emerald-600,oklch(59.6% .145 163.225));padding-inline:calc(var(--spacing,.25rem)*3);padding-inline:calc(var(--spacing,.25rem)*4);padding-block:calc(var(--spacing,.25rem)*3);font-size:var(--text-sm,.875rem);line-height:var(--tw-leading,var(--text-sm--line-height,calc(1.25/.875)));--tw-font-weight:var(--font-weight-semibold,600);font-weight:var(--font-weight-semibold,600);--tw-shadow:0 1px 3px 0 var(--tw-shadow-color,#0000001a),0 1px 2px -1px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}@media (hover:hover){.fb-form-submit-button:hover{background-color:var(--color-emerald-500,oklch(69.6% .17 162.48))}}.fb-form-user-container{background-color:var(--color-white,#fff);padding-inline:calc(var(--spacing,.25rem)*8);padding-block:calc(var(--spacing,.25rem)*16)}.step-material-container{max-width:106.667vh;height:60vh;margin:0 auto}.step-material-container img,.step-material-container iframe{object-fit:contain;width:100%;height:100%}.step-material-container iframe[src*=\.pdf]{min-height:60vh}@property --tw-font-weight{syntax:"*";inherits:false}@property --tw-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-shadow-color{syntax:"*";inherits:false}@property --tw-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-inset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-shadow-color{syntax:"*";inherits:false}@property --tw-inset-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-ring-color{syntax:"*";inherits:false}@property --tw-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-ring-color{syntax:"*";inherits:false}@property --tw-inset-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-ring-inset{syntax:"*";inherits:false}@property --tw-ring-offset-width{syntax:"<length>";inherits:false;initial-value:0}@property --tw-ring-offset-color{syntax:"*";inherits:false;initial-value:#fff}@property --tw-ring-offset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}
+.fb-form-submit-button {
+    margin-top: 2.5rem;
+    background-color: #059669;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: background-color 0.15s ease-in-out;
+}
+
+.fb-form-submit-button:hover {
+    background-color: #10b981;
+}
+
+.fb-form-user-container {
+    background-color: white;
+    padding: 4rem 2rem;
+}
+
+/* LMS Plugin Styles */
+
+/* Centralized step material sizing */
+.step-material-container {
+    height: 60vh;
+    max-width: calc(60vh * 16/9);
+    margin: 0 auto;
+}
+
+.step-material-container img,
+.step-material-container iframe {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Ensure PDFs and documents fit properly */
+.step-material-container iframe[src*=".pdf"] {
+    min-height: 60vh;
+}

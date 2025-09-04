@@ -82,14 +82,44 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
-### Tailwind Configuration
+### Tailwind CSS Setup
 
-Add the following to your Filament `theme.css` file to ensure proper styling:
+This package uses Tailwind CSS classes in its Blade views. To ensure proper styling, you need to:
 
-```css
-@source '../../../../vendor/tapp/filament-lms';
-@source '../../../../vendor/tapp/filament-form-builder';
+1. **Install Tailwind CSS** in your project (if not already installed):
+```bash
+npm install -D tailwindcss
+npx tailwindcss init
 ```
+
+2. **Configure Tailwind** to include the package's views in your `tailwind.config.js`:
+```js
+module.exports = {
+  content: [
+    // ... your existing content paths
+    './vendor/tapp/filament-lms/resources/views/**/*.blade.php',
+    './vendor/tapp/filament-form-builder/resources/views/**/*.blade.php',
+  ],
+  // ... rest of your config
+}
+```
+
+3. **Include the package CSS** in your main CSS file (e.g., `resources/css/app.css`):
+```css
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Import the LMS package styles */
+@import '../../vendor/tapp/filament-lms/dist/filament-lms.css';
+```
+
+4. **Build your CSS** to include both Tailwind and the package styles:
+```bash
+npm run build
+```
+
+**Note:** The package provides its own CSS for component-specific styling, while using Tailwind classes in views for layout and utilities. This approach ensures no dependency conflicts while maintaining the benefits of Tailwind CSS.
 
 # Development Reccomendations
 

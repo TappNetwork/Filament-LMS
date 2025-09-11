@@ -5,15 +5,15 @@
 <div
     {{
         $attributes->class([
-            'fi-topbar sticky top-0 z-20 overflow-x-clip fi-topbar-with-navigation',
+            'sticky top-0 z-20 overflow-x-clip fi-topbar-with-navigation',
         ])
     }}
 >
     <nav
-        class="flex h-16 items-center gap-x-4 bg-white px-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
+        class="flex h-16 items-center gap-x-4 bg-white px-4 dark:bg-gray-900 dark:ring-white/10"
     >
         @if (filament()->hasNavigation())
-            <ul class="me-4 hidden items-center gap-x-4 lg:flex">
+            <ul class="fi-topbar-nav-groups me-4 hidden items-center gap-x-4 lg:flex">
                 @foreach ($navigation as $group)
                     @if ($groupLabel = $group->getLabel())
                         <x-filament::dropdown

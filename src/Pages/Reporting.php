@@ -60,19 +60,27 @@ class Reporting extends Page implements HasTable
             ->columns([
                 TextColumn::make('user_first_name')
                     ->label('First Name')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByFirstName($query, $direction);
+                    }),
 
                 TextColumn::make('user_last_name')
                     ->label('Last Name')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByLastName($query, $direction);
+                    }),
 
                 TextColumn::make('user_email')
                     ->label('User Email')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByEmail($query, $direction);
+                    }),
 
                 TextColumn::make('course_name')
                     ->label('Course')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByCourseName($query, $direction);
+                    }),
 
                 TextColumn::make('status')
                     ->label('Status')
@@ -87,22 +95,30 @@ class Reporting extends Page implements HasTable
 
                         return 'gray';
                     })
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByStatus($query, $direction);
+                    }),
 
                 TextColumn::make('steps_completed')
                     ->label('Progress')
                     ->formatStateUsing(fn ($record) => "{$record['steps_completed']} / {$record['total_steps']}")
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByStepsCompleted($query, $direction);
+                    }),
 
                 TextColumn::make('started_at')
                     ->label('Date Started')
                     ->date()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByStartedAt($query, $direction);
+                    }),
 
                 TextColumn::make('completed_at')
                     ->label('Date Completed')
                     ->date()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByCompletedAt($query, $direction);
+                    }),
             ])
             ->filters([
                 Filter::make('date_range')
@@ -209,10 +225,6 @@ class Reporting extends Page implements HasTable
                             'course-progress-'.now()->format('Y-m-d').'.xlsx'
                         );
                     }),
-            ])
-            ->defaultSort(function (Builder $query) {
-                // Use raw SQL for ordering to avoid ONLY_FULL_GROUP_BY issues
-                return $query->orderByRaw('MAX(lms_step_user.completed_at) DESC');
-            });
+            ]);
     }
 }

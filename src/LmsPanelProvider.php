@@ -118,7 +118,7 @@ class LmsPanelProvider extends PanelProvider
             filament()->getCurrentOrDefaultPanel()->topNavigation(false);
 
             FilamentView::registerRenderHook(
-                PanelsRenderHook::TOPBAR_START,
+                PanelsRenderHook::TOPBAR_LOGO_AFTER,
                 function () use ($hookedNavigationItems): View {
                     $topNavigation = [
                         ...$hookedNavigationItems,

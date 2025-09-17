@@ -2,8 +2,8 @@
 
 namespace Tapp\FilamentLms\Actions;
 
+use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
-use Filament\Tables\Actions\BulkAction;
 use Tapp\FilamentLms\Models\Course;
 
 class AssignCoursesBulkAction

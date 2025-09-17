@@ -23,27 +23,29 @@ class CourseProgressQueryService
                 'lms_courses.id as course_id',
                 'lms_courses.name as course_name',
                 DB::raw('MIN(lms_step_user.created_at) as started_at'),
-                DB::raw('CASE 
-                        WHEN COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) = 
-                        (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id) 
-                        THEN MAX(lms_step_user.completed_at) 
-                        ELSE NULL 
+                DB::raw('CASE
+                        WHEN COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) =
+                        (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id)
+                        THEN MAX(lms_step_user.completed_at)
+                        ELSE NULL
                     END as completed_at'),
-                DB::raw('CASE 
-                        WHEN COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) = 
-                        (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id) 
-                        THEN MAX(lms_step_user.completed_at) 
-                        ELSE NULL 
+                DB::raw('CASE
+                        WHEN COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) =
+                        (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id)
+                        THEN MAX(lms_step_user.completed_at)
+                        ELSE NULL
                     END as completion_date'),
                 DB::raw('COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) as steps_completed'),
                 DB::raw('(SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id) as total_steps'),
-                DB::raw('CASE 
-                        WHEN COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) = 
-                        (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id) 
-                        THEN \'Completed\' 
-                        ELSE \'In Progress\' 
+                DB::raw('CASE
+                        WHEN COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) =
+                        (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id)
+                        THEN \'Completed\'
+                        ELSE \'In Progress\'
                     END as status'),
             ])
-            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'lms_courses.id', 'lms_courses.name');
+            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'lms_courses.id', 'lms_courses.name')
+            ->orderBy('users.id', 'asc')
+            ->orderBy('lms_courses.id', 'asc');
     }
 }

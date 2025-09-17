@@ -60,19 +60,39 @@ class Reporting extends Page implements HasTable
             ->columns([
                 TextColumn::make('user_first_name')
                     ->label('First Name')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->reorder()
+                            ->orderBy('users.first_name', $direction)
+                            ->orderBy('users.id', 'asc')
+                            ->orderBy('lms_courses.id', 'asc');
+                    }),
 
                 TextColumn::make('user_last_name')
                     ->label('Last Name')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->reorder()
+                            ->orderBy('users.last_name', $direction)
+                            ->orderBy('users.id', 'asc')
+                            ->orderBy('lms_courses.id', 'asc');
+                    }),
 
                 TextColumn::make('user_email')
                     ->label('User Email')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->reorder()
+                            ->orderBy('users.email', $direction)
+                            ->orderBy('users.id', 'asc')
+                            ->orderBy('lms_courses.id', 'asc');
+                    }),
 
                 TextColumn::make('course_name')
                     ->label('Course')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->reorder()
+                            ->orderBy('lms_courses.name', $direction)
+                            ->orderBy('users.id', 'asc')
+                            ->orderBy('lms_courses.id', 'asc');
+                    }),
 
                 TextColumn::make('status')
                     ->label('Status')
@@ -87,22 +107,49 @@ class Reporting extends Page implements HasTable
 
                         return 'gray';
                     })
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        // Sort by completion status: Completed first when DESC, In Progress first when ASC
+                        return $query->reorder()
+                            ->orderByRaw("CASE
+                                WHEN COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) =
+                                (SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id)
+                                THEN 1
+                                ELSE 0
+                            END {$direction}")
+                            ->orderBy('users.id', 'asc')
+                            ->orderBy('lms_courses.id', 'asc');
+                    }),
 
                 TextColumn::make('steps_completed')
                     ->label('Progress')
                     ->formatStateUsing(fn ($record) => "{$record['steps_completed']} / {$record['total_steps']}")
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        // Sort by the number of completed steps
+                        return $query->reorder()
+                            ->orderByRaw("COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) {$direction}")
+                            ->orderBy('users.id', 'asc')
+                            ->orderBy('lms_courses.id', 'asc');
+                    }),
 
                 TextColumn::make('started_at')
                     ->label('Date Started')
                     ->date()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->reorder()
+                            ->orderByRaw("MIN(lms_step_user.created_at) {$direction}")
+                            ->orderBy('users.id', 'asc')
+                            ->orderBy('lms_courses.id', 'asc');
+                    }),
 
                 TextColumn::make('completed_at')
                     ->label('Date Completed')
                     ->date()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->reorder()
+                            ->orderByRaw("MAX(lms_step_user.completed_at) {$direction}")
+                            ->orderBy('users.id', 'asc')
+                            ->orderBy('lms_courses.id', 'asc');
+                    }),
             ])
             ->filters([
                 Filter::make('date_range')
@@ -209,10 +256,6 @@ class Reporting extends Page implements HasTable
                             'course-progress-'.now()->format('Y-m-d').'.xlsx'
                         );
                     }),
-            ])
-            ->defaultSort(function (Builder $query) {
-                // Use raw SQL for ordering to avoid ONLY_FULL_GROUP_BY issues
-                return $query->orderByRaw('MAX(lms_step_user.completed_at) DESC');
-            });
+            ]);
     }
 }

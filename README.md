@@ -84,7 +84,9 @@ class AdminPanelProvider extends PanelProvider
 
 ### Tailwind CSS Setup
 
-This package uses Tailwind CSS classes in its Blade views. To ensure proper styling, you need to:
+This package uses Tailwind CSS classes in its Blade views. The configuration differs between Tailwind v3 and v4:
+
+#### For Tailwind CSS v3
 
 1. **Install Tailwind CSS** in your project (if not already installed):
 ```bash
@@ -119,7 +121,29 @@ module.exports = {
 npm run build
 ```
 
+#### For Tailwind CSS v4
+
+1. **Install Tailwind CSS v4** in your project:
+```bash
+npm install -D @tailwindcss/vite@next
+```
+
+2. **Include the package CSS** in your main CSS file (e.g., `resources/css/app.css` or `resources/css/theme.css`):
+```css
+@import "tailwindcss";
+
+/* Import the LMS package styles */
+@import '../../vendor/tapp/filament-lms/dist/filament-lms.css';
+```
+
+3. **Build your CSS** to include both Tailwind and the package styles:
+```bash
+npm run build
+```
+
 **Note:** The package provides its own CSS for component-specific styling, while using Tailwind classes in views for layout and utilities. This approach ensures no dependency conflicts while maintaining the benefits of Tailwind CSS.
+
+For more detailed Tailwind CSS configuration options, refer to the [official Tailwind CSS documentation](https://tailwindcss.com/docs).
 
 # Development Reccomendations
 

@@ -16,7 +16,7 @@
         "maatwebsite/excel": "^3.1",
         "spatie/browsershot": "^5.0",
         "spatie/eloquent-sortable": "^4.4.0",
-        "tapp/filament-form-builder": "^4.0"
+        "tapp/filament-form-builder": "*"
     },
     "require-dev": {
         "filament/upgrade": "^4.0",
@@ -52,8 +52,6 @@
         }
     },
     "scripts": {
-        "post-autoload-dump": "@composer run prepare",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",

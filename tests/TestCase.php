@@ -55,7 +55,7 @@ abstract class TestCase extends Orchestra
         config()->set('media-library.media_model', \Spatie\MediaLibrary\MediaCollections\Models\Media::class);
 
         // Set up app key for testing
-        config()->set('app.key', 'base64:' . base64_encode(random_bytes(32)));
+        config()->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
     }
 
     protected function createTestTables(): void

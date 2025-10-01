@@ -3,7 +3,6 @@
 namespace Tapp\FilamentLms\Tests\Feature;
 
 use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Tests\TestCase;
 
 test('course image url fallback to placeholder when no media', function () {
     $course = Course::factory()->create();

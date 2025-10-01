@@ -7,6 +7,7 @@ use Filament\Support\SupportServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Spatie\MediaLibrary\MediaLibraryServiceProvider;
 use Tapp\FilamentFormBuilder\FilamentFormBuilderServiceProvider;
 use Tapp\FilamentLms\FilamentLmsServiceProvider;
 
@@ -25,6 +26,7 @@ abstract class TestCase extends Orchestra
             LivewireServiceProvider::class,
             FilamentServiceProvider::class,
             SupportServiceProvider::class,
+            MediaLibraryServiceProvider::class,
             FilamentLmsServiceProvider::class,
             FilamentFormBuilderServiceProvider::class,
         ];
@@ -40,6 +42,20 @@ abstract class TestCase extends Orchestra
             'database' => ':memory:',
             'prefix' => '',
         ]);
+
+        // Set up filesystem for testing
+        config()->set('filesystems.default', 'local');
+        config()->set('filesystems.disks.local', [
+            'driver' => 'local',
+            'root' => storage_path('app'),
+        ]);
+
+        // Set up media library configuration
+        config()->set('media-library.disk_name', 'local');
+        config()->set('media-library.media_model', \Spatie\MediaLibrary\MediaCollections\Models\Media::class);
+
+        // Set up app key for testing
+        config()->set('app.key', 'base64:' . base64_encode(random_bytes(32)));
     }
 
     protected function createTestTables(): void
@@ -186,6 +202,28 @@ abstract class TestCase extends Orchestra
                 $table->string('file_path');
                 $table->text('description')->nullable();
                 $table->timestamps();
+            });
+        }
+
+        // Create media table for Spatie Media Library
+        if (! Schema::hasTable('media')) {
+            Schema::create('media', function ($table) {
+                $table->id();
+                $table->morphs('model');
+                $table->uuid('uuid')->nullable();
+                $table->string('collection_name');
+                $table->string('name');
+                $table->string('file_name');
+                $table->string('mime_type')->nullable();
+                $table->string('disk');
+                $table->string('conversions_disk')->nullable();
+                $table->unsignedBigInteger('size');
+                $table->json('manipulations');
+                $table->json('custom_properties');
+                $table->json('generated_conversions');
+                $table->json('responsive_images');
+                $table->unsignedInteger('order_column')->nullable();
+                $table->nullableTimestamps();
             });
         }
     }

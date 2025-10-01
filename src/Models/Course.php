@@ -14,6 +14,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
+use Tapp\FilamentLms\Traits\HasMediaUrl;
 
 /**
  * @property string|null $award
@@ -23,6 +24,7 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
 class Course extends Model implements HasMedia
 {
     use HasFactory;
+    use HasMediaUrl;
     use InteractsWithMedia;
 
     protected $guarded = [];
@@ -216,9 +218,9 @@ class Course extends Model implements HasMedia
 
     public function getImageUrlAttribute()
     {
-        $mediaPath = $this->getFirstMediaUrl('courses');
+        $mediaUrl = $this->getMediaUrl('courses');
 
-        return $mediaPath ?: 'https://picsum.photos/200';
+        return $mediaUrl ?: 'https://picsum.photos/200';
     }
 
     // Add the users() relationship for the pivot table

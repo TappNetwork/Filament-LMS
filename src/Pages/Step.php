@@ -4,7 +4,7 @@ namespace Tapp\FilamentLms\Pages;
 
 use Filament\Actions\Action;
 use Filament\Pages\Page;
-use Filament\Support\Enums\MaxWidth;
+use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;
@@ -18,7 +18,7 @@ class Step extends Page
 
     protected static bool $shouldRegisterNavigation = false;
 
-    protected static string $view = 'filament-lms::pages.step';
+    protected string $view = 'filament-lms::pages.step';
 
     protected static ?string $slug = 'courses/{courseSlug}/{lessonSlug}/{stepSlug}';
 
@@ -88,9 +88,9 @@ class Step extends Page
         return static::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]);
     }
 
-    public function getMaxContentWidth(): MaxWidth
+    public function getMaxContentWidth(): Width
     {
-        return MaxWidth::Full;
+        return Width::Full;
     }
 
     public function viewAllCourses()

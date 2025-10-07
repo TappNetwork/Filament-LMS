@@ -2,13 +2,14 @@
 
 namespace Tapp\FilamentLms\Livewire;
 
+use Exception;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Livewire\Component;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Models\Test;
@@ -33,25 +34,25 @@ class ViewGradedEntry extends Component implements HasForms, HasInfolists
         return view('filament-lms::livewire.view-graded-entry');
     }
 
-    public function gradedTestInfolist(Infolist $infolist): Infolist
+    public function gradedTestInfolist(Schema $schema): Schema
     {
         $test = $this->test;
         $grade = null;
 
         try {
             $gradeResult = $test->gradeEntry($this->entry);
-            if ($gradeResult instanceof \Exception) {
+            if ($gradeResult instanceof Exception) {
                 $grade = null;
             } else {
                 $grade = $gradeResult;
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Grade calculation failed, but we'll still show the form
         }
 
-        return $infolist
+        return $schema
             ->record($this->entry)
-            ->schema([
+            ->components([
                 Section::make('Test Results')
                     ->schema([
                         TextEntry::make('test_name')
@@ -80,12 +81,12 @@ class ViewGradedEntry extends Component implements HasForms, HasInfolists
                             ->getStateUsing(function (FilamentFormUser $record) use ($test) {
                                 try {
                                     $result = $test->gradedKeyValueEntry($record);
-                                    if ($result instanceof \Exception) {
+                                    if ($result instanceof Exception) {
                                         return [];
                                     }
 
                                     return $result;
-                                } catch (\Exception $e) {
+                                } catch (Exception $e) {
                                     return [];
                                 }
                             }),

@@ -13,7 +13,8 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets;
+use Filament\Widgets\AccountWidget;
+use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Tapp\FilamentLms\Concerns\HasTopbarNavigation;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step;
@@ -39,7 +41,7 @@ class LmsPanelProvider extends PanelProvider
             FilamentView::registerRenderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,
                 function () {
-                    if (Filament::getCurrentPanel()->getId() == 'lms') {
+                    if (Filament::getCurrentOrDefaultPanel()->getId() == 'lms') {
                         return view('filament-lms::components.exit-lms');
                     }
                 }
@@ -88,9 +90,9 @@ class LmsPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Lms/Widgets'), for: 'App\\Filament\\Lms\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                AccountWidget::class,
+                AccountWidget::class,
+                FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -113,10 +115,10 @@ class LmsPanelProvider extends PanelProvider
         $hookedNavigationItems = LmsNavigation::getNavigation('lms');
 
         if (Route::current()->parameter('courseSlug')) {
-            filament()->getCurrentPanel()->topNavigation(false);
+            filament()->getCurrentOrDefaultPanel()->topNavigation(false);
 
             FilamentView::registerRenderHook(
-                PanelsRenderHook::TOPBAR_START,
+                PanelsRenderHook::TOPBAR_LOGO_AFTER,
                 function () use ($hookedNavigationItems): View {
                     $topNavigation = [
                         ...$hookedNavigationItems,
@@ -137,7 +139,7 @@ class LmsPanelProvider extends PanelProvider
             $course = Course::where('slug', Route::current()->parameter('courseSlug'))->firstOrFail();
 
             $navigationGroups = $course->lessons->map(function ($lesson) {
-                /** @var \Tapp\FilamentLms\Models\Lesson $lesson */
+                /** @var Lesson $lesson */
                 return NavigationGroup::make($lesson->name)
                     ->collapsed(fn (): bool => ! $lesson->isActive())
                     // ->collapsible(true)

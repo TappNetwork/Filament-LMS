@@ -2,7 +2,7 @@
 
 namespace Tapp\FilamentLms\Resources\CourseResource\Pages;
 
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Tapp\FilamentLms\Resources\CourseResource;
 
@@ -13,7 +13,7 @@ class EditCourse extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            DeleteAction::make(),
         ];
     }
 }

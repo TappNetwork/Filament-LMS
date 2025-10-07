@@ -2,14 +2,17 @@
 
 namespace Tapp\FilamentLms\Pages;
 
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,13 +22,13 @@ use Tapp\FilamentLms\Exports\CourseProgressExport;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Services\CourseProgressQueryService;
 
-class Reporting extends Page implements Tables\Contracts\HasTable
+class Reporting extends Page implements HasTable
 {
-    use Tables\Concerns\InteractsWithTable;
+    use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar';
 
-    protected static string $view = 'filament-lms::pages.reporting';
+    protected string $view = 'filament-lms::pages.reporting';
 
     protected static ?string $title = 'Reports';
 
@@ -37,16 +40,16 @@ class Reporting extends Page implements Tables\Contracts\HasTable
 
     protected static ?string $slug = 'reporting';
 
-    protected static ?string $navigationGroup = 'LMS';
+    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
     public static function canAccess(): bool
     {
         return Auth::check() && Gate::allows('viewLmsReporting');
     }
 
-    public function getTableRecordKey(array|\Illuminate\Database\Eloquent\Model $record): string
+    public function getTableRecordKey(Model|array $record): string
     {
-        if ($record instanceof \Illuminate\Database\Eloquent\Model) {
+        if ($record instanceof Model) {
             $key = $record->getKey();
         }
 
@@ -61,19 +64,27 @@ class Reporting extends Page implements Tables\Contracts\HasTable
             ->columns([
                 TextColumn::make('user_first_name')
                     ->label('First Name')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByFirstName($query, $direction);
+                    }),
 
                 TextColumn::make('user_last_name')
                     ->label('Last Name')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByLastName($query, $direction);
+                    }),
 
                 TextColumn::make('user_email')
                     ->label('User Email')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByEmail($query, $direction);
+                    }),
 
                 TextColumn::make('course_name')
                     ->label('Course')
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByCourseName($query, $direction);
+                    }),
 
                 TextColumn::make('status')
                     ->label('Status')
@@ -88,26 +99,34 @@ class Reporting extends Page implements Tables\Contracts\HasTable
 
                         return 'gray';
                     })
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByStatus($query, $direction);
+                    }),
 
                 TextColumn::make('steps_completed')
                     ->label('Progress')
                     ->formatStateUsing(fn ($record) => "{$record['steps_completed']} / {$record['total_steps']}")
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByStepsCompleted($query, $direction);
+                    }),
 
                 TextColumn::make('started_at')
                     ->label('Date Started')
                     ->date()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByStartedAt($query, $direction);
+                    }),
 
                 TextColumn::make('completed_at')
                     ->label('Date Completed')
                     ->date()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByCompletedAt($query, $direction);
+                    }),
             ])
             ->filters([
                 Filter::make('date_range')
-                    ->form([
+                    ->schema([
                         DatePicker::make('completed_from')
                             ->label('Completed From'),
                         DatePicker::make('completed_until')
@@ -191,7 +210,7 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                     ->attribute('user_id'),
             ])
             ->headerActions([
-                Tables\Actions\Action::make('export')
+                Action::make('export')
                     ->label('Export')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(function () use ($table) {
@@ -210,10 +229,6 @@ class Reporting extends Page implements Tables\Contracts\HasTable
                             'course-progress-'.now()->format('Y-m-d').'.xlsx'
                         );
                     }),
-            ])
-            ->defaultSort(function (Builder $query) {
-                // Use raw SQL for ordering to avoid ONLY_FULL_GROUP_BY issues
-                return $query->orderByRaw('MAX(lms_step_user.completed_at) DESC');
-            });
+            ]);
     }
 }

@@ -7,9 +7,9 @@ use Tapp\FilamentLms\Models\Course;
 
 class Dashboard extends \Filament\Pages\Dashboard
 {
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-home';
 
-    protected static string $view = 'filament-lms::pages.dashboard';
+    protected string $view = 'filament-lms::pages.dashboard';
 
     protected static string $routePath = '/';
 

@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,7 +20,7 @@ use Tapp\FilamentLms\Database\Factories\LessonFactory;
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property-read Course $course
- * @property-read \Illuminate\Database\Eloquent\Collection|Step[] $steps
+ * @property-read Collection<int, Step> $steps
  */
 class Lesson extends Model implements Sortable
 {

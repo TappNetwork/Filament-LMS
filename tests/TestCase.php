@@ -167,17 +167,6 @@ abstract class TestCase extends Orchestra
             });
         }
 
-        // Create lms_resources table
-        if (! Schema::hasTable('lms_resources')) {
-            Schema::create('lms_resources', function ($table) {
-                $table->id();
-                $table->string('name');
-                $table->string('type');
-                $table->text('description')->nullable();
-                $table->timestamps();
-            });
-        }
-
         // Create lms_images table
         if (! Schema::hasTable('lms_images')) {
             Schema::create('lms_images', function ($table) {

@@ -47,14 +47,6 @@ or
 }
 ```
 
-### For Filament 3
-
-```bash
-composer require tapp/filament-lms:"^1.0"
-```
-
-### For Filament 4
-
 ```bash
 composer require tapp/filament-lms:"^4.0"
 ```

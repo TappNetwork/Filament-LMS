@@ -53,6 +53,9 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
 
     public function packageBooted()
     {
+        // Load migrations for Orchestra Testbench
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        
         $this->publishes([
             __DIR__.'/../resources/views' => resource_path('views/vendor/filament-lms'),
         ], 'filament-lms-views');

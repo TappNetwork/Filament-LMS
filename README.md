@@ -47,6 +47,12 @@ or
 }
 ```
 
+### For Filament 3
+
+Please check the docs for [Filament 3 here](https://github.com/TappNetwork/Filament-LMS/tree/main)
+
+### For Filament 4
+
 ```bash
 composer require tapp/filament-lms:"^4.0"
 ```

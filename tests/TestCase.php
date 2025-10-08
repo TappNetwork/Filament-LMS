@@ -5,7 +5,6 @@ namespace Tapp\FilamentLms\Tests;
 use Filament\FilamentServiceProvider;
 use Filament\Support\SupportServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
@@ -154,8 +153,6 @@ abstract class TestCase extends Orchestra
         });
     }
 
-
-
     protected function getPackageProviders($app)
     {
         return [
@@ -191,9 +188,8 @@ abstract class TestCase extends Orchestra
 
         // Set up app key for testing
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
-        
+
         // Set up database tables
         $this->setUpDatabase($app);
     }
-
 }

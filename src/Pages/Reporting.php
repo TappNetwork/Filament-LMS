@@ -32,6 +32,10 @@ class Reporting extends Page implements HasTable
 
     protected static ?string $title = 'Reports';
 
+    protected ?string $heading = 'Course Completion Reports';
+
+    protected ?string $subheading = 'Track which users have completed courses and when they were completed.';
+
     protected static ?string $navigationLabel = 'Reporting';
 
     protected static ?string $slug = 'reporting';

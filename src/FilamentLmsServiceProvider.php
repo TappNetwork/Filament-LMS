@@ -40,7 +40,6 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'create_lms_step_user_table',
                 'create_lms_videos_table',
                 'add_text_to_lms_steps_table',
-                'create_lms_resources_table',
                 'create_lms_tests_table',
                 'create_lms_course_user_table',
                 'create_lms_images_table',
@@ -54,6 +53,9 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
 
     public function packageBooted()
     {
+        // Load migrations for Orchestra Testbench
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
         $this->publishes([
             __DIR__.'/../resources/views' => resource_path('views/vendor/filament-lms'),
         ], 'filament-lms-views');

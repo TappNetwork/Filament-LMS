@@ -17,9 +17,19 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
 
 /**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string $external_id
+ * @property string|null $image
  * @property string|null $award
  * @property array $award_content
- * @property string $slug
+ * @property string|null $description
+ * @property bool $hidden
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
+ * @property-read \Illuminate\Database\Eloquent\Collection|Step[] $steps
  */
 class Course extends Model implements HasMedia
 {
@@ -66,14 +76,15 @@ class Course extends Model implements HasMedia
 
         // Get all completed steps for this user
         $completedStepIds = StepUser::whereIn('step_id', $allSteps->pluck('id'))
-            ->where('user_id', auth()->user()->id)
+            ->where('user_id', Auth::user()->id)
             ->whereNotNull('completed_at')
             ->pluck('step_id')
             ->toArray();
 
         // Find the first step that hasn't been completed
         $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
-            return ! in_array($step->id, $completedStepIds) && auth()->user()?->canAccessStep($step);
+            // @phpstan-ignore-next-line
+            return ! in_array($step->id, $completedStepIds) && Auth::user()?->canAccessStep($step);
         });
 
         // If no incomplete step is available, check if course is complete
@@ -196,19 +207,20 @@ class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId): float
     {
-        if ($this->steps->isEmpty()) {
+        // Get all steps for this course
+        $steps = $this->steps()->get();
+
+        if ($steps->isEmpty()) {
             return 0;
         }
 
-        // Load steps with progress for the specific user
-        $steps = $this->steps()->with(['progress' => function ($query) use ($userId) {
-            $query->where('user_id', $userId);
-        }])->get();
+        // Get all completed steps for this specific user
+        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+            ->where('user_id', $userId)
+            ->whereNotNull('completed_at')
+            ->get();
 
-        // @phpstan-ignore-next-line
-        $completedSteps = $steps->filter->completed_at;
-
-        return $completedSteps->count() / $steps->count() * 100;
+        return $completedStepUsers->count() / $steps->count() * 100;
     }
 
     public function certificateUrl(): string

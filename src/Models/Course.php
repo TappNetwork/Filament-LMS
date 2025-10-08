@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
+use Tapp\FilamentLms\Models\StepUser;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
@@ -207,12 +208,12 @@ class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId): float
     {
-        if ($this->steps->isEmpty()) {
-            return 0;
-        }
-
         // Get all steps for this course
         $steps = $this->steps()->get();
+
+        if ($steps->isEmpty()) {
+            return 0;
+        }
 
         // Get all completed steps for this specific user
         $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))

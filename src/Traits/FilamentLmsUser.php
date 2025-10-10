@@ -133,8 +133,6 @@ trait FilamentLmsUser
     /**
      * Check if the user is an LMS admin.
      * This method can be overridden in the User model to implement custom admin logic.
-     * 
-     * @return bool
      */
     public function isLmsAdmin(): bool
     {

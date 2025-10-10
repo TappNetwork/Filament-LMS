@@ -69,20 +69,20 @@ class Course extends Model implements HasMedia
             // Public courses - not private, accessible to everyone
             $q->where('is_private', false)
               // Private courses - only accessible to LMS admins or assigned users
-              ->orWhere(function ($subQ) use ($user) {
-                  $subQ->where('is_private', true)
-                       ->where(function ($adminOrAssignedQuery) use ($user) {
-                           // LMS admins can see all private courses
-                           if ($user->isLmsAdmin()) {
-                               $adminOrAssignedQuery->whereRaw('1 = 1'); // Always true for admins
-                           } else {
-                               // Non-admins can only see assigned courses
-                               $adminOrAssignedQuery->whereHas('users', function ($userQuery) use ($user) {
-                                   $userQuery->where('user_id', $user->id);
-                               });
-                           }
-                       });
-              });
+                ->orWhere(function ($subQ) use ($user) {
+                    $subQ->where('is_private', true)
+                        ->where(function ($adminOrAssignedQuery) use ($user) {
+                            // LMS admins can see all private courses
+                            if ($user->isLmsAdmin()) {
+                                $adminOrAssignedQuery->whereRaw('1 = 1'); // Always true for admins
+                            } else {
+                                // Non-admins can only see assigned courses
+                                $adminOrAssignedQuery->whereHas('users', function ($userQuery) use ($user) {
+                                    $userQuery->where('user_id', $user->id);
+                                });
+                            }
+                        });
+                });
         });
     }
 
@@ -266,22 +266,21 @@ class Course extends Model implements HasMedia
     public function users()
     {
         $userModel = config('filament-lms.user_model');
+
         return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')->withTimestamps();
     }
-
-
 
     /**
      * Check if a user can access this course based on private status and user assignments.
      */
     public function canBeAccessedBy($user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         // Public courses (not private) - accessible to everyone
-        if (!$this->is_private) {
+        if (! $this->is_private) {
             return true;
         }
 
@@ -293,5 +292,4 @@ class Course extends Model implements HasMedia
         // Check if user is assigned to this course
         return $this->users()->where('user_id', $user->id)->exists();
     }
-
 }

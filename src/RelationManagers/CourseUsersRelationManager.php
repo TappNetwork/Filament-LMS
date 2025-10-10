@@ -92,22 +92,22 @@ class CourseUsersRelationManager extends RelationManager
         if ($configColumns && is_array($configColumns)) {
             return $configColumns;
         }
-        
+
         // Fallback to database detection
         $userModel = config('filament-lms.user_model');
         $user = new $userModel;
-        
+
         // Check if the model has a name column
         if ($user->getConnection()->getSchemaBuilder()->hasColumn($user->getTable(), 'name')) {
             return ['name', 'email'];
         }
-        
+
         // Check for first_name and last_name columns
-        if ($user->getConnection()->getSchemaBuilder()->hasColumn($user->getTable(), 'first_name') && 
+        if ($user->getConnection()->getSchemaBuilder()->hasColumn($user->getTable(), 'first_name') &&
             $user->getConnection()->getSchemaBuilder()->hasColumn($user->getTable(), 'last_name')) {
             return ['first_name', 'last_name', 'email'];
         }
-        
+
         // Fallback to email only
         return ['email'];
     }

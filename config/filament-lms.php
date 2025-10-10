@@ -24,8 +24,8 @@ return [
     // User search columns for relation managers
     'user_search_columns' => [
         'first_name',
-        'last_name', 
-        'email'
+        'last_name',
+        'email',
     ],
 
     // Media URL configuration

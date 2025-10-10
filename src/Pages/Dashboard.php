@@ -20,7 +20,7 @@ class Dashboard extends \Filament\Pages\Dashboard
     public function mount()
     {
         $user = Auth::user();
-        
+
         if ($user) {
             // Use the new accessibleTo scope for better performance
             $courses = Course::accessibleTo($user)->get();
@@ -28,7 +28,7 @@ class Dashboard extends \Filament\Pages\Dashboard
             // For non-authenticated users, only show public courses (not private)
             $courses = Course::where('is_private', false)->get();
         }
-        
+
         $this->courses = $courses;
     }
 }

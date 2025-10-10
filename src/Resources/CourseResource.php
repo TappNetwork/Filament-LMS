@@ -20,11 +20,11 @@ use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\RelationManagers\CourseUsersRelationManager;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\CreateCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\ListCourses;
 use Tapp\FilamentLms\Resources\CourseResource\RelationManagers\LessonsRelationManager;
-use Tapp\FilamentLms\RelationManagers\CourseUsersRelationManager;
 
 class CourseResource extends Resource
 {

@@ -129,4 +129,17 @@ trait FilamentLmsUser
     {
         return $course->users->contains('id', $this->id);
     }
+
+    /**
+     * Check if the user is an LMS admin.
+     * This method can be overridden in the User model to implement custom admin logic.
+     * 
+     * @return bool
+     */
+    public function isLmsAdmin(): bool
+    {
+        // Default implementation - return false
+        // This should be overridden in the User model to implement project-specific logic
+        return false;
+    }
 }

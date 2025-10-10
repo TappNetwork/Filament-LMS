@@ -25,7 +25,7 @@ use Tapp\FilamentLms\Traits\HasMediaUrl;
  * @property string|null $award
  * @property array $award_content
  * @property string|null $description
- * @property bool $hidden
+ * @property bool $is_private
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
@@ -43,6 +43,7 @@ class Course extends Model implements HasMedia
 
     protected $casts = [
         'award_content' => 'array',
+        'is_private' => 'boolean',
     ];
 
     public function registerMediaCollections(): void
@@ -52,11 +53,37 @@ class Course extends Model implements HasMedia
     }
 
     /**
-     * Scope a query to only include popular users.
+     * Scope a query to only include visible courses.
      */
     public function scopeVisible(Builder $query): void
     {
-        $query->whereHas('steps')->where('hidden', false);
+        $query->whereHas('steps')->where('is_private', false);
+    }
+
+    /**
+     * Scope a query to only include courses accessible to a specific user.
+     */
+    public function scopeAccessibleTo(Builder $query, $user): void
+    {
+        $query->where(function ($q) use ($user) {
+            // Public courses - not private, accessible to everyone
+            $q->where('is_private', false)
+              // Private courses - only accessible to LMS admins or assigned users
+              ->orWhere(function ($subQ) use ($user) {
+                  $subQ->where('is_private', true)
+                       ->where(function ($adminOrAssignedQuery) use ($user) {
+                           // LMS admins can see all private courses
+                           if ($user->isLmsAdmin()) {
+                               $adminOrAssignedQuery->whereRaw('1 = 1'); // Always true for admins
+                           } else {
+                               // Non-admins can only see assigned courses
+                               $adminOrAssignedQuery->whereHas('users', function ($userQuery) use ($user) {
+                                   $userQuery->where('user_id', $user->id);
+                               });
+                           }
+                       });
+              });
+        });
     }
 
     protected static function newFactory()
@@ -238,6 +265,33 @@ class Course extends Model implements HasMedia
     // Add the users() relationship for the pivot table
     public function users()
     {
-        return $this->belongsToMany(Authenticatable::class, 'lms_course_user', 'course_id', 'user_id')->withTimestamps();
+        $userModel = config('filament-lms.user_model');
+        return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')->withTimestamps();
     }
+
+
+
+    /**
+     * Check if a user can access this course based on private status and user assignments.
+     */
+    public function canBeAccessedBy($user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        // Public courses (not private) - accessible to everyone
+        if (!$this->is_private) {
+            return true;
+        }
+
+        // Private courses - only accessible to LMS admins or assigned users
+        if ($user->isLmsAdmin()) {
+            return true;
+        }
+
+        // Check if user is assigned to this course
+        return $this->users()->where('user_id', $user->id)->exists();
+    }
+
 }

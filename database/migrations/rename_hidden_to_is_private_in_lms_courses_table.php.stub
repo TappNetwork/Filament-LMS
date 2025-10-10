@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('lms_courses', function (Blueprint $table) {
-            $table->renameColumn('private', 'is_private');
+            $table->renameColumn('hidden', 'is_private');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('lms_courses', function (Blueprint $table) {
-            $table->renameColumn('is_private', 'private');
+            $table->renameColumn('is_private', 'hidden');
         });
     }
 };

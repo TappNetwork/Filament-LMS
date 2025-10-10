@@ -19,15 +19,16 @@ class Dashboard extends \Filament\Pages\Dashboard
 
     public function mount()
     {
-        $courses = Course::visible()->get();
-        if (config('filament-lms.restrict_course_visibility') && Auth::check()) {
-            $user = Auth::user();
-            if (method_exists($user, 'isCourseVisibleForUser')) {
-                $courses = $courses->filter(function ($course) use ($user) {
-                    return $user->isCourseVisibleForUser($course);
-                })->values();
-            }
+        $user = Auth::user();
+
+        if ($user) {
+            // Use the new accessibleTo scope for better performance
+            $courses = Course::accessibleTo($user)->get();
+        } else {
+            // For non-authenticated users, only show public courses (not private)
+            $courses = Course::where('is_private', false)->get();
         }
+
         $this->courses = $courses;
     }
 }

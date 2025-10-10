@@ -20,6 +20,7 @@ use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\RelationManagers\CourseUsersRelationManager;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\CreateCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\ListCourses;
@@ -90,7 +91,9 @@ class CourseResource extends Resource
                         return null;
                     })
                     ->helperText('Form must be saved before previewing.'),
-                Checkbox::make('hidden'),
+                Checkbox::make('is_private')
+                    ->label('Private Course')
+                    ->helperText('Private courses are only visible to assigned users and LMS admins'),
 
                 /*
                      * TODO: Implement award layout and content
@@ -115,6 +118,11 @@ class CourseResource extends Resource
                 TextColumn::make('slug')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('is_private')
+                    ->label('Visibility')
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'danger' : 'success')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Private (Manual Assignment)' : 'Public'),
             ])
             ->filters([
                 //
@@ -133,6 +141,7 @@ class CourseResource extends Resource
     {
         return [
             LessonsRelationManager::make(),
+            CourseUsersRelationManager::make(),
         ];
     }
 

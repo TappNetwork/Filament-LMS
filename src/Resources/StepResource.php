@@ -62,7 +62,7 @@ class StepResource extends Resource
                     ->required(),
                 Placeholder::make('material_help')
                     ->label('')
-                    ->content('**Step Material**: Select an existing material or create a new one. To create new materials, use the Videos, Documents, Links, or Images resources first.')
+                    ->content('**Step Material**: Select an existing material or create a new one using the header action buttons above (Create Video, Create Document, Create Link, Create Image).')
                     ->columnSpanFull(),
                 MorphToSelect::make('material')
                     ->label('Step Material')
@@ -119,6 +119,7 @@ class StepResource extends Resource
             ->headerActions([
                 CreateAction::make()
                     ->label('Create Video')
+                    ->icon('heroicon-o-video-camera')
                     ->form([
                         TextInput::make('name')
                             ->required(),
@@ -133,6 +134,7 @@ class StepResource extends Resource
                     }),
                 CreateAction::make()
                     ->label('Create Document')
+                    ->icon('heroicon-o-document')
                     ->form([
                         TextInput::make('name')
                             ->required(),
@@ -149,6 +151,7 @@ class StepResource extends Resource
                     }),
                 CreateAction::make()
                     ->label('Create Link')
+                    ->icon('heroicon-o-link')
                     ->form([
                         TextInput::make('name')
                             ->required(),
@@ -165,6 +168,7 @@ class StepResource extends Resource
                     }),
                 CreateAction::make()
                     ->label('Create Image')
+                    ->icon('heroicon-o-photo')
                     ->form([
                         TextInput::make('name')
                             ->required(),

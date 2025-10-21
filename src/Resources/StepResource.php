@@ -3,6 +3,7 @@
 namespace Tapp\FilamentLms\Resources;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\MarkdownEditor;
@@ -114,6 +115,66 @@ class StepResource extends Resource
             ])
             ->filters([
                 //
+            ])
+            ->headerActions([
+                CreateAction::make()
+                    ->label('Create Video')
+                    ->form([
+                        TextInput::make('name')
+                            ->required(),
+                        TextInput::make('url')
+                            ->helperText(new HtmlString('YouTube: https://www.youtube.com/embed/xxxxxxxxxxx<br/>Vimeo: https://player.vimeo.com/video/xxxxxxxxx'))
+                            ->regex('/(https:\/\/www\.youtube\.com\/embed\/|https:\/\/player\.vimeo\.com\/video\/)([a-zA-Z0-9_-]+)/')
+                            ->activeUrl()
+                            ->required(),
+                    ])
+                    ->action(function (array $data) {
+                        return Video::create($data);
+                    }),
+                CreateAction::make()
+                    ->label('Create Document')
+                    ->form([
+                        TextInput::make('name')
+                            ->required(),
+                        SpatieMediaLibraryFileUpload::make('file')
+                            ->required(),
+                        SpatieMediaLibraryFileUpload::make('preview')
+                            ->collection('preview')
+                            ->label('Custom Preview Image (optional)')
+                            ->image()
+                            ->maxFiles(1),
+                    ])
+                    ->action(function (array $data) {
+                        return Document::create(['name' => $data['name']]);
+                    }),
+                CreateAction::make()
+                    ->label('Create Link')
+                    ->form([
+                        TextInput::make('name')
+                            ->required(),
+                        TextInput::make('url')
+                            ->activeUrl()
+                            ->required(),
+                        SpatieMediaLibraryFileUpload::make('preview')
+                            ->collection('preview')
+                            ->image()
+                            ->helperText('Optional - will be auto-generated if not provided'),
+                    ])
+                    ->action(function (array $data) {
+                        return Link::create(['name' => $data['name'], 'url' => $data['url']]);
+                    }),
+                CreateAction::make()
+                    ->label('Create Image')
+                    ->form([
+                        TextInput::make('name')
+                            ->required(),
+                        SpatieMediaLibraryFileUpload::make('image')
+                            ->image()
+                            ->required(),
+                    ])
+                    ->action(function (array $data) {
+                        return Image::create(['name' => $data['name']]);
+                    }),
             ])
             ->recordActions([
                 EditAction::make(),

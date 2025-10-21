@@ -90,14 +90,7 @@ class StepResource extends Resource
                     ])
                     ->searchable()
                     ->required()
-                    ->live()
-                    ->afterStateUpdated(function ($state, Set $set) {
-                        if ($state) {
-                            // Get the material type from the selected material
-                            $materialType = get_class($state);
-                            $set('material_type', $materialType);
-                        }
-                    }),
+                    ->live(),
                 Hidden::make('material_type'),
                 MarkdownEditor::make('text')
                     ->label('Text Content')

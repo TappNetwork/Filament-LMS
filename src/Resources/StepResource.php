@@ -3,7 +3,6 @@
 namespace Tapp\FilamentLms\Resources;
 
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\MarkdownEditor;
@@ -62,7 +61,7 @@ class StepResource extends Resource
                     ->required(),
                 Placeholder::make('material_help')
                     ->label('')
-                    ->content('**Step Material**: Select an existing material or create a new one using the header action buttons above (Create Video, Create Document, Create Link, Create Image).')
+                    ->content('**Step Material**: Select an existing material or create a new one using the header action buttons (Create Video, Create Document, Create Link, Create Image).')
                     ->columnSpanFull(),
                 MorphToSelect::make('material')
                     ->label('Step Material')
@@ -115,70 +114,6 @@ class StepResource extends Resource
             ])
             ->filters([
                 //
-            ])
-            ->headerActions([
-                CreateAction::make()
-                    ->label('Create Video')
-                    ->icon('heroicon-o-video-camera')
-                    ->form([
-                        TextInput::make('name')
-                            ->required(),
-                        TextInput::make('url')
-                            ->helperText(new HtmlString('YouTube: https://www.youtube.com/embed/xxxxxxxxxxx<br/>Vimeo: https://player.vimeo.com/video/xxxxxxxxx'))
-                            ->regex('/(https:\/\/www\.youtube\.com\/embed\/|https:\/\/player\.vimeo\.com\/video\/)([a-zA-Z0-9_-]+)/')
-                            ->activeUrl()
-                            ->required(),
-                    ])
-                    ->action(function (array $data) {
-                        return Video::create($data);
-                    }),
-                CreateAction::make()
-                    ->label('Create Document')
-                    ->icon('heroicon-o-document')
-                    ->form([
-                        TextInput::make('name')
-                            ->required(),
-                        SpatieMediaLibraryFileUpload::make('file')
-                            ->required(),
-                        SpatieMediaLibraryFileUpload::make('preview')
-                            ->collection('preview')
-                            ->label('Custom Preview Image (optional)')
-                            ->image()
-                            ->maxFiles(1),
-                    ])
-                    ->action(function (array $data) {
-                        return Document::create(['name' => $data['name']]);
-                    }),
-                CreateAction::make()
-                    ->label('Create Link')
-                    ->icon('heroicon-o-link')
-                    ->form([
-                        TextInput::make('name')
-                            ->required(),
-                        TextInput::make('url')
-                            ->activeUrl()
-                            ->required(),
-                        SpatieMediaLibraryFileUpload::make('preview')
-                            ->collection('preview')
-                            ->image()
-                            ->helperText('Optional - will be auto-generated if not provided'),
-                    ])
-                    ->action(function (array $data) {
-                        return Link::create(['name' => $data['name'], 'url' => $data['url']]);
-                    }),
-                CreateAction::make()
-                    ->label('Create Image')
-                    ->icon('heroicon-o-photo')
-                    ->form([
-                        TextInput::make('name')
-                            ->required(),
-                        SpatieMediaLibraryFileUpload::make('image')
-                            ->image()
-                            ->required(),
-                    ])
-                    ->action(function (array $data) {
-                        return Image::create(['name' => $data['name']]);
-                    }),
             ])
             ->recordActions([
                 EditAction::make(),

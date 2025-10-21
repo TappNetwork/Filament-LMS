@@ -93,7 +93,9 @@ class StepResource extends Resource
                     ->live()
                     ->afterStateUpdated(function ($state, Set $set) {
                         if ($state) {
-                            $set('material_type', get_class($state));
+                            // Get the material type from the selected material
+                            $materialType = get_class($state);
+                            $set('material_type', $materialType);
                         }
                     }),
                 Hidden::make('material_type'),

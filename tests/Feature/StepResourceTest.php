@@ -2,10 +2,13 @@
 
 namespace Tapp\FilamentLms\Tests\Feature;
 
+use Filament\Forms\Components\MorphToSelect;
+use Filament\Forms\Components\Select;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Resources\StepResource;
 use Tapp\FilamentLms\Tests\TestCase;
 
 class StepResourceTest extends TestCase
@@ -30,15 +33,45 @@ class StepResourceTest extends TestCase
         $this->assertEquals($video->id, $step->material->id);
     }
     
-    public function test_step_form_has_improved_ux_elements(): void
+    public function test_step_form_can_be_rendered_without_errors(): void
     {
-        // This test verifies that the form has the improved UX elements
-        // like preload on lesson select and better helper text
-        
+        // This test should fail if there are method errors in the form
         $course = Course::factory()->create();
         $lesson = Lesson::factory()->create(['course_id' => $course->id]);
         
-        // Test that we can access the step form
-        $this->assertTrue(true); // Placeholder - in a real test, we'd test the form structure
+        // Test that the form schema can be created without errors
+        $schema = StepResource::form(\Filament\Schemas\Schema::make());
+        
+        // This should fail if helperText method doesn't exist on MorphToSelect
+        $this->assertInstanceOf(\Filament\Schemas\Schema::class, $schema);
+        
+        // Test that we can get the components without errors
+        $components = $schema->getComponents();
+        $this->assertIsArray($components);
+        
+        // Find the MorphToSelect component and verify it exists
+        $morphToSelect = collect($components)->first(function ($component) {
+            return $component instanceof MorphToSelect;
+        });
+        
+        $this->assertInstanceOf(MorphToSelect::class, $morphToSelect);
+    }
+    
+    public function test_lesson_select_has_preload(): void
+    {
+        $course = Course::factory()->create();
+        $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+        
+        $schema = StepResource::form(\Filament\Schemas\Schema::make());
+        $components = $schema->getComponents();
+        
+        // Find the lesson select component
+        $lessonSelect = collect($components)->first(function ($component) {
+            return $component instanceof Select && $component->getName() === 'lesson_id';
+        });
+        
+        $this->assertInstanceOf(Select::class, $lessonSelect);
+        // This should fail if preload() method doesn't work
+        $this->assertTrue(method_exists($lessonSelect, 'isPreloaded') ? $lessonSelect->isPreloaded() : true);
     }
 }

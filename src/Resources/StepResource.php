@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\MorphToSelect;
 use Filament\Forms\Components\MorphToSelect\Type;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
@@ -58,9 +59,12 @@ class StepResource extends Resource
                     ->relationship(name: 'lesson', titleAttribute: 'name')
                     ->preload()
                     ->required(),
+                Placeholder::make('material_help')
+                    ->label('')
+                    ->content('**Step Material**: Select an existing material or create a new one. To create new materials, use the Videos, Documents, Links, or Images resources first.')
+                    ->columnSpanFull(),
                 MorphToSelect::make('material')
                     ->label('Step Material')
-                    ->helperText('Select an existing material or create a new one. To create new materials, use the Videos, Documents, Links, or Images resources first.')
                     ->types([
                         Type::make(Video::class)
                             ->titleAttribute('name')

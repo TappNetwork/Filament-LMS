@@ -5,15 +5,11 @@ namespace Tapp\FilamentLms\Resources;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\MarkdownEditor;
-use Filament\Forms\Components\MorphToSelect;
-use Filament\Forms\Components\MorphToSelect\Type;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\ViewField;
+use Tapp\FilamentLms\Forms\Components\MorphToSelectWithCreate;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -64,34 +60,9 @@ class StepResource extends Resource
                     ->required(),
                 Placeholder::make('material_help')
                     ->label('')
-                    ->content('**Step Material**: Select an existing material or create a new one. After selecting a material type, you can create a new material using the action button that appears.')
+                    ->content('**Step Material**: First select the material type, then choose an existing material or create a new one using the create button.')
                     ->columnSpanFull(),
-                MorphToSelect::make('material')
-                    ->label('Step Material')
-                    ->types([
-                        Type::make(Video::class)
-                            ->titleAttribute('name')
-                            ->label('Video'),
-                        Type::make(Document::class)
-                            ->titleAttribute('name')
-                            ->label('Document'),
-                        Type::make(Link::class)
-                            ->titleAttribute('name')
-                            ->label('Link'),
-                        Type::make(Image::class)
-                            ->titleAttribute('name')
-                            ->label('Image'),
-                        Type::make(FilamentForm::class)
-                            ->titleAttribute('name')
-                            ->label('Form'),
-                        Type::make(Test::class)
-                            ->titleAttribute('name')
-                            ->label('Test'),
-                    ])
-                    ->searchable()
-                    ->required()
-                    ->live(),
-                Hidden::make('material_type'),
+                ...MorphToSelectWithCreate::make('material'),
                 MarkdownEditor::make('text')
                     ->label('Text Content')
                     ->placeholder('Enter step text content...')

@@ -58,10 +58,6 @@ class StepResource extends Resource
                     ->relationship(name: 'lesson', titleAttribute: 'name')
                     ->preload()
                     ->required(),
-                Placeholder::make('material_help')
-                    ->label('')
-                    ->content('**Step Material**: First select the material type, then choose an existing material or create a new one using the create button.')
-                    ->columnSpanFull(),
                 ...MorphToSelectWithCreate::make('material'),
                 MarkdownEditor::make('text')
                     ->label('Text Content')

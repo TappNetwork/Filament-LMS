@@ -9,9 +9,11 @@ use Filament\Actions\Action;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\HtmlString;
+use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Image;
 use Tapp\FilamentLms\Models\Link;
+use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Models\Video;
 
 class MorphToSelectWithCreate
@@ -26,6 +28,8 @@ class MorphToSelectWithCreate
                     'document' => 'Document',
                     'link' => 'Link',
                     'image' => 'Image',
+                    'form' => 'Filament form',
+                    'test' => 'Test',
                 ])
                 ->live()
                 ->required()
@@ -47,6 +51,8 @@ class MorphToSelectWithCreate
                         'document' => Document::class,
                         'link' => Link::class,
                         'image' => Image::class,
+                        'form' => FilamentForm::class,
+                        'test' => Test::class,
                     ];
 
                     $className = $classMap[$materialType] ?? null;
@@ -60,9 +66,9 @@ class MorphToSelectWithCreate
                 ->required()
                 ->suffixActions([
                     Action::make('create_video')
-                        ->label('Create Video')
-                        ->icon('heroicon-o-video-camera')
-                        ->color('success')
+                        ->label('New')
+                        ->icon('heroicon-o-plus')
+                        ->color('primary')
                         ->visible(fn (Get $get) => $get('material_type') === 'video')
                         ->form([
                             TextInput::make('name')
@@ -79,9 +85,9 @@ class MorphToSelectWithCreate
                         }),
 
                     Action::make('create_document')
-                        ->label('Create Document')
-                        ->icon('heroicon-o-document')
-                        ->color('success')
+                        ->label('New')
+                        ->icon('heroicon-o-plus')
+                        ->color('primary')
                         ->visible(fn (Get $get) => $get('material_type') === 'document')
                         ->form([
                             TextInput::make('name')
@@ -100,9 +106,9 @@ class MorphToSelectWithCreate
                         }),
 
                     Action::make('create_link')
-                        ->label('Create Link')
-                        ->icon('heroicon-o-link')
-                        ->color('success')
+                        ->label('New')
+                        ->icon('heroicon-o-plus')
+                        ->color('primary')
                         ->visible(fn (Get $get) => $get('material_type') === 'link')
                         ->form([
                             TextInput::make('name')
@@ -121,9 +127,9 @@ class MorphToSelectWithCreate
                         }),
 
                     Action::make('create_image')
-                        ->label('Create Image')
-                        ->icon('heroicon-o-photo')
-                        ->color('success')
+                        ->label('New')
+                        ->icon('heroicon-o-plus')
+                        ->color('primary')
                         ->visible(fn (Get $get) => $get('material_type') === 'image')
                         ->form([
                             TextInput::make('name')

@@ -22,10 +22,10 @@ class MorphToSelectWithCreate
             Select::make('material_type')
                 ->label('Material Type')
                 ->options([
-                    Video::class => 'Video',
-                    Document::class => 'Document',
-                    Link::class => 'Link',
-                    Image::class => 'Image',
+                    'video' => 'Video',
+                    'document' => 'Document',
+                    'link' => 'Link',
+                    'image' => 'Image',
                 ])
                 ->live()
                 ->required()
@@ -41,7 +41,20 @@ class MorphToSelectWithCreate
                         return [];
                     }
 
-                    return $materialType::query()->pluck('name', 'id');
+                    // Map morph aliases to class names
+                    $classMap = [
+                        'video' => Video::class,
+                        'document' => Document::class,
+                        'link' => Link::class,
+                        'image' => Image::class,
+                    ];
+
+                    $className = $classMap[$materialType] ?? null;
+                    if (!$className) {
+                        return [];
+                    }
+
+                    return $className::query()->pluck('name', 'id');
                 })
                 ->searchable()
                 ->required()
@@ -50,7 +63,7 @@ class MorphToSelectWithCreate
                         ->label('Create Video')
                         ->icon('heroicon-o-video-camera')
                         ->color('success')
-                        ->visible(fn (Get $get) => $get('material_type') === Video::class)
+                        ->visible(fn (Get $get) => $get('material_type') === 'video')
                         ->form([
                             TextInput::make('name')
                                 ->required(),
@@ -69,7 +82,7 @@ class MorphToSelectWithCreate
                         ->label('Create Document')
                         ->icon('heroicon-o-document')
                         ->color('success')
-                        ->visible(fn (Get $get) => $get('material_type') === Document::class)
+                        ->visible(fn (Get $get) => $get('material_type') === 'document')
                         ->form([
                             TextInput::make('name')
                                 ->required(),
@@ -90,7 +103,7 @@ class MorphToSelectWithCreate
                         ->label('Create Link')
                         ->icon('heroicon-o-link')
                         ->color('success')
-                        ->visible(fn (Get $get) => $get('material_type') === Link::class)
+                        ->visible(fn (Get $get) => $get('material_type') === 'link')
                         ->form([
                             TextInput::make('name')
                                 ->required(),
@@ -111,7 +124,7 @@ class MorphToSelectWithCreate
                         ->label('Create Image')
                         ->icon('heroicon-o-photo')
                         ->color('success')
-                        ->visible(fn (Get $get) => $get('material_type') === Image::class)
+                        ->visible(fn (Get $get) => $get('material_type') === 'image')
                         ->form([
                             TextInput::make('name')
                                 ->required(),

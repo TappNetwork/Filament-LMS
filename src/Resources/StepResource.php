@@ -9,12 +9,14 @@ use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\MorphToSelect;
 use Filament\Forms\Components\MorphToSelect\Type;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
@@ -54,21 +56,30 @@ class StepResource extends Resource
                     ->required(),
                 Select::make('lesson_id')
                     ->relationship(name: 'lesson', titleAttribute: 'name')
+                    ->preload()
                     ->required(),
                 MorphToSelect::make('material')
+                    ->label('Step Material')
+                    ->helperText('Select an existing material or create a new one. To create new materials, use the Videos, Documents, Links, or Images resources first.')
                     ->types([
                         Type::make(Video::class)
-                            ->titleAttribute('name'),
+                            ->titleAttribute('name')
+                            ->label('Video'),
                         Type::make(Document::class)
-                            ->titleAttribute('name'),
+                            ->titleAttribute('name')
+                            ->label('Document'),
                         Type::make(Link::class)
-                            ->titleAttribute('name'),
-                        Type::make(FilamentForm::class)
-                            ->titleAttribute('name'),
-                        Type::make(Test::class)
-                            ->titleAttribute('name'),
+                            ->titleAttribute('name')
+                            ->label('Link'),
                         Type::make(Image::class)
-                            ->titleAttribute('name'),
+                            ->titleAttribute('name')
+                            ->label('Image'),
+                        Type::make(FilamentForm::class)
+                            ->titleAttribute('name')
+                            ->label('Form'),
+                        Type::make(Test::class)
+                            ->titleAttribute('name')
+                            ->label('Test'),
                     ])
                     ->searchable()
                     ->required(),

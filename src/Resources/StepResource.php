@@ -5,6 +5,7 @@ namespace Tapp\FilamentLms\Resources;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\MorphToSelect;
 use Filament\Forms\Components\MorphToSelect\Type;
@@ -12,7 +13,9 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ViewField;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -61,7 +64,7 @@ class StepResource extends Resource
                     ->required(),
                 Placeholder::make('material_help')
                     ->label('')
-                    ->content('**Step Material**: Select an existing material or create a new one using the header action buttons (Create Video, Create Document, Create Link, Create Image).')
+                    ->content('**Step Material**: Select an existing material or create a new one. After selecting a material type, you can create a new material using the action button that appears.')
                     ->columnSpanFull(),
                 MorphToSelect::make('material')
                     ->label('Step Material')
@@ -86,7 +89,14 @@ class StepResource extends Resource
                             ->label('Test'),
                     ])
                     ->searchable()
-                    ->required(),
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function ($state, Set $set) {
+                        if ($state) {
+                            $set('material_type', get_class($state));
+                        }
+                    }),
+                Hidden::make('material_type'),
                 MarkdownEditor::make('text')
                     ->label('Text Content')
                     ->placeholder('Enter step text content...')

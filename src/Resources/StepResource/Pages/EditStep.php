@@ -25,6 +25,7 @@ class EditStep extends EditRecord
                 ->label('Create Video')
                 ->icon('heroicon-o-video-camera')
                 ->color('success')
+                ->visible(fn () => $this->form->getState('material_type') === Video::class)
                 ->form([
                     TextInput::make('name')
                         ->required(),
@@ -42,6 +43,7 @@ class EditStep extends EditRecord
                 ->label('Create Document')
                 ->icon('heroicon-o-document')
                 ->color('success')
+                ->visible(fn () => $this->form->getState('material_type') === Document::class)
                 ->form([
                     TextInput::make('name')
                         ->required(),
@@ -61,6 +63,7 @@ class EditStep extends EditRecord
                 ->label('Create Link')
                 ->icon('heroicon-o-link')
                 ->color('success')
+                ->visible(fn () => $this->form->getState('material_type') === Link::class)
                 ->form([
                     TextInput::make('name')
                         ->required(),
@@ -80,6 +83,7 @@ class EditStep extends EditRecord
                 ->label('Create Image')
                 ->icon('heroicon-o-photo')
                 ->color('success')
+                ->visible(fn () => $this->form->getState('material_type') === Image::class)
                 ->form([
                     TextInput::make('name')
                         ->required(),

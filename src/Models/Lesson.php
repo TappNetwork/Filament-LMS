@@ -12,8 +12,13 @@ use Spatie\EloquentSortable\SortableTrait;
 use Tapp\FilamentLms\Database\Factories\LessonFactory;
 
 /**
- * @property string $slug
+ * @property int $id
+ * @property int $course_id
  * @property int $order
+ * @property string $name
+ * @property string $slug
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
  * @property-read Course $course
  * @property-read Collection<int, Step> $steps
  */
@@ -41,7 +46,8 @@ class Lesson extends Model implements Sortable
 
     public function steps(): HasMany
     {
-        return $this->hasMany(Step::class)->orderBy('order');
+        // @phpstan-ignore-next-line
+        return $this->hasMany(Step::class)->ordered();
     }
 
     public function isActive()
@@ -52,7 +58,7 @@ class Lesson extends Model implements Sortable
         }
 
         // Then check if any step in this lesson is currently active
-        return $this->steps->contains(function ($step) {
+        return $this->steps->contains(function (Step $step) {
             return $step->isActive();
         });
     }
@@ -61,7 +67,9 @@ class Lesson extends Model implements Sortable
     {
         $this->loadProgress();
 
-        if ($this->steps->every->completed_at) {
+        if ($this->steps->every(function (Step $step) {
+            return $step->completed_at !== null;
+        })) {
             return $this->steps->pluck('completed_at')->max();
         }
 

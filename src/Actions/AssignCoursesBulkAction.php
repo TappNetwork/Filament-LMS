@@ -2,30 +2,39 @@
 
 namespace Tapp\FilamentLms\Actions;
 
-use Filament\Forms\Components\Select;
 use Filament\Actions\BulkAction;
-use Tapp\FilamentLms\Models\Course;
+use Filament\Forms\Components\Select;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
-class AssignCoursesBulkAction
+class AssignCoursesBulkAction extends BulkAction
 {
-    public static function make(string $name = 'assign_courses')
+    public static function getDefaultName(): string
     {
-        return BulkAction::make($name)
+        return 'assign_courses';
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->label('Assign Courses')
             ->icon('heroicon-o-academic-cap')
-            ->action(function ($records, $data) {
-                $courseIds = $data['courses'] ?? [];
-                foreach ($records as $user) {
-                    $user->courses()->syncWithoutDetaching($courseIds);
+            ->form([
+                Select::make('courses')
+                    ->label('Courses to Assign')
+                    ->multiple()
+                    ->options(\Tapp\FilamentLms\Models\Course::all()->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+            ])
+            ->action(function (Collection $records, array $data) {
+                foreach ($records as $record) {
+                    /** @var Model $record */
+                    $record->courses()->syncWithoutDetaching($data['courses']);
                 }
             })
-            ->schema([
-                Select::make('courses')
-                    ->preload()
-                    ->multiple()
-                    // TODO: relationship is not working
-                    // ->relationship('courses', 'name')
-                    ->options(Course::pluck('name', 'id')->toArray())
-                    ->required(),
-            ]);
+            ->deselectRecordsAfterCompletion();
     }
 }

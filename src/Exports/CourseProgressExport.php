@@ -20,7 +20,7 @@ class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
 
     public function query()
     {
-        return CourseProgressQueryService::buildQuery()->orderByRaw('MAX(lms_step_user.completed_at) DESC');
+        return CourseProgressQueryService::buildQuery();
     }
 
     public function headings(): array

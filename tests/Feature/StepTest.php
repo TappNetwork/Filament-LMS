@@ -2,14 +2,11 @@
 
 namespace Tapp\FilamentLms\Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Tests\TestUser;
-
-uses(RefreshDatabase::class);
 
 test('step can be created with required fields', function () {
     $course = Course::factory()->create();

@@ -1,14 +1,22 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 .fb-form-submit-button {
-    @apply mt-10 bg-emerald-600 hover:bg-emerald-500 font-semibold px-3 rounded-lg px-4 py-3 text-sm shadow-sm;
+    margin-top: 2.5rem;
+    background-color: #059669;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: background-color 0.15s ease-in-out;
 }
 
-  .fb-form-user-container {
-    @apply bg-white px-8 py-16;
-  }
+.fb-form-submit-button:hover {
+    background-color: #10b981;
+}
+
+.fb-form-user-container {
+    background-color: white;
+    padding: 4rem 2rem;
+}
 
 /* LMS Plugin Styles */
 

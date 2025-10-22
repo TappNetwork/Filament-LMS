@@ -14,15 +14,27 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
+use Tapp\FilamentLms\Traits\HasMediaUrl;
 
 /**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string $external_id
+ * @property string|null $image
  * @property string|null $award
  * @property array $award_content
- * @property string $slug
+ * @property string|null $description
+ * @property bool $is_private
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
+ * @property-read \Illuminate\Database\Eloquent\Collection|Step[] $steps
  */
 class Course extends Model implements HasMedia
 {
     use HasFactory;
+    use HasMediaUrl;
     use InteractsWithMedia;
 
     protected $guarded = [];
@@ -31,6 +43,7 @@ class Course extends Model implements HasMedia
 
     protected $casts = [
         'award_content' => 'array',
+        'is_private' => 'boolean',
     ];
 
     public function registerMediaCollections(): void
@@ -40,11 +53,37 @@ class Course extends Model implements HasMedia
     }
 
     /**
-     * Scope a query to only include popular users.
+     * Scope a query to only include visible courses.
      */
     public function scopeVisible(Builder $query): void
     {
-        $query->whereHas('steps')->where('hidden', false);
+        $query->whereHas('steps')->where('is_private', false);
+    }
+
+    /**
+     * Scope a query to only include courses accessible to a specific user.
+     */
+    public function scopeAccessibleTo(Builder $query, $user): void
+    {
+        $query->where(function ($q) use ($user) {
+            // Public courses - not private, accessible to everyone
+            $q->where('is_private', false)
+              // Private courses - only accessible to LMS admins or assigned users
+                ->orWhere(function ($subQ) use ($user) {
+                    $subQ->where('is_private', true)
+                        ->where(function ($adminOrAssignedQuery) use ($user) {
+                            // LMS admins can see all private courses
+                            if ($user->isLmsAdmin()) {
+                                $adminOrAssignedQuery->whereRaw('1 = 1'); // Always true for admins
+                            } else {
+                                // Non-admins can only see assigned courses
+                                $adminOrAssignedQuery->whereHas('users', function ($userQuery) use ($user) {
+                                    $userQuery->where('user_id', $user->id);
+                                });
+                            }
+                        });
+                });
+        });
     }
 
     protected static function newFactory()
@@ -64,14 +103,15 @@ class Course extends Model implements HasMedia
 
         // Get all completed steps for this user
         $completedStepIds = StepUser::whereIn('step_id', $allSteps->pluck('id'))
-            ->where('user_id', auth()->user()->id)
+            ->where('user_id', Auth::user()->id)
             ->whereNotNull('completed_at')
             ->pluck('step_id')
             ->toArray();
 
         // Find the first step that hasn't been completed
         $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
-            return ! in_array($step->id, $completedStepIds) && auth()->user()?->canAccessStep($step);
+            // @phpstan-ignore-next-line
+            return ! in_array($step->id, $completedStepIds) && Auth::user()?->canAccessStep($step);
         });
 
         // If no incomplete step is available, check if course is complete
@@ -194,19 +234,20 @@ class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId): float
     {
-        if ($this->steps->isEmpty()) {
+        // Get all steps for this course
+        $steps = $this->steps()->get();
+
+        if ($steps->isEmpty()) {
             return 0;
         }
 
-        // Load steps with progress for the specific user
-        $steps = $this->steps()->with(['progress' => function ($query) use ($userId) {
-            $query->where('user_id', $userId);
-        }])->get();
+        // Get all completed steps for this specific user
+        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+            ->where('user_id', $userId)
+            ->whereNotNull('completed_at')
+            ->get();
 
-        // @phpstan-ignore-next-line
-        $completedSteps = $steps->filter->completed_at;
-
-        return $completedSteps->count() / $steps->count() * 100;
+        return $completedStepUsers->count() / $steps->count() * 100;
     }
 
     public function certificateUrl(): string
@@ -216,14 +257,39 @@ class Course extends Model implements HasMedia
 
     public function getImageUrlAttribute()
     {
-        $mediaPath = $this->getFirstMediaUrl('courses');
+        $mediaUrl = $this->getMediaUrl('courses');
 
-        return $mediaPath ?: 'https://picsum.photos/200';
+        return $mediaUrl ?: 'https://picsum.photos/200';
     }
 
     // Add the users() relationship for the pivot table
     public function users()
     {
-        return $this->belongsToMany(Authenticatable::class, 'lms_course_user', 'course_id', 'user_id')->withTimestamps();
+        $userModel = config('filament-lms.user_model');
+
+        return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')->withTimestamps();
+    }
+
+    /**
+     * Check if a user can access this course based on private status and user assignments.
+     */
+    public function canBeAccessedBy($user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        // Public courses (not private) - accessible to everyone
+        if (! $this->is_private) {
+            return true;
+        }
+
+        // Private courses - only accessible to LMS admins or assigned users
+        if ($user->isLmsAdmin()) {
+            return true;
+        }
+
+        // Check if user is assigned to this course
+        return $this->users()->where('user_id', $user->id)->exists();
     }
 }

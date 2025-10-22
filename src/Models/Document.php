@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentLms\Database\Factories\DocumentFactory;
+use Tapp\FilamentLms\Traits\HasMediaUrl;
 
 class Document extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, SoftDeletes;
+    use HasFactory, HasMediaUrl, InteractsWithMedia, SoftDeletes;
 
     protected $guarded = [];
 
@@ -51,17 +52,13 @@ class Document extends Model implements HasMedia
      */
     public function getPreviewImageUrl(): ?string
     {
-        $previewMedia = $this->getFirstMedia('preview');
-        if ($previewMedia) {
-            return $previewMedia->getUrl();
-        }
-        // Fallback: use the generated preview from the main file collection (assumed to be 'file')
-        $mainMedia = $this->getFirstMedia();
-        if ($mainMedia && method_exists($mainMedia, 'getGeneratedConversionUrl')) {
-            // If you have a conversion (e.g., 'thumb'), you can use it here
-            return $mainMedia->getUrl();
+        // Try preview collection first
+        $previewUrl = $this->getMediaUrl('preview');
+        if ($previewUrl) {
+            return $previewUrl;
         }
 
-        return null;
+        // Fallback: use the main file collection
+        return $this->getMediaUrl('default');
     }
 }

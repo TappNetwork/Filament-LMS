@@ -37,7 +37,17 @@ class VideoResource extends Resource
                 TextInput::make('url')
                     ->helperText(new HtmlString(VideoUrlService::getHelperText()))
                     ->activeUrl()
-                    ->required(),
+                    ->required()
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                $result = VideoUrlService::validateAndConvertWithErrors($value);
+                                if (!empty($result['errors'])) {
+                                    $fail($result['errors']['url']);
+                                }
+                            };
+                        },
+                    ]),
             ]);
     }
 

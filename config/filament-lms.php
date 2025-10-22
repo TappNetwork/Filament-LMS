@@ -19,7 +19,7 @@ return [
     'restrict_course_visibility' => false,
 
     // User model class for course assignments
-    'user_model' => \App\Models\User::class,
+    'user_model' => \App\Models\User::class, // @phpstan-ignore-line
 
     // User search columns for relation managers
     'user_search_columns' => [

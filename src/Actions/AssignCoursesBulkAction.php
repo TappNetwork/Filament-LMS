@@ -21,7 +21,7 @@ class AssignCoursesBulkAction extends BulkAction
 
         $this->label('Assign Courses')
             ->icon('heroicon-o-academic-cap')
-            ->form([
+            ->schema([
                 Select::make('courses')
                     ->label('Courses to Assign')
                     ->multiple()
@@ -32,8 +32,10 @@ class AssignCoursesBulkAction extends BulkAction
             ])
             ->action(function (Collection $records, array $data) {
                 foreach ($records as $record) {
-                    /** @var Model $record */
-                    $record->courses()->syncWithoutDetaching($data['courses']);
+                    /** @var \Illuminate\Database\Eloquent\Model $record */
+                    if (method_exists($record, 'courses')) {
+                        $record->courses()->syncWithoutDetaching($data['courses']);
+                    }
                 }
             })
             ->deselectRecordsAfterCompletion();

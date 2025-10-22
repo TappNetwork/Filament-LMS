@@ -5,7 +5,6 @@ namespace Tapp\FilamentLms\Actions;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 
 class AssignCoursesBulkAction extends BulkAction
 {

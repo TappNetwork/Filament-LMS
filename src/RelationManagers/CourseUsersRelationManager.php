@@ -70,8 +70,10 @@ class CourseUsersRelationManager extends RelationManager
                         $ownerRecord = $this->getOwnerRecord();
                         if (method_exists($ownerRecord, 'users')) {
                             $existingUserIds = $ownerRecord->users()->pluck('users.id');
+
                             return $query->whereNotIn('users.id', $existingUserIds);
                         }
+
                         return $query;
                     })
                     ->schema(fn (AttachAction $action): array => [

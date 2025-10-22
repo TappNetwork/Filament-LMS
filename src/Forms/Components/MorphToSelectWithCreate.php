@@ -75,14 +75,26 @@ class MorphToSelectWithCreate
                             TextInput::make('name')
                                 ->required(),
                             TextInput::make('url')
-                                ->helperText(new HtmlString('Paste any YouTube or Vimeo URL (watch, short, or embed format)<br/>Examples:<br/>• https://www.youtube.com/watch?v=ABC123<br/>• https://youtu.be/ABC123<br/>• https://vimeo.com/123456<br/>• https://www.youtube.com/embed/ABC123'))
+                                ->helperText(new HtmlString('Enter a YouTube or Vimeo video URL and it will be converted to embed link.<br/>Examples:<br/>• https://www.youtube.com/watch?v=ABC123<br/>• https://youtu.be/ABC123<br/>• https://vimeo.com/123456'))
                                 ->activeUrl()
                                 ->required(),
                         ])
                         ->action(function (array $data, Set $set) {
                             // Convert standard YouTube/Vimeo URLs to embed URLs
-                            $data['url'] = self::convertToEmbedUrl($data['url']);
+                            $originalUrl = $data['url'];
+                            $convertedUrl = self::convertToEmbedUrl($data['url']);
                             
+                            // Validate that conversion was successful
+                            if ($convertedUrl === $originalUrl && !self::isValidEmbedUrl($convertedUrl)) {
+                                throw new \Exception('Automatic conversion to embed link failed. Please try entering the link that the video is embedded from.');
+                            }
+                            
+                            // Validate the converted URL matches embed format
+                            if (!self::isValidEmbedUrl($convertedUrl)) {
+                                throw new \Exception('Automatic conversion to embed link failed. Please try entering the link that the video is embedded from.');
+                            }
+                            
+                            $data['url'] = $convertedUrl;
                             $video = Video::create($data);
                             $set('material_id', $video->id);
                         }),
@@ -117,5 +129,13 @@ class MorphToSelectWithCreate
 
         // If no conversion is possible, return the original URL
         return $url;
+    }
+
+    /**
+     * Check if URL is a valid embed URL
+     */
+    private static function isValidEmbedUrl(string $url): bool
+    {
+        return preg_match('/(https:\/\/www\.youtube\.com\/embed\/|https:\/\/player\.vimeo\.com\/video\/)([a-zA-Z0-9_-]+)/', $url);
     }
 }

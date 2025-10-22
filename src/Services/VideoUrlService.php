@@ -65,6 +65,37 @@ class VideoUrlService
     }
 
     /**
+     * Validate and convert a video URL with validation errors
+     * Returns array with 'url' and 'errors' keys
+     */
+    public static function validateAndConvertWithErrors(string $url): array
+    {
+        $originalUrl = $url;
+        $convertedUrl = self::convertToEmbedUrl($url);
+        
+        // Validate that conversion was successful
+        if ($convertedUrl === $originalUrl && !self::isValidEmbedUrl($convertedUrl)) {
+            return [
+                'url' => $url,
+                'errors' => ['url' => 'Automatic conversion to embed link failed. Please try entering the link that the video is embedded from.']
+            ];
+        }
+        
+        // Validate the converted URL matches embed format
+        if (!self::isValidEmbedUrl($convertedUrl)) {
+            return [
+                'url' => $url,
+                'errors' => ['url' => 'Automatic conversion to embed link failed. Please try entering the link that the video is embedded from.']
+            ];
+        }
+        
+        return [
+            'url' => $convertedUrl,
+            'errors' => []
+        ];
+    }
+
+    /**
      * Get helper text for video URL input
      */
     public static function getHelperText(): string

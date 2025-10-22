@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\HtmlString;
+use Illuminate\Validation\ValidationException;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Image;
@@ -81,8 +82,17 @@ class MorphToSelectWithCreate
                         ])
                         ->action(function (array $data, Set $set) {
                             // Convert and validate the URL using the shared service
-                            $data['url'] = VideoUrlService::validateAndConvert($data['url']);
+                            $result = VideoUrlService::validateAndConvertWithErrors($data['url']);
                             
+                            if (!empty($result['errors'])) {
+                                // Throw a validation exception that Filament can handle
+                                throw new \Illuminate\Validation\ValidationException(
+                                    validator([], []),
+                                    ['url' => $result['errors']['url']]
+                                );
+                            }
+                            
+                            $data['url'] = $result['url'];
                             $video = Video::create($data);
                             $set('material_id', $video->id);
                         }),

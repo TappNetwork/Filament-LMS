@@ -2,13 +2,10 @@
 
 namespace Tapp\FilamentLms\Forms\Components;
 
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Illuminate\Support\HtmlString;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Image;
@@ -43,7 +40,7 @@ class MorphToSelectWithCreate
                 ->label('Select Material')
                 ->options(function (Get $get) {
                     $materialType = $get('material_type');
-                    if (!$materialType) {
+                    if (! $materialType) {
                         return [];
                     }
 
@@ -58,7 +55,7 @@ class MorphToSelectWithCreate
                     ];
 
                     $className = $classMap[$materialType] ?? null;
-                    if (!$className) {
+                    if (! $className) {
                         return [];
                     }
 
@@ -76,12 +73,11 @@ class MorphToSelectWithCreate
                         ->action(function (array $data, Set $set) {
                             // Convert the URL (validation already happened in the form rules)
                             $data['url'] = VideoUrlService::convertToEmbedUrl($data['url']);
-                            
+
                             $video = Video::create($data);
                             $set('material_id', $video->id);
                         }),
                 ]),
         ];
     }
-
 }

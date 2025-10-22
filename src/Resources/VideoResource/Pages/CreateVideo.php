@@ -14,6 +14,7 @@ class CreateVideo extends CreateRecord
     {
         // Convert the URL (validation already happened in the form rules)
         $data['url'] = VideoUrlService::convertToEmbedUrl($data['url']);
+
         return $data;
     }
 }

@@ -71,7 +71,14 @@ class MorphToSelectWithCreate
                         ->icon('heroicon-o-plus')
                         ->color('primary')
                         ->visible(fn (Get $get) => $get('material_type') === 'video')
-                        ->form(VideoResource::form(\Filament\Schemas\Schema::make())->getComponents())
+                        ->form([
+                            TextInput::make('name')
+                                ->required(),
+                            TextInput::make('url')
+                                ->helperText(new HtmlString('Paste any YouTube or Vimeo URL (watch, short, or embed format)<br/>Examples:<br/>• https://www.youtube.com/watch?v=ABC123<br/>• https://youtu.be/ABC123<br/>• https://vimeo.com/123456<br/>• https://www.youtube.com/embed/ABC123'))
+                                ->activeUrl()
+                                ->required(),
+                        ])
                         ->action(function (array $data, Set $set) {
                             // Convert standard YouTube/Vimeo URLs to embed URLs
                             $data['url'] = self::convertToEmbedUrl($data['url']);

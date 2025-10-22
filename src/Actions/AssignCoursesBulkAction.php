@@ -3,12 +3,12 @@
 namespace Tapp\FilamentLms\Actions;
 
 use Filament\Forms\Components\Select;
-use Filament\Tables\Actions\BulkAction;
+use Filament\Actions\BulkAction;
 use Tapp\FilamentLms\Models\Course;
 
 class AssignCoursesBulkAction
 {
-    public static function make(string $name = 'assign_courses'): BulkAction
+    public static function make(string $name = 'assign_courses')
     {
         return BulkAction::make($name)
             ->icon('heroicon-o-academic-cap')

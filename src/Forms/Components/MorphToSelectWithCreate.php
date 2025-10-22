@@ -72,7 +72,7 @@ class MorphToSelectWithCreate
                         ->icon('heroicon-o-plus')
                         ->color('primary')
                         ->visible(fn (Get $get) => $get('material_type') === 'video')
-                        ->form(VideoResource::form(\Filament\Schemas\Schema::make())->getComponents())
+                        ->schema(VideoResource::form(\Filament\Schemas\Schema::make())->getComponents())
                         ->action(function (array $data, Set $set) {
                             // Convert the URL (validation already happened in the form rules)
                             $data['url'] = VideoUrlService::convertToEmbedUrl($data['url']);

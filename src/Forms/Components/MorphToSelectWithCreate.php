@@ -15,6 +15,7 @@ use Tapp\FilamentLms\Models\Image;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Resources\VideoResource;
 
 class MorphToSelectWithCreate
 {
@@ -70,20 +71,44 @@ class MorphToSelectWithCreate
                         ->icon('heroicon-o-plus')
                         ->color('primary')
                         ->visible(fn (Get $get) => $get('material_type') === 'video')
-                        ->form([
-                            TextInput::make('name')
-                                ->required(),
-                            TextInput::make('url')
-                                ->helperText(new HtmlString('YouTube: https://www.youtube.com/embed/xxxxxxxxxxx<br/>Vimeo: https://player.vimeo.com/video/xxxxxxxxx'))
-                                ->regex('/(https:\/\/www\.youtube\.com\/embed\/|https:\/\/player\.vimeo\.com\/video\/)([a-zA-Z0-9_-]+)/')
-                                ->activeUrl()
-                                ->required(),
-                        ])
+                        ->form(VideoResource::form(\Filament\Schemas\Schema::make())->getComponents())
                         ->action(function (array $data, Set $set) {
+                            // Convert standard YouTube/Vimeo URLs to embed URLs
+                            $data['url'] = self::convertToEmbedUrl($data['url']);
+                            
                             $video = Video::create($data);
                             $set('material_id', $video->id);
                         }),
                 ]),
         ];
+    }
+
+    /**
+     * Convert standard YouTube/Vimeo URLs to embed URLs
+     */
+    private static function convertToEmbedUrl(string $url): string
+    {
+        // If it's already an embed URL, return as is
+        if (str_contains($url, 'youtube.com/embed/') || str_contains($url, 'player.vimeo.com/video/')) {
+            return $url;
+        }
+
+        // Convert YouTube watch URLs to embed URLs
+        if (preg_match('/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1];
+        }
+
+        // Convert YouTube short URLs to embed URLs
+        if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1];
+        }
+
+        // Convert Vimeo URLs to embed URLs
+        if (preg_match('/vimeo\.com\/(\d+)/', $url, $matches)) {
+            return 'https://player.vimeo.com/video/' . $matches[1];
+        }
+
+        // If no conversion is possible, return the original URL
+        return $url;
     }
 }

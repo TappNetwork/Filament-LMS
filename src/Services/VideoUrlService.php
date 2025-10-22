@@ -100,6 +100,6 @@ class VideoUrlService
      */
     public static function getHelperText(): string
     {
-        return 'Enter a YouTube or Vimeo video URL and it will be converted to embed link.<br/>Examples:<br/>• https://www.youtube.com/watch?v=ABC123<br/>• https://youtu.be/ABC123<br/>• https://vimeo.com/123456';
+        return 'Enter a YouTube or Vimeo video URL and it will be converted to embed link.';
     }
 }

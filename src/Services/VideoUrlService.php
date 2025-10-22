@@ -16,17 +16,17 @@ class VideoUrlService
 
         // Convert YouTube watch URLs to embed URLs
         if (preg_match('/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/', $url, $matches)) {
-            return 'https://www.youtube.com/embed/' . $matches[1];
+            return 'https://www.youtube.com/embed/'.$matches[1];
         }
 
         // Convert YouTube short URLs to embed URLs
         if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
-            return 'https://www.youtube.com/embed/' . $matches[1];
+            return 'https://www.youtube.com/embed/'.$matches[1];
         }
 
         // Convert Vimeo URLs to embed URLs
         if (preg_match('/vimeo\.com\/(\d+)/', $url, $matches)) {
-            return 'https://player.vimeo.com/video/' . $matches[1];
+            return 'https://player.vimeo.com/video/'.$matches[1];
         }
 
         // If no conversion is possible, return the original URL
@@ -43,24 +43,24 @@ class VideoUrlService
 
     /**
      * Validate and convert a video URL
-     * 
+     *
      * @throws \Exception if conversion fails or URL is invalid
      */
     public static function validateAndConvert(string $url): string
     {
         $originalUrl = $url;
         $convertedUrl = self::convertToEmbedUrl($url);
-        
+
         // Validate that conversion was successful
-        if ($convertedUrl === $originalUrl && !self::isValidEmbedUrl($convertedUrl)) {
+        if ($convertedUrl === $originalUrl && ! self::isValidEmbedUrl($convertedUrl)) {
             throw new \Exception('Automatic conversion from video link to embed link failed. Please try entering the embed link directly.');
         }
-        
+
         // Validate the converted URL matches embed format
-        if (!self::isValidEmbedUrl($convertedUrl)) {
+        if (! self::isValidEmbedUrl($convertedUrl)) {
             throw new \Exception('Automatic conversion from video link to embed link failed. Please try entering the embed link directly.');
         }
-        
+
         return $convertedUrl;
     }
 
@@ -72,26 +72,26 @@ class VideoUrlService
     {
         $originalUrl = $url;
         $convertedUrl = self::convertToEmbedUrl($url);
-        
+
         // Validate that conversion was successful
-        if ($convertedUrl === $originalUrl && !self::isValidEmbedUrl($convertedUrl)) {
+        if ($convertedUrl === $originalUrl && ! self::isValidEmbedUrl($convertedUrl)) {
             return [
                 'url' => $url,
-                'errors' => ['url' => 'Automatic conversion from video link to embed link failed. Please try entering the embed link directly.']
+                'errors' => ['url' => 'Automatic conversion from video link to embed link failed. Please try entering the embed link directly.'],
             ];
         }
-        
+
         // Validate the converted URL matches embed format
-        if (!self::isValidEmbedUrl($convertedUrl)) {
+        if (! self::isValidEmbedUrl($convertedUrl)) {
             return [
                 'url' => $url,
-                'errors' => ['url' => 'Automatic conversion from video link to embed link failed. Please try entering the embed link directly.']
+                'errors' => ['url' => 'Automatic conversion from video link to embed link failed. Please try entering the embed link directly.'],
             ];
         }
-        
+
         return [
             'url' => $convertedUrl,
-            'errors' => []
+            'errors' => [],
         ];
     }
 

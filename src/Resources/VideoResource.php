@@ -42,7 +42,7 @@ class VideoResource extends Resource
                         function () {
                             return function (string $attribute, $value, \Closure $fail) {
                                 $result = VideoUrlService::validateAndConvertWithErrors($value);
-                                if (!empty($result['errors'])) {
+                                if (! empty($result['errors'])) {
                                     $fail($result['errors']['url']);
                                 }
                             };

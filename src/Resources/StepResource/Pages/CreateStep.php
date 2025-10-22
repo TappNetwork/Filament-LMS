@@ -28,6 +28,4 @@ class CreateStep extends CreateRecord
 
         return $data;
     }
-
-
 }

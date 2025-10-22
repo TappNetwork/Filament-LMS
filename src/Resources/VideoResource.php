@@ -16,6 +16,7 @@ use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Resources\VideoResource\Pages\CreateVideo;
 use Tapp\FilamentLms\Resources\VideoResource\Pages\EditVideo;
 use Tapp\FilamentLms\Resources\VideoResource\Pages\ListVideos;
+use Tapp\FilamentLms\Services\VideoUrlService;
 
 class VideoResource extends Resource
 {
@@ -34,11 +35,7 @@ class VideoResource extends Resource
                 TextInput::make('name')
                     ->required(),
                 TextInput::make('url')
-                    ->helperText(new HtmlString('https://www.youtube.com/embed/xxxxxxxxxxx <br/> https://player.vimeo.com/video/xxxxxxxxx'))
-                    // regex validation to match youtube and vimeo urls
-                    // https://www.youtube.com/embed/xxxxxxxxxxx
-                    // https://player.vimeo.com/video/xxxxxxxxx
-                    ->regex('/(https:\/\/www\.youtube\.com\/embed\/|https:\/\/player\.vimeo\.com\/video\/)([a-zA-Z0-9_-]+)/')
+                    ->helperText(new HtmlString(VideoUrlService::getHelperText()))
                     ->activeUrl()
                     ->required(),
             ]);

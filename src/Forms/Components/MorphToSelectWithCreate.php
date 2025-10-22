@@ -15,6 +15,7 @@ use Tapp\FilamentLms\Models\Image;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Resources\VideoResource;
 use Tapp\FilamentLms\Services\VideoUrlService;
 
 class MorphToSelectWithCreate
@@ -71,24 +72,7 @@ class MorphToSelectWithCreate
                         ->icon('heroicon-o-plus')
                         ->color('primary')
                         ->visible(fn (Get $get) => $get('material_type') === 'video')
-                        ->form([
-                            TextInput::make('name')
-                                ->required(),
-                            TextInput::make('url')
-                                ->helperText(new HtmlString(VideoUrlService::getHelperText()))
-                                ->activeUrl()
-                                ->required()
-                                ->rules([
-                                    function () {
-                                        return function (string $attribute, $value, \Closure $fail) {
-                                            $result = VideoUrlService::validateAndConvertWithErrors($value);
-                                            if (!empty($result['errors'])) {
-                                                $fail($result['errors']['url']);
-                                            }
-                                        };
-                                    },
-                                ]),
-                        ])
+                        ->form(VideoResource::form(\Filament\Schemas\Schema::make())->getComponents())
                         ->action(function (array $data, Set $set) {
                             // Convert the URL (validation already happened in the form rules)
                             $data['url'] = VideoUrlService::convertToEmbedUrl($data['url']);

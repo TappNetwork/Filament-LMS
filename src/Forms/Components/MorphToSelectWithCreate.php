@@ -83,65 +83,6 @@ class MorphToSelectWithCreate
                             $video = Video::create($data);
                             $set('material_id', $video->id);
                         }),
-
-                    Action::make('create_document')
-                        ->label('New')
-                        ->icon('heroicon-o-plus')
-                        ->color('primary')
-                        ->visible(fn (Get $get) => $get('material_type') === 'document')
-                        ->form([
-                            TextInput::make('name')
-                                ->required(),
-                            SpatieMediaLibraryFileUpload::make('file')
-                                ->required(),
-                            SpatieMediaLibraryFileUpload::make('preview')
-                                ->collection('preview')
-                                ->label('Custom Preview Image (optional)')
-                                ->image()
-                                ->maxFiles(1),
-                        ])
-                        ->action(function (array $data, Set $set) {
-                            $document = Document::create(['name' => $data['name']]);
-                            $set('material_id', $document->id);
-                        }),
-
-                    Action::make('create_link')
-                        ->label('New')
-                        ->icon('heroicon-o-plus')
-                        ->color('primary')
-                        ->visible(fn (Get $get) => $get('material_type') === 'link')
-                        ->form([
-                            TextInput::make('name')
-                                ->required(),
-                            TextInput::make('url')
-                                ->activeUrl()
-                                ->required(),
-                            SpatieMediaLibraryFileUpload::make('preview')
-                                ->collection('preview')
-                                ->image()
-                                ->helperText('Optional - will be auto-generated if not provided'),
-                        ])
-                        ->action(function (array $data, Set $set) {
-                            $link = Link::create(['name' => $data['name'], 'url' => $data['url']]);
-                            $set('material_id', $link->id);
-                        }),
-
-                    Action::make('create_image')
-                        ->label('New')
-                        ->icon('heroicon-o-plus')
-                        ->color('primary')
-                        ->visible(fn (Get $get) => $get('material_type') === 'image')
-                        ->form([
-                            TextInput::make('name')
-                                ->required(),
-                            SpatieMediaLibraryFileUpload::make('image')
-                                ->image()
-                                ->required(),
-                        ])
-                        ->action(function (array $data, Set $set) {
-                            $image = Image::create(['name' => $data['name']]);
-                            $set('material_id', $image->id);
-                        }),
                 ]),
         ];
     }

@@ -53,12 +53,12 @@ class VideoUrlService
         
         // Validate that conversion was successful
         if ($convertedUrl === $originalUrl && !self::isValidEmbedUrl($convertedUrl)) {
-            throw new \Exception('Automatic conversion to embed link failed. Please try entering the link that the video is embedded from.');
+            throw new \Exception('Automatic conversion from video link to embed link failed. Please try entering the embed link directly.');
         }
         
         // Validate the converted URL matches embed format
         if (!self::isValidEmbedUrl($convertedUrl)) {
-            throw new \Exception('Automatic conversion to embed link failed. Please try entering the link that the video is embedded from.');
+            throw new \Exception('Automatic conversion from video link to embed link failed. Please try entering the embed link directly.');
         }
         
         return $convertedUrl;
@@ -77,7 +77,7 @@ class VideoUrlService
         if ($convertedUrl === $originalUrl && !self::isValidEmbedUrl($convertedUrl)) {
             return [
                 'url' => $url,
-                'errors' => ['url' => 'Automatic conversion to embed link failed. Please try entering the link that the video is embedded from.']
+                'errors' => ['url' => 'Automatic conversion from video link to embed link failed. Please try entering the embed link directly.']
             ];
         }
         
@@ -85,7 +85,7 @@ class VideoUrlService
         if (!self::isValidEmbedUrl($convertedUrl)) {
             return [
                 'url' => $url,
-                'errors' => ['url' => 'Automatic conversion to embed link failed. Please try entering the link that the video is embedded from.']
+                'errors' => ['url' => 'Automatic conversion from video link to embed link failed. Please try entering the embed link directly.']
             ];
         }
         

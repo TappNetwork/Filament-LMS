@@ -62,9 +62,7 @@ class VideoResource extends Resource
                     ->searchable()
                     ->sortable(),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->recordActions([
                 EditAction::make(),
             ])
@@ -77,9 +75,7 @@ class VideoResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

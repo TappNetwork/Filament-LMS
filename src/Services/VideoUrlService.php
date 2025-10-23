@@ -42,29 +42,6 @@ class VideoUrlService
     }
 
     /**
-     * Validate and convert a video URL
-     *
-     * @throws \Exception if conversion fails or URL is invalid
-     */
-    public static function validateAndConvert(string $url): string
-    {
-        $originalUrl = $url;
-        $convertedUrl = self::convertToEmbedUrl($url);
-
-        // Validate that conversion was successful
-        if ($convertedUrl === $originalUrl && ! self::isValidEmbedUrl($convertedUrl)) {
-            throw new \Exception('Automatic conversion from video link to embed link failed. Please try entering the embed link directly.');
-        }
-
-        // Validate the converted URL matches embed format
-        if (! self::isValidEmbedUrl($convertedUrl)) {
-            throw new \Exception('Automatic conversion from video link to embed link failed. Please try entering the embed link directly.');
-        }
-
-        return $convertedUrl;
-    }
-
-    /**
      * Validate and convert a video URL with validation errors
      * Returns array with 'url' and 'errors' keys
      */

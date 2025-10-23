@@ -17,5 +17,4 @@ class CreateStep extends CreateRecord
 
         $this->form->fill($request->query());
     }
-
 }

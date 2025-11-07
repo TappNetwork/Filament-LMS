@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
@@ -111,7 +112,12 @@ class Course extends Model implements HasMedia
         // Find the first step that hasn't been completed
         $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
             // @phpstan-ignore-next-line
-            return ! in_array($step->id, $completedStepIds) && Auth::user()?->canAccessStep($step);
+            $user = Auth::user();
+            if (! $user instanceof FilamentLmsUserInterface) {
+                return false;
+            }
+
+            return ! in_array($step->id, $completedStepIds) && $user->canAccessStep($step);
         });
 
         // If no incomplete step is available, check if course is complete

@@ -8,6 +8,7 @@ use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step as StepModel;
@@ -37,9 +38,9 @@ class Step extends Page
         // @phpstan-ignore-next-line
         $this->heading = $this->step->name;
 
-        $user = Auth::user();
         // @phpstan-ignore-next-line
-        if (! $user || ! $user->canAccessStep($this->step)) {
+        $user = Auth::user();
+        if (! $user instanceof FilamentLmsUserInterface || ! $user->canAccessStep($this->step)) {
             return redirect()->to($this->course->linkToCurrentStep());
         }
 

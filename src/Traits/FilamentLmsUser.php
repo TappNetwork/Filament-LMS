@@ -5,9 +5,24 @@ namespace Tapp\FilamentLms\Traits;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\DB;
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Step;
 
+/**
+ * Trait for User models to provide LMS functionality.
+ *
+ * Classes using this trait should implement FilamentLmsUserInterface
+ * to help static analysis tools (like PHPStan) understand the available methods.
+ *
+ * Example:
+ * ```php
+ * class User extends Authenticatable implements FilamentLmsUserInterface
+ * {
+ *     use FilamentLmsUser;
+ * }
+ * ```
+ */
 trait FilamentLmsUser
 {
     /**

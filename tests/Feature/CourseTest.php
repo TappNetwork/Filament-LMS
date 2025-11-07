@@ -7,6 +7,10 @@ use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Tests\TestUser;
 
+beforeEach(function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+});
+
 test('course can be created with required fields', function () {
     $course = Course::factory()->create([
         'name' => 'Test Course',

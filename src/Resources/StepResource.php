@@ -6,8 +6,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\MarkdownEditor;
-use Filament\Forms\Components\MorphToSelect;
-use Filament\Forms\Components\MorphToSelect\Type;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
@@ -16,14 +14,9 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
-use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
-use Tapp\FilamentLms\Models\Document;
-use Tapp\FilamentLms\Models\Image;
-use Tapp\FilamentLms\Models\Link;
+use Tapp\FilamentLms\Forms\Components\MorphToSelectWithCreate;
 use Tapp\FilamentLms\Models\Step;
-use Tapp\FilamentLms\Models\Test;
-use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Resources\StepResource\Pages\CreateStep;
 use Tapp\FilamentLms\Resources\StepResource\Pages\EditStep;
 use Tapp\FilamentLms\Resources\StepResource\Pages\ListSteps;
@@ -54,24 +47,9 @@ class StepResource extends Resource
                     ->required(),
                 Select::make('lesson_id')
                     ->relationship(name: 'lesson', titleAttribute: 'name')
+                    ->preload()
                     ->required(),
-                MorphToSelect::make('material')
-                    ->types([
-                        Type::make(Video::class)
-                            ->titleAttribute('name'),
-                        Type::make(Document::class)
-                            ->titleAttribute('name'),
-                        Type::make(Link::class)
-                            ->titleAttribute('name'),
-                        Type::make(FilamentForm::class)
-                            ->titleAttribute('name'),
-                        Type::make(Test::class)
-                            ->titleAttribute('name'),
-                        Type::make(Image::class)
-                            ->titleAttribute('name'),
-                    ])
-                    ->searchable()
-                    ->required(),
+                ...MorphToSelectWithCreate::make('material'),
                 MarkdownEditor::make('text')
                     ->label('Text Content')
                     ->placeholder('Enter step text content...')
@@ -97,9 +75,7 @@ class StepResource extends Resource
                     ->searchable()
                     ->sortable(),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->recordActions([
                 EditAction::make(),
             ])
@@ -112,9 +88,7 @@ class StepResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

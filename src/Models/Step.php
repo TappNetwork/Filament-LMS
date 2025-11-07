@@ -199,12 +199,23 @@ class Step extends Model implements Sortable
             return false;
         }
 
-        // If step is already completed, it's available
+        // @phpstan-ignore-next-line
+        $user = Auth::user();
+        if (! $user) {
+            return false;
+        }
+
+        // Use canAccessStep (respects user overrides like admin access)
+        // No circular dependency: trait's canAccessStep calls checkPreviousStepsCompleted directly
+        return $user->canAccessStep($this);
+    }
+
+    public function checkPreviousStepsCompleted(): bool
+    {
         if ($this->completed_at) {
             return true;
         }
 
-        // Get all steps in the course up to this step
         $previousSteps = $this->lesson->course->steps()
             ->where(function ($query) {
                 $query->where('lms_lessons.order', '<', $this->lesson->order)

@@ -62,8 +62,9 @@ trait FilamentLmsUser
      */
     public function canAccessStep(Step $step): bool
     {
-        // Default implementation: check if the step is available (based on completion of previous steps)
-        return $step->available;
+        // Default implementation: check if previous steps are completed
+        // Use the protected method directly to avoid circular dependency with available attribute
+        return $step->checkPreviousStepsCompleted();
     }
 
     /**

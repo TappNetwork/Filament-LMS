@@ -75,7 +75,7 @@ class Step extends Page
                 ]);
 
                 // Redirect to dashboard instead to break the loop
-                return redirect()->to(Dashboard::getUrl());
+                return redirect()->to(\Tapp\FilamentLms\Pages\Dashboard::getUrl());
             }
 
             return redirect()->to($currentStepUrl);

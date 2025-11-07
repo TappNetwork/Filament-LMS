@@ -189,6 +189,9 @@ abstract class TestCase extends Orchestra
         // Set up app key for testing
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
 
+        // Set up filament-lms user model for testing
+        $app['config']->set('filament-lms.user_model', \Tapp\FilamentLms\Tests\TestUser::class);
+
         // Set up database tables
         $this->setUpDatabase($app);
     }

@@ -25,6 +25,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Tapp\FilamentLms\Concerns\HasTopbarNavigation;
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Pages\CourseCompleted;
@@ -148,7 +149,14 @@ class LmsPanelProvider extends PanelProvider
                         return NavigationItem::make($step->name)
                             ->icon(fn (): string => $step->completed_at ? 'heroicon-o-check-circle' : '')
                             ->isActiveWhen(fn (): bool => $step->isActive())
-                            ->url(fn (): string => auth()->user()?->canAccessStep($step) ? $step->url : '');
+                            ->url(function () use ($step): string {
+                                $user = auth()->user();
+                                if (! $user instanceof FilamentLmsUserInterface) {
+                                    return '';
+                                }
+
+                                return $user->canAccessStep($step) ? $step->url : '';
+                            });
                     })->toArray());
             })->toArray();
 

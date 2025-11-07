@@ -69,7 +69,8 @@ class CourseUsersRelationManager extends RelationManager
                     ->recordSelectOptionsQuery(function (Builder $query) {
                         $ownerRecord = $this->getOwnerRecord();
                         if (method_exists($ownerRecord, 'users')) {
-                            $existingUserIds = $ownerRecord->users()->pluck('users.id');
+                            // @phpstan-ignore-next-line - users() method is provided by Course model relationship
+                            $existingUserIds = $ownerRecord->users()->pluck('user_id');
 
                             return $query->whereNotIn('users.id', $existingUserIds);
                         }

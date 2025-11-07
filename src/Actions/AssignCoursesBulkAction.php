@@ -30,8 +30,9 @@ class AssignCoursesBulkAction extends BulkAction
             ])
             ->action(function (Collection $records, array $data) {
                 foreach ($records as $record) {
-                    /** @var \Illuminate\Database\Eloquent\Model $record */
+                    /** @var \Illuminate\Database\Eloquent\Model&\Tapp\FilamentLms\Contracts\FilamentLmsUserInterface $record */
                     if (method_exists($record, 'courses')) {
+                        // @phpstan-ignore-next-line - courses() method is provided by FilamentLmsUser trait
                         $record->courses()->syncWithoutDetaching($data['courses']);
                     }
                 }

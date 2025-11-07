@@ -20,7 +20,7 @@ class AssignCoursesBulkAction extends BulkAction
 
         $this->label('Assign Courses')
             ->icon('heroicon-o-academic-cap')
-            ->form([
+            ->schema([
                 Select::make('courses')
                     ->label('Courses to Assign')
                     ->multiple()
@@ -31,7 +31,8 @@ class AssignCoursesBulkAction extends BulkAction
             ])
             ->action(function (Collection $records, array $data) {
                 foreach ($records as $record) {
-                    /** @var Model $record */
+                    /** @var Model&\Tapp\FilamentLms\Contracts\FilamentLmsUserInterface $record */
+                    // @phpstan-ignore-next-line - courses() method is provided by FilamentLmsUser trait
                     $record->courses()->syncWithoutDetaching($data['courses']);
                 }
             })

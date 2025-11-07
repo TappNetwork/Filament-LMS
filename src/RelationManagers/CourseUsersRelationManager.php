@@ -66,15 +66,15 @@ class CourseUsersRelationManager extends RelationManager
                 AttachAction::make()
                     ->preloadRecordSelect()
                     ->recordSelectSearchColumns($this->getUserSearchColumns())
-                    ->recordSelectOptionsQuery(fn (Builder $query) => $query->whereNotIn('users.id', $this->getOwnerRecord()->users()->pluck('user_id')))
-                    ->form(fn (AttachAction $action): array => [
+                    ->recordSelectOptionsQuery(fn (Builder $query) => $query->whereNotIn('users.id', $this->getOwnerRecord()->users()->pluck('user_id'))) // @phpstan-ignore-line - users() method is provided by Course model relationship
+                    ->schema(fn (AttachAction $action): array => [
                         $action->getRecordSelect(),
                     ]),
             ])
-            ->actions([
+            ->recordActions([
                 DetachAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DetachBulkAction::make(),
                 ]),

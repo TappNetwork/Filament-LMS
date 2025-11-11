@@ -63,6 +63,9 @@ composer require tapp/filament-lms:"^4.0"
 php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider"
 ```
 
+> [!WARNING]  
+> If you are using multi-tenancy, please see the "Multi-Tenancy Support" section below **before** running migrations.
+
 run migrations after publishing
 
 ### Add plugin to admin panel
@@ -150,6 +153,59 @@ For more detailed Tailwind CSS configuration options, refer to the [official Tai
 - create the directory {project}/packages
 - from within the packages directory, clone this repo
 - (if necessary) add a type:path repository to project composer.json
+
+## Multi-Tenancy Support
+
+Filament LMS includes built-in support for multi-tenancy, allowing you to scope courses, lessons, steps, and all learning materials to specific tenants (e.g., teams, organizations, workspaces).
+
+### ⚠️ Important: Enable Tenancy Before Migrations
+
+**You MUST configure and enable tenancy in the config file BEFORE running the migrations.** The migrations check the tenancy configuration to determine whether to add tenant columns to the database tables. If you enable tenancy after running migrations, you'll need to manually add the tenant columns to your database.
+
+### Quick Setup
+
+1. **Configure tenancy in `config/filament-lms.php` BEFORE running migrations:**
+
+```php
+'tenancy' => [
+    'enabled' => true,
+    'model' => \App\Models\Team::class,
+    'relationship_name' => 'team', // optional
+    'column' => 'team_id', // optional
+],
+```
+
+2. **Run migrations** (which will now include tenant columns):
+
+```bash
+php artisan migrate
+```
+
+3. **Configure your Filament Panel** with tenancy (for example, team tenant):
+
+```php
+use Filament\Panel;
+use App\Models\Team;
+use Tapp\FilamentLms\Lms;
+
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        ->tenant(Team::class)
+        ->plugins([
+            Lms::make(),
+        ]);
+}
+```
+
+4. **Implement required contracts** on your User and Team models (see detailed docs).
+
+### How It Works
+
+Once tenancy is enabled:
+- All LMS queries are automatically scoped to the current tenant
+- New courses, lessons, and materials are automatically associated with the current tenant
+- Users can only access LMS content belonging to their current tenant
 
 # LMS Features
 

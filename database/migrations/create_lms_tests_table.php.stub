@@ -13,6 +13,18 @@ return new class extends Migration
     {
         Schema::create('lms_tests', function (Blueprint $table) {
             $table->id();
+
+            // Add tenant foreign key if tenancy is enabled
+            if (config('filament-lms.tenancy.enabled')) {
+                $tenantModel = config('filament-lms.tenancy.model');
+                if (! $tenantModel) {
+                    throw new \Exception('Tenant model must be configured when tenancy is enabled.');
+                }
+                $table->foreignIdFor($tenantModel)
+                    ->constrained()
+                    ->cascadeOnDelete();
+            }
+
             $table->foreignId('filament_form_id')->constrained()->cascadeOnDelete();
             $table->foreignId('filament_form_user_id')->nullable()->references('id')->on('filament_form_user')->constrained()->cascadeOnDelete();
             $table->string('name');

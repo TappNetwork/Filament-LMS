@@ -13,6 +13,18 @@ return new class extends Migration
     {
         Schema::create('lms_lessons', function (Blueprint $table) {
             $table->id();
+
+            // Add tenant foreign key if tenancy is enabled
+            if (config('filament-lms.tenancy.enabled')) {
+                $tenantModel = config('filament-lms.tenancy.model');
+                if (! $tenantModel) {
+                    throw new \Exception('Tenant model must be configured when tenancy is enabled.');
+                }
+                $table->foreignIdFor($tenantModel)
+                    ->constrained()
+                    ->cascadeOnDelete();
+            }
+
             $table->foreignId('course_id')->references('id')->on('lms_courses')->onDelete('cascade');
             $table->unsignedInteger('order');
             $table->string('name');

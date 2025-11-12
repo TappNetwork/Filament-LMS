@@ -40,6 +40,8 @@ return [
     // Multi-Tenancy configuration
     'tenancy' => [
         // Enable tenancy support
+        // When enabled, LMS URLs will be scoped to tenants: /lms/{tenant}/...
+        // Example: /lms/acme-corp/courses, /lms/acme-corp/certificates/...
         'enabled' => false,
 
         // The Tenant model class (e.g., App\Models\Team::class, App\Models\Organization::class)
@@ -54,5 +56,20 @@ return [
         // The tenant column name (defaults to snake_case of tenant model class name + '_id')
         // You can override this if needed
         'column' => null,
+
+        // Permission checking: Your User model must implement:
+        // 1. FilamentUser contract with canAccessPanel(Panel $panel): bool
+        //    - This controls whether the user can access the LMS panel at all
+        // 2. HasTenants contract with these methods:
+        //    - getTenants(Panel $panel): Collection - Returns all tenants the user can access
+        //    - canAccessTenant(Model $tenant): bool - Checks if user can access a specific tenant
+        //
+        // Example implementation:
+        // public function getTenants(Panel $panel): Collection {
+        //     return $this->teams; // Returns user's teams
+        // }
+        // public function canAccessTenant(Model $tenant): bool {
+        //     return $this->teams()->whereKey($tenant)->exists();
+        // }
     ],
 ];

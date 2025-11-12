@@ -181,31 +181,74 @@ Filament LMS includes built-in support for multi-tenancy, allowing you to scope 
 php artisan migrate
 ```
 
-3. **Configure your Filament Panel** with tenancy (for example, team tenant):
+3. **Implement required contracts on your User model:**
 
 ```php
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
-use App\Models\Team;
-use Tapp\FilamentLms\Lms;
+use Illuminate\Support\Collection;
 
-public function panel(Panel $panel): Panel
+class User extends Authenticatable implements FilamentUser, HasTenants
 {
-    return $panel
-        ->tenant(Team::class)
-        ->plugins([
-            Lms::make(),
-        ]);
+    // Allow users to access the LMS panel
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true; // Or add custom logic
+    }
+
+    // Define the teams relationship
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class);
+    }
+
+    // Return all teams the user can access
+    public function getTenants(Panel $panel): Collection
+    {
+        return $this->teams;
+    }
+
+    // Check if user can access a specific team
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $this->teams()->whereKey($tenant)->exists();
+    }
 }
 ```
 
-4. **Implement required contracts** on your User and Team models (see detailed docs).
+4. **Implement HasName contract on your Tenant model:**
+
+```php
+use Filament\Models\Contracts\HasName;
+
+class Team extends Model implements HasName
+{
+    public function getFilamentName(): string
+    {
+        return $this->name;
+    }
+}
+```
 
 ### How It Works
 
 Once tenancy is enabled:
+
+**URL Structure Changes:**
+- LMS URLs are now scoped to tenants: `/lms/{tenant}/...`
+- Example: `/lms/acme-corp/courses`, `/lms/acme-corp/certificates/...`
+- The `{tenant}` slug is automatically determined from your tenant model's route key
+
+**Data Scoping:**
 - All LMS queries are automatically scoped to the current tenant
 - New courses, lessons, and materials are automatically associated with the current tenant
 - Users can only access LMS content belonging to their current tenant
+
+**Permission Checking:**
+- Filament automatically verifies users have access to the tenant via `canAccessTenant()`
+- Users can only see tenants returned by `getTenants()`
+- Panel access is controlled by `canAccessPanel()`
 
 # LMS Features
 

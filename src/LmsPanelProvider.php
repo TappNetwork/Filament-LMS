@@ -67,12 +67,23 @@ class LmsPanelProvider extends PanelProvider
             $panel->brandName(config('filament-lms.brand_name'));
         }
 
-        return $panel
+        $panel = $panel
             ->id('lms')
             ->path('lms')
             ->homeUrl(config('filament-lms.home_url'))
             ->font(config('filament-lms.font'))
-            ->darkMode(false)
+            ->darkMode(false);
+
+        // Add tenancy support if enabled
+        if (config('filament-lms.tenancy.enabled')) {
+            $tenantModel = config('filament-lms.tenancy.model');
+            if ($tenantModel) {
+                // Use 'slug' as the route key, matching the admin panel configuration
+                $panel->tenant($tenantModel, slugAttribute: 'slug');
+            }
+        }
+
+        return $panel
             // ->renderHook(
                 // TODO how can we configure this
             //     PanelsRenderHook::BODY_END,

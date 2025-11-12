@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 use Tapp\FilamentLms\Database\Factories\LessonFactory;
+use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
 /**
  * @property int $id
@@ -24,7 +25,9 @@ use Tapp\FilamentLms\Database\Factories\LessonFactory;
  */
 class Lesson extends Model implements Sortable
 {
-    use HasFactory, SortableTrait;
+    use BelongsToTenant;
+    use HasFactory;
+    use SortableTrait;
 
     public $sortable = [
         'order_column_name' => 'order',

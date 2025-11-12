@@ -63,6 +63,9 @@ composer require tapp/filament-lms:"^4.0"
 php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider"
 ```
 
+> [!WARNING]  
+> If you are using multi-tenancy, please see the "Multi-Tenancy Support" section below **before** running migrations.
+
 run migrations after publishing
 
 ### Add plugin to admin panel
@@ -150,6 +153,102 @@ For more detailed Tailwind CSS configuration options, refer to the [official Tai
 - create the directory {project}/packages
 - from within the packages directory, clone this repo
 - (if necessary) add a type:path repository to project composer.json
+
+## Multi-Tenancy Support
+
+Filament LMS includes built-in support for multi-tenancy, allowing you to scope courses, lessons, steps, and all learning materials to specific tenants (e.g., teams, organizations, workspaces).
+
+### ⚠️ Important: Enable Tenancy Before Migrations
+
+**You MUST configure and enable tenancy in the config file BEFORE running the migrations.** The migrations check the tenancy configuration to determine whether to add tenant columns to the database tables. If you enable tenancy after running migrations, you'll need to manually add the tenant columns to your database.
+
+### Quick Setup
+
+1. **Configure tenancy in `config/filament-lms.php` BEFORE running migrations:**
+
+```php
+'tenancy' => [
+    'enabled' => true,
+    'model' => \App\Models\Team::class,
+    'relationship_name' => 'team', // optional
+    'column' => 'team_id', // optional
+],
+```
+
+2. **Run migrations** (which will now include tenant columns):
+
+```bash
+php artisan migrate
+```
+
+3. **Implement required contracts on your User model:**
+
+```php
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasTenants;
+use Filament\Panel;
+use Illuminate\Support\Collection;
+
+class User extends Authenticatable implements FilamentUser, HasTenants
+{
+    // Allow users to access the LMS panel
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true; // Or add custom logic
+    }
+
+    // Define the teams relationship
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class);
+    }
+
+    // Return all teams the user can access
+    public function getTenants(Panel $panel): Collection
+    {
+        return $this->teams;
+    }
+
+    // Check if user can access a specific team
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $this->teams()->whereKey($tenant)->exists();
+    }
+}
+```
+
+4. **Implement HasName contract on your Tenant model:**
+
+```php
+use Filament\Models\Contracts\HasName;
+
+class Team extends Model implements HasName
+{
+    public function getFilamentName(): string
+    {
+        return $this->name;
+    }
+}
+```
+
+### How It Works
+
+Once tenancy is enabled:
+
+**URL Structure Changes:**
+- LMS URLs are now scoped to tenants: `/lms/{tenant}/...`
+- Example: `/lms/acme-corp/courses`, `/lms/acme-corp/certificates/...`
+- The `{tenant}` slug is automatically determined from your tenant model's route key
+
+**Data Scoping:**
+- All LMS queries are automatically scoped to the current tenant
+- New courses, lessons, and materials are automatically associated with the current tenant
+- Users can only access LMS content belonging to their current tenant
+
+**Permission Checking:**
+- Filament automatically verifies users have access to the tenant via `canAccessTenant()`
+- Users can only see tenants returned by `getTenants()`
+- Panel access is controlled by `canAccessPanel()`
 
 # LMS Features
 

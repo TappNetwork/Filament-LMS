@@ -28,6 +28,26 @@ class VideoResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
+    /**
+     * Check if this resource should be scoped to a tenant.
+     */
+    public static function isScopedToTenant(): bool
+    {
+        return config('filament-lms.tenancy.enabled', false);
+    }
+
+    /**
+     * Get the tenant ownership relationship name.
+     */
+    public static function getTenantOwnershipRelationshipName(): string
+    {
+        if (! config('filament-lms.tenancy.enabled')) {
+            return 'tenant';
+        }
+
+        return Video::getTenantRelationshipName();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Tapp\FilamentLms\Database\Factories\VideoFactory;
+use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
 class Video extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $guarded = [];

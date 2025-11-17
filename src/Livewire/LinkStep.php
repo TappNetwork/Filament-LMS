@@ -36,6 +36,6 @@ class LinkStep extends Component
      */
     public function getPreviewImage()
     {
-        return $this->link->getFirstMediaUrl('preview') ?: null;
+        return $this->link->getMediaUrl('preview') ?: null;
     }
 }

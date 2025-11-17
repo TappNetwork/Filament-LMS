@@ -10,10 +10,11 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentLms\Database\Factories\LinkFactory;
 use Tapp\FilamentLms\Jobs\GenerateLinkScreenshot;
+use Tapp\FilamentLms\Traits\HasMediaUrl;
 
 class Link extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, SoftDeletes;
+    use HasFactory, HasMediaUrl, InteractsWithMedia, SoftDeletes;
 
     protected $guarded = [];
 

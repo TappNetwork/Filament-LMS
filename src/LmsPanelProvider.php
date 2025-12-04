@@ -113,6 +113,11 @@ class LmsPanelProvider extends PanelProvider
 
     public function navigationItems(NavigationBuilder $builder): NavigationBuilder
     {
+        // Only modify navigation for the LMS panel
+        if (Filament::getCurrentOrDefaultPanel()->getId() !== 'lms') {
+            return $builder;
+        }
+
         $hookedNavigationItems = LmsNavigation::getNavigation('lms');
 
         if (Route::current()->parameter('courseSlug')) {

@@ -5,7 +5,6 @@ namespace Tapp\FilamentLms\Pages;
 use Filament\Pages\Page;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Pages\Dashboard;
 
 class CourseCompleted extends Page
 {

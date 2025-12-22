@@ -87,7 +87,7 @@ class Course extends Model implements HasMedia
                 });
         })
         // Only include courses that have at least one step
-        ->whereHas('steps');
+            ->whereHas('steps');
     }
 
     protected static function newFactory()

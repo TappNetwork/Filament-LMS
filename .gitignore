@@ -6,3 +6,4 @@ build/*
 .DS_Store
 .phpunit.cache/
 bin/run-laravel-mcp.sh
+.php-cs-fixer.dist.php

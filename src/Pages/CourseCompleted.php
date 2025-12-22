@@ -26,8 +26,19 @@ class CourseCompleted extends Page
     {
         $this->course = Course::where('slug', $courseSlug)->firstOrFail();
 
+        // If course has no steps, redirect to dashboard
+        if (! $this->course->steps()->exists()) {
+            return redirect()->to(Dashboard::getUrl());
+        }
+
         if (! $this->course->completed_at) {
-            return redirect()->to($this->course->linkToCurrentStep());
+            $currentStepUrl = $this->course->linkToCurrentStep();
+            // If linkToCurrentStep returns empty (no steps), redirect to dashboard
+            if (empty($currentStepUrl)) {
+                return redirect()->to(Dashboard::getUrl());
+            }
+
+            return redirect()->to($currentStepUrl);
         }
 
         $this->registerCourseLayout();

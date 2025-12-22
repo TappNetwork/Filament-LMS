@@ -34,45 +34,47 @@ abstract class TestCase extends Orchestra
         // Create lms_courses table
         $app['db']->connection()->getSchemaBuilder()->create('lms_courses', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->string('slug')->unique();
-            $table->string('external_id')->nullable();
-            $table->string('award')->default('default');
+            $table->string('external_id')->unique();
+            $table->text('image')->nullable();
+            $table->string('award')->nullable();
             $table->text('description')->nullable();
+            $table->boolean('is_private')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Create lms_lessons table
         $app['db']->connection()->getSchemaBuilder()->create('lms_lessons', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('course_id')->constrained('lms_courses')->onDelete('cascade');
+            $table->foreignId('course_id')->references('id')->on('lms_courses')->onDelete('cascade');
+            $table->unsignedInteger('order');
             $table->string('name');
             $table->string('slug');
-            $table->text('description')->nullable();
-            $table->integer('order')->default(0);
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Create lms_steps table
         $app['db']->connection()->getSchemaBuilder()->create('lms_steps', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lesson_id')->constrained('lms_lessons')->onDelete('cascade');
+            $table->foreignId('lesson_id')->references('id')->on('lms_lessons')->onDelete('cascade');
+            $table->unsignedInteger('order');
             $table->string('name');
             $table->string('slug');
-            $table->text('description')->nullable();
+            $table->morphs('material');
             $table->text('text')->nullable();
-            $table->string('material_type')->nullable();
-            $table->unsignedBigInteger('material_id')->nullable();
-            $table->integer('order')->default(0);
-            $table->boolean('last_step')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Create lms_step_user table
         $app['db']->connection()->getSchemaBuilder()->create('lms_step_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('step_id')->constrained('lms_steps')->onDelete('cascade');
-            $table->unsignedBigInteger('user_id');
+            $table->foreignId('step_id')->references('id')->on('lms_steps')->onDelete('cascade');
+            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedInteger('seconds')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });

@@ -15,12 +15,10 @@ test('step can be created with required fields', function () {
         'lesson_id' => $lesson->id,
         'name' => 'Test Step',
         'slug' => 'test-step',
-        'description' => 'Test step description',
     ]);
 
     expect($step->name)->toBe('Test Step');
     expect($step->slug)->toBe('test-step');
-    expect($step->description)->toBe('Test step description');
     expect($step->lesson_id)->toBe($lesson->id);
 });
 

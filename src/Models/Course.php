@@ -14,6 +14,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Pages\CourseCompleted;
+use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
 
@@ -84,7 +85,9 @@ class Course extends Model implements HasMedia
                             }
                         });
                 });
-        });
+        })
+        // Only include courses that have at least one step
+        ->whereHas('steps');
     }
 
     protected static function newFactory()
@@ -101,6 +104,11 @@ class Course extends Model implements HasMedia
     {
         // Get all steps in order
         $allSteps = $this->steps()->ordered()->get();
+
+        // If course has no steps, return dashboard URL
+        if ($allSteps->isEmpty()) {
+            return Dashboard::getUrl();
+        }
 
         // Get all completed steps for this user
         $completedStepIds = StepUser::whereIn('step_id', $allSteps->pluck('id'))
@@ -132,7 +140,7 @@ class Course extends Model implements HasMedia
             });
         }
 
-        return $firstIncompleteStep ? StepPage::getUrl([$firstIncompleteStep->lesson->course->slug, $firstIncompleteStep->lesson->slug, $firstIncompleteStep->slug]) : '';
+        return $firstIncompleteStep ? StepPage::getUrl([$firstIncompleteStep->lesson->course->slug, $firstIncompleteStep->lesson->slug, $firstIncompleteStep->slug]) : Dashboard::getUrl();
     }
 
     public function currentStep(?Authenticatable $user = null): ?Step

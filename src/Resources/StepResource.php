@@ -54,6 +54,7 @@ class StepResource extends Resource
                         Forms\Components\MorphToSelect\Type::make(Link::class)
                             ->titleAttribute('name'),
                         Forms\Components\MorphToSelect\Type::make(FilamentForm::class)
+                            ->label('Form')
                             ->titleAttribute('name'),
                         Forms\Components\MorphToSelect\Type::make(Test::class)
                             ->titleAttribute('name'),

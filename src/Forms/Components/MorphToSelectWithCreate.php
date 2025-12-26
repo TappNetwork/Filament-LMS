@@ -27,7 +27,7 @@ class MorphToSelectWithCreate
                     'document' => 'Document',
                     'link' => 'Link',
                     'image' => 'Image',
-                    'form' => 'Filament form',
+                    'form' => 'Form',
                     'test' => 'Test',
                 ])
                 ->live()

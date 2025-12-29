@@ -59,6 +59,10 @@ composer require tapp/filament-lms:"^4.0"
 
 ### Publish
 
+Make sure that the [Filament Form Builder](https://github.com/TappNetwork/Filament-Form-Builder) migrations are published before.
+
+Then publish the migrations:
+
 ``` sh
 php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider"
 ```

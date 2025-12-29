@@ -42,9 +42,9 @@ class DocumentStep extends Component
         if ($previewUrl) {
             return $previewUrl;
         }
-        $mediaItem = $this->document->getFirstMedia();
 
-        return $mediaItem ? $mediaItem->getUrl() : null;
+        // Use getMediaUrl for the default collection to support signed URLs
+        return $this->document->getMediaUrl('default') ?: null;
     }
 
     /**
@@ -52,6 +52,6 @@ class DocumentStep extends Component
      */
     public function getPreviewImage()
     {
-        return $this->document->getFirstMediaUrl('preview') ?: null;
+        return $this->document->getMediaUrl('preview') ?: null;
     }
 }

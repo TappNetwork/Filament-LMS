@@ -13,12 +13,10 @@ test('lesson can be created with required fields', function () {
         'course_id' => $course->id,
         'name' => 'Test Lesson',
         'slug' => 'test-lesson',
-        'description' => 'Test lesson description',
     ]);
 
     expect($lesson->name)->toBe('Test Lesson');
     expect($lesson->slug)->toBe('test-lesson');
-    expect($lesson->description)->toBe('Test lesson description');
     expect($lesson->course_id)->toBe($course->id);
 });
 

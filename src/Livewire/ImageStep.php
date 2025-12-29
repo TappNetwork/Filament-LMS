@@ -25,6 +25,6 @@ class ImageStep extends Component
 
     public function getImageUrl()
     {
-        return $this->image->getFirstMediaUrl('image') ?: null;
+        return $this->image->getMediaUrl('image') ?: null;
     }
 }

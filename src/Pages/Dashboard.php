@@ -25,8 +25,8 @@ class Dashboard extends \Filament\Pages\Dashboard
             // Use the new accessibleTo scope for better performance
             $courses = Course::accessibleTo($user)->get();
         } else {
-            // For non-authenticated users, only show public courses (not private)
-            $courses = Course::where('is_private', false)->get();
+            // For non-authenticated users, only show public courses (not private) with steps
+            $courses = Course::where('is_private', false)->whereHas('steps')->get();
         }
 
         $this->courses = $courses;

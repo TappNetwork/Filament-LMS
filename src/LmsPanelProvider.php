@@ -39,13 +39,9 @@ class LmsPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         if (config('filament-lms.show_exit_lms_link')) {
-            FilamentView::registerRenderHook(
+            $panel->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,
-                function () {
-                    if (Filament::getCurrentOrDefaultPanel()->getId() == 'lms') {
-                        return view('filament-lms::components.exit-lms');
-                    }
-                }
+                fn (): View => view('filament-lms::components.exit-lms'),
             );
         }
 

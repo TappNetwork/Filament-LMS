@@ -200,6 +200,7 @@ class LmsPanelProvider extends PanelProvider
 
             return $builder;
         }
+
         return $builder->items([
             ...$hookedNavigationItems,
             NavigationItem::make('Courses')

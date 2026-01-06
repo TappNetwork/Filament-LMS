@@ -53,9 +53,27 @@ class LmsPanelProvider extends PanelProvider
             $panel->viteTheme(config('filament-lms.vite_theme'));
         }
 
+        // Enable top navigation for the dashboard (only affects non-course pages)
         if (config('filament-lms.top_navigation')) {
             $panel->topNavigation();
         }
+
+        // Disable top navigation dynamically when on a course page
+        // This needs to happen before the layout is rendered
+        Filament::serving(function () {
+            if (Filament::getCurrentOrDefaultPanel()->getId() !== 'lms') {
+                return;
+            }
+
+            $courseSlug = Route::current()?->parameter('courseSlug')
+                ?? request()->route('courseSlug')
+                ?? request()->route()?->parameter('courseSlug');
+
+            if ($courseSlug) {
+                $panel = Filament::getPanel('lms');
+                $panel->topNavigation(false);
+            }
+        });
 
         if (config('filament-lms.brand_logo')) {
             $panel->brandLogo(asset(config('filament-lms.brand_logo')));
@@ -120,9 +138,12 @@ class LmsPanelProvider extends PanelProvider
 
         $hookedNavigationItems = LmsNavigation::getNavigation('lms');
 
-        if (Route::current()->parameter('courseSlug')) {
-            filament()->getCurrentOrDefaultPanel()->topNavigation(false);
+        // Try multiple methods to get the courseSlug parameter
+        $courseSlug = Route::current()?->parameter('courseSlug')
+            ?? request()->route('courseSlug')
+            ?? request()->route()?->parameter('courseSlug');
 
+        if ($courseSlug) {
             FilamentView::registerRenderHook(
                 PanelsRenderHook::TOPBAR_LOGO_AFTER,
                 function () use ($hookedNavigationItems): View {
@@ -142,7 +163,7 @@ class LmsPanelProvider extends PanelProvider
                 },
             );
 
-            $course = Course::where('slug', Route::current()->parameter('courseSlug'))->firstOrFail();
+            $course = Course::where('slug', $courseSlug)->firstOrFail();
 
             $navigationGroups = $course->lessons->map(function ($lesson) {
                 /** @var Lesson $lesson */
@@ -179,7 +200,6 @@ class LmsPanelProvider extends PanelProvider
 
             return $builder;
         }
-
         return $builder->items([
             ...$hookedNavigationItems,
             NavigationItem::make('Courses')

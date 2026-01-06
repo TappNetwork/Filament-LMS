@@ -225,7 +225,9 @@ return [
 
 ### top_navigation
 
-Set it to `true` to use top navigation instead of left sidebar on courses page.
+Set it to `true` to enable top navigation on the LMS dashboard (courses list page). 
+
+**Note:** This configuration only affects the dashboard. Course pages (when viewing individual steps) always use sidebar navigation, regardless of this setting.
 
 ### show_exit_lms_link
 

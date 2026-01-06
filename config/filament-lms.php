@@ -12,6 +12,8 @@ return [
     'awards' => [
         'Default' => 'default',
     ],
+    // Enable top navigation on the LMS dashboard (courses list page).
+    // Note: This only affects the dashboard. Course pages always use sidebar navigation.
     'top_navigation' => false,
     'show_exit_lms_link' => true,
 

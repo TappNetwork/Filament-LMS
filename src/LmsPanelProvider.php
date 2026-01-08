@@ -74,8 +74,9 @@ class LmsPanelProvider extends PanelProvider
         if (config('filament-lms.tenancy.enabled')) {
             $tenantModel = config('filament-lms.tenancy.model');
             if ($tenantModel) {
-                // Use 'slug' as the route key, matching the admin panel configuration
-                $panel->tenant($tenantModel, slugAttribute: 'slug');
+                // Use the configured slug attribute for tenant URL routing
+                $slugAttribute = config('filament-lms.tenancy.slug_attribute', 'slug');
+                $panel->tenant($tenantModel, slugAttribute: $slugAttribute);
             }
         }
 

@@ -67,6 +67,12 @@ return [
         // You can override this if needed
         'column' => null,
 
+        // The attribute to use for URL routing (slugAttribute)
+        // Common values: 'slug', 'id', 'uuid'
+        // Defaults to 'slug' if not specified
+        // This should match your tenant model's route key name (getRouteKeyName())
+        'slug_attribute' => 'slug',
+
         // Permission checking: Your User model must implement:
         // 1. FilamentUser contract with canAccessPanel(Panel $panel): bool
         //    - This controls whether the user can access the LMS panel at all

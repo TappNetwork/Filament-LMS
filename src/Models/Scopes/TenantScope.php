@@ -12,7 +12,7 @@ class TenantScope implements Scope
 {
     /**
      * Apply the scope to a given Eloquent query builder.
-     * 
+     *
      * This scope filters all LMS model queries by the current tenant.
      * We've disabled Filament's Resource-level tenant scoping (isScopedToTenant = false)
      * in all LMS Resources to use this unified model-level scope instead.

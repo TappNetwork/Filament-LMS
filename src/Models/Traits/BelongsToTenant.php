@@ -22,9 +22,9 @@ trait BelongsToTenant
         // (e.g., in LMS Pages like Step, Dashboard, CourseCompleted)
         // Filament's own tenant scope only applies to Resource queries
         $scopeName = 'filament_lms_tenancy';
-        
+
         if (! static::hasGlobalScope($scopeName)) {
-            static::addGlobalScope($scopeName, new TenantScope());
+            static::addGlobalScope($scopeName, new TenantScope);
         }
 
         // Register the dynamic relationship

@@ -91,10 +91,11 @@ class CourseResource extends Resource
                     ->helperText('Image will be automatically cropped to a square.')
                     ->collection('courses')
                     ->image()
-                    ->imageResizeMode('cover')
-                    ->imageResizeTargetWidth('1080')
-                    ->imageResizeTargetHeight('1080')
-                    ->imageCropAspectRatio('1:1'),
+                    ->automaticallyResizeImagesMode('cover')
+                    ->automaticallyResizeImagesToWidth('1080')
+                    ->automaticallyResizeImagesToHeight('1080')
+                    ->imageAspectRatio('1:1')
+                    ->automaticallyCropImagesToAspectRatio(),
                 Textarea::make('description'),
                 Select::make('award')
                     ->options(config('filament-lms.awards'))

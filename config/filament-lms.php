@@ -7,6 +7,16 @@ return [
     'brand_name' => 'LMS',
     'brand_logo' => '',
     'brand_logo_height' => null,
+
+    // Falls back to brand_logo if not set. Recommended max height: 90px for optimal certificate layout
+    'certificate_logo' => '',
+
+    // Show signature lines on certificates
+    'certificate_show_signatures' => true,
+
+    // Show unique certificate ID
+    'certificate_show_id' => true,
+
     'vite_theme' => '',
     'colors' => [],
     'awards' => [

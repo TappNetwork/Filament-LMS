@@ -311,6 +311,12 @@ return [
     'brand_name' => 'LMS',
     'brand_logo' => '',
     'brand_logo_height' => null,
+    
+    // Certificate customization
+    'certificate_logo' => '', // Falls back to brand_logo if not set
+    'certificate_show_signatures' => true, // Show signature lines on certificates
+    'certificate_show_id' => true, // Show unique certificate ID
+    
     'vite_theme' => '',
     'colors' => [],
     'awards' => [
@@ -329,6 +335,65 @@ Set it to `true` to use top navigation instead of left sidebar on courses page.
 ### show_exit_lms_link
 
 Use to display or not the `Exit LMS` link on top bar.
+
+## Certificate Customization
+
+The LMS package generates PDF certificates when users complete courses. You can customize the appearance and content of certificates using the following configuration options:
+
+### certificate_logo
+
+Specify a custom logo to display on certificates. If not set, it falls back to the `brand_logo` setting.
+
+**Recommended logo dimensions:** Maximum height of 90px for optimal certificate layout.
+
+```php
+'certificate_logo' => 'images/certificate-logo.png',
+```
+
+**Note:** The path should be relative to your public directory or use a full URL.
+
+### certificate_show_signatures
+
+Control whether signature lines are displayed on certificates. Default is `true`.
+
+```php
+'certificate_show_signatures' => true, // Show signature lines
+'certificate_show_signatures' => false, // Hide signature lines
+```
+
+When enabled, the certificate will display signature lines for:
+- An authorized signature (e.g., course instructor or administrator)
+- The learner's signature
+
+### certificate_show_id
+
+Control whether a unique certificate ID is displayed on certificates. Default is `true`.
+
+```php
+'certificate_show_id' => true, // Show unique certificate ID
+'certificate_show_id' => false, // Hide certificate ID
+```
+
+The certificate ID helps with verification and tracking of issued certificates.
+
+### Example Certificate Configuration
+
+Here's a complete example of certificate customization in your `config/filament-lms.php`:
+
+```php
+return [
+    // General branding
+    'brand_name' => 'Acme Learning Academy',
+    'brand_logo' => 'images/brand-logo.png',
+    
+    // Certificate-specific settings
+    'certificate_logo' => 'images/certificate-seal.png', // Use a different logo for certificates
+    'certificate_show_signatures' => true, // Include signature lines
+    'certificate_show_id' => true, // Include unique certificate ID
+    
+    // Other settings...
+];
+```
 
 ## Adding extra navigation items
 

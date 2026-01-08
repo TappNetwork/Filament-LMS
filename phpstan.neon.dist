@@ -9,8 +9,6 @@ parameters:
         - database
     tmpDir: build/phpstan
     reportUnmatchedIgnoredErrors: false
-    scanDirectories:
-        - vendor/tapp/filament-form-builder/src
     ignoreErrors:
         - '#Trait .+ is used zero times and is not analysed#'
         - '#Property .* \$view \(view-string\) does not accept default value of type string#'
@@ -19,3 +17,16 @@ parameters:
         - '#Property .*::\$view \(view-string\) does not accept default value of type string#'
         - '#.*\$view \(view-string\) does not accept.*string#'
         - '#Cannot call static method find\(\) on class-string\|false#'
+        - '#Class Tapp\\FilamentFormBuilder\\Models\\FilamentForm not found#'
+        - '#Class Tapp\\FilamentFormBuilder\\Models\\FilamentFormUser not found#'
+        - '#unknown class Tapp\\FilamentFormBuilder\\Models\\FilamentForm#'
+        - '#unknown class Tapp\\FilamentFormBuilder\\Models\\FilamentFormUser#'
+        - '#Call to static method make\(\) on an unknown class Tapp\\FilamentFormBuilder\\FilamentFormBuilderPlugin#'
+        - '#Access to property .* on an unknown class Tapp\\FilamentFormBuilder\\Models\\FilamentForm#'
+        - '#Access to property .* on an unknown class Tapp\\FilamentFormBuilder\\Models\\FilamentFormUser#'
+        - '#Call to static method .* on an unknown class Tapp\\FilamentFormBuilder\\Models\\FilamentForm#'
+        - '#Call to static method .* on an unknown class Tapp\\FilamentFormBuilder\\Models\\FilamentFormUser#'
+        - '#Call to method .* on an unknown class Tapp\\FilamentFormBuilder\\Models\\FilamentForm#'
+        - '#Call to method .* on an unknown class Tapp\\FilamentFormBuilder\\Models\\FilamentFormUser#'
+        - '#Parameter .* has invalid type Tapp\\FilamentFormBuilder\\Models\\FilamentForm#'
+        - '#Parameter .* has invalid type Tapp\\FilamentFormBuilder\\Models\\FilamentFormUser#'

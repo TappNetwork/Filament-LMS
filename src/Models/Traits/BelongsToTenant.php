@@ -4,6 +4,7 @@ namespace Tapp\FilamentLms\Models\Traits;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Tapp\FilamentLms\Helpers\TenantHelper;
+use Tapp\FilamentLms\Models\Scopes\TenantScope;
 
 trait BelongsToTenant
 {
@@ -14,6 +15,16 @@ trait BelongsToTenant
     {
         if (! config('filament-lms.tenancy.enabled')) {
             return;
+        }
+
+        // Add global scope to filter all queries by current tenant
+        // This protects direct Eloquent queries made outside of Filament Resources
+        // (e.g., in LMS Pages like Step, Dashboard, CourseCompleted)
+        // Filament's own tenant scope only applies to Resource queries
+        $scopeName = 'filament_lms_tenancy';
+        
+        if (! static::hasGlobalScope($scopeName)) {
+            static::addGlobalScope($scopeName, new TenantScope());
         }
 
         // Register the dynamic relationship
@@ -126,5 +137,25 @@ trait BelongsToTenant
         }
 
         return $this->belongsTo($tenantModel, static::getTenantColumnName());
+    }
+
+    /**
+     * Scope a query to include all tenants (bypass tenant filtering).
+     * Useful for administrative operations.
+     */
+    public function scopeWithoutTenantScope($query)
+    {
+        return $query->withoutGlobalScope('filament_lms_tenancy');
+    }
+
+    /**
+     * Scope a query to a specific tenant.
+     */
+    public function scopeForTenant($query, $tenantId)
+    {
+        $tenantColumnName = static::getTenantColumnName();
+
+        return $query->withoutGlobalScope('filament_lms_tenancy')
+            ->where($tenantColumnName, $tenantId);
     }
 }

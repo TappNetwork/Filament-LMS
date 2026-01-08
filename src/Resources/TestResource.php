@@ -30,11 +30,13 @@ class TestResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
     /**
-     * Check if this resource should be scoped to a tenant.
+     * Disable Filament's automatic tenant scoping.
+     * We use our own model-level global scope instead for better consistency
+     * across both Resource queries and direct Eloquent queries (LMS pages).
      */
     public static function isScopedToTenant(): bool
     {
-        return config('filament-lms.tenancy.enabled', false);
+        return false;
     }
 
     /**

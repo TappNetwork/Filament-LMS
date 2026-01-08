@@ -52,6 +52,19 @@ return [
         // Enable tenancy support
         // When enabled, LMS URLs will be scoped to tenants: /lms/{tenant}/...
         // Example: /lms/acme-corp/courses, /lms/acme-corp/certificates/...
+        //
+        // When enabled, a global scope automatically filters all LMS queries
+        // (Course, Lesson, Step, Document, Video, Image, Link, Test, StepUser) to the
+        // current tenant. This prevents cross-tenant data access.
+        //
+        // This uses a model-level scope (not Filament's Resource-level scope) for:
+        // - Consistent filtering across both admin Resources and LMS Pages
+        // - Better performance (single scope, no runtime checks)
+        // - Simpler architecture
+        //
+        // To bypass tenant filtering (e.g., for admin operations), use:
+        // - Course::withoutTenantScope()->get() - Access all tenants
+        // - Course::forTenant($tenantId)->get() - Access specific tenant
         'enabled' => false,
 
         // The Tenant model class (e.g., App\Models\Team::class, App\Models\Organization::class)

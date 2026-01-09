@@ -16,7 +16,7 @@
         "maatwebsite/excel": "^3.1",
         "spatie/browsershot": "^5.0",
         "spatie/eloquent-sortable": "^4.4.0",
-        "tapp/filament-form-builder": "*"
+        "tapp/filament-form-builder": "^4.0"
     },
     "require-dev": {
         "filament/upgrade": "^4.0",
@@ -33,12 +33,6 @@
         "phpstan/phpstan-phpunit": "^1.3||^2.0",
         "spatie/laravel-ray": "^1.35"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/TappNetwork/Filament-Form-Builder"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "Tapp\\FilamentLms\\": "src/",
@@ -52,7 +46,7 @@
         }
     },
     "scripts": {
-        "analyse": "vendor/bin/phpstan analyse",
+        "analyse": "vendor/bin/phpstan analyse --configuration=phpstan.neon.dist",
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",
         "format": "vendor/bin/pint"

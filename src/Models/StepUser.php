@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
 /**
  * @property string|null $completed_at
@@ -13,6 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  */
 class StepUser extends Pivot
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $guarded = [];

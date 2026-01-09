@@ -36,6 +36,28 @@ class CourseResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
+    /**
+     * Disable Filament's automatic tenant scoping.
+     * We use our own model-level global scope instead for better consistency
+     * across both Resource queries and direct Eloquent queries (LMS pages).
+     */
+    public static function isScopedToTenant(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Get the tenant ownership relationship name.
+     */
+    public static function getTenantOwnershipRelationshipName(): string
+    {
+        if (! config('filament-lms.tenancy.enabled')) {
+            return 'tenant';
+        }
+
+        return Course::getTenantRelationshipName();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -71,10 +93,11 @@ class CourseResource extends Resource
                     ->helperText('Image will be automatically cropped to a square.')
                     ->collection('courses')
                     ->image()
-                    ->imageResizeMode('cover')
-                    ->imageResizeTargetWidth('1080')
-                    ->imageResizeTargetHeight('1080')
-                    ->imageCropAspectRatio('1:1'),
+                    ->automaticallyResizeImagesMode('cover')
+                    ->automaticallyResizeImagesToWidth('1080')
+                    ->automaticallyResizeImagesToHeight('1080')
+                    ->imageAspectRatio('1:1')
+                    ->automaticallyCropImagesToAspectRatio(),
                 Textarea::make('description'),
                 Select::make('award')
                     ->options(config('filament-lms.awards'))

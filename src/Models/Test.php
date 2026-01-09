@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
+use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
 class Test extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $guarded = [];

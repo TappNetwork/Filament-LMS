@@ -67,6 +67,9 @@ Then publish the migrations:
 php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider"
 ```
 
+> [!WARNING]  
+> If you are using multi-tenancy, please see the "Multi-Tenancy Support" section below **before** running migrations.
+
 run migrations after publishing
 
 ### Add plugin to admin panel
@@ -155,6 +158,102 @@ For more detailed Tailwind CSS configuration options, refer to the [official Tai
 - from within the packages directory, clone this repo
 - (if necessary) add a type:path repository to project composer.json
 
+## Multi-Tenancy Support
+
+Filament LMS includes built-in support for multi-tenancy, allowing you to scope courses, lessons, steps, and all learning materials to specific tenants (e.g., teams, organizations, workspaces).
+
+### ⚠️ Important: Enable Tenancy Before Migrations
+
+**You MUST configure and enable tenancy in the config file BEFORE running the migrations.** The migrations check the tenancy configuration to determine whether to add tenant columns to the database tables. If you enable tenancy after running migrations, you'll need to manually add the tenant columns to your database.
+
+### Quick Setup
+
+1. **Configure tenancy in `config/filament-lms.php` BEFORE running migrations:**
+
+```php
+'tenancy' => [
+    'enabled' => true,
+    'model' => \App\Models\Team::class,
+    'relationship_name' => 'team', // optional
+    'column' => 'team_id', // optional
+],
+```
+
+2. **Run migrations** (which will now include tenant columns):
+
+```bash
+php artisan migrate
+```
+
+3. **Implement required contracts on your User model:**
+
+```php
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasTenants;
+use Filament\Panel;
+use Illuminate\Support\Collection;
+
+class User extends Authenticatable implements FilamentUser, HasTenants
+{
+    // Allow users to access the LMS panel
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true; // Or add custom logic
+    }
+
+    // Define the teams relationship
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class);
+    }
+
+    // Return all teams the user can access
+    public function getTenants(Panel $panel): Collection
+    {
+        return $this->teams;
+    }
+
+    // Check if user can access a specific team
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $this->teams()->whereKey($tenant)->exists();
+    }
+}
+```
+
+4. **Implement HasName contract on your Tenant model:**
+
+```php
+use Filament\Models\Contracts\HasName;
+
+class Team extends Model implements HasName
+{
+    public function getFilamentName(): string
+    {
+        return $this->name;
+    }
+}
+```
+
+### How It Works
+
+Once tenancy is enabled:
+
+**URL Structure Changes:**
+- LMS URLs are now scoped to tenants: `/lms/{tenant}/...`
+- Example: `/lms/acme-corp/courses`, `/lms/acme-corp/certificates/...`
+- The `{tenant}` slug is automatically determined from your tenant model's route key
+
+**Data Scoping:**
+- All LMS queries are automatically scoped to the current tenant
+- New courses, lessons, and materials are automatically associated with the current tenant
+- Users can only access LMS content belonging to their current tenant
+
+**Permission Checking:**
+- Filament automatically verifies users have access to the tenant via `canAccessTenant()`
+- Users can only see tenants returned by `getTenants()`
+- Panel access is controlled by `canAccessPanel()`
+
 # LMS Features
 
 ## Frontend LMS Panel
@@ -212,6 +311,12 @@ return [
     'brand_name' => 'LMS',
     'brand_logo' => '',
     'brand_logo_height' => null,
+    
+    // Certificate customization
+    'certificate_logo' => '', // Falls back to brand_logo if not set
+    'certificate_show_signatures' => true, // Show signature lines on certificates
+    'certificate_show_id' => true, // Show unique certificate ID
+    
     'vite_theme' => '',
     'colors' => [],
     'awards' => [
@@ -232,6 +337,65 @@ Set it to `true` to enable top navigation on the LMS dashboard (courses list pag
 ### show_exit_lms_link
 
 Use to display or not the `Exit LMS` link on top bar.
+
+## Certificate Customization
+
+The LMS package generates PDF certificates when users complete courses. You can customize the appearance and content of certificates using the following configuration options:
+
+### certificate_logo
+
+Specify a custom logo to display on certificates. If not set, it falls back to the `brand_logo` setting.
+
+**Recommended logo dimensions:** Maximum height of 90px for optimal certificate layout.
+
+```php
+'certificate_logo' => 'images/certificate-logo.png',
+```
+
+**Note:** The path should be relative to your public directory or use a full URL.
+
+### certificate_show_signatures
+
+Control whether signature lines are displayed on certificates. Default is `true`.
+
+```php
+'certificate_show_signatures' => true, // Show signature lines
+'certificate_show_signatures' => false, // Hide signature lines
+```
+
+When enabled, the certificate will display signature lines for:
+- An authorized signature (e.g., course instructor or administrator)
+- The learner's signature
+
+### certificate_show_id
+
+Control whether a unique certificate ID is displayed on certificates. Default is `true`.
+
+```php
+'certificate_show_id' => true, // Show unique certificate ID
+'certificate_show_id' => false, // Hide certificate ID
+```
+
+The certificate ID helps with verification and tracking of issued certificates.
+
+### Example Certificate Configuration
+
+Here's a complete example of certificate customization in your `config/filament-lms.php`:
+
+```php
+return [
+    // General branding
+    'brand_name' => 'Acme Learning Academy',
+    'brand_logo' => 'images/brand-logo.png',
+    
+    // Certificate-specific settings
+    'certificate_logo' => 'images/certificate-seal.png', // Use a different logo for certificates
+    'certificate_show_signatures' => true, // Include signature lines
+    'certificate_show_id' => true, // Include unique certificate ID
+    
+    // Other settings...
+];
+```
 
 ## Adding extra navigation items
 

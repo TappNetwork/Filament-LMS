@@ -15,6 +15,7 @@ use Tapp\FilamentLms\Database\Factories\StepFactory;
 use Tapp\FilamentLms\Events\CourseCompleted;
 use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Events\StepCompleted;
+use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 
 /**
@@ -35,7 +36,9 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
  */
 class Step extends Model implements Sortable
 {
-    use HasFactory, SortableTrait;
+    use BelongsToTenant;
+    use HasFactory;
+    use SortableTrait;
 
     public $sortable = [
         'order_column_name' => 'order',

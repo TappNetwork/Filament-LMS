@@ -30,6 +30,28 @@ class LessonResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'LMS';
 
+    /**
+     * Disable Filament's automatic tenant scoping.
+     * We use our own model-level global scope instead for better consistency
+     * across both Resource queries and direct Eloquent queries (LMS pages).
+     */
+    public static function isScopedToTenant(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Get the tenant ownership relationship name.
+     */
+    public static function getTenantOwnershipRelationshipName(): string
+    {
+        if (! config('filament-lms.tenancy.enabled')) {
+            return 'tenant';
+        }
+
+        return Lesson::getTenantRelationshipName();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

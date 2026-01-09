@@ -13,6 +13,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
+use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
@@ -35,6 +36,7 @@ use Tapp\FilamentLms\Traits\HasMediaUrl;
  */
 class Course extends Model implements HasMedia
 {
+    use BelongsToTenant;
     use HasFactory;
     use HasMediaUrl;
     use InteractsWithMedia;

@@ -39,13 +39,9 @@ class LmsPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         if (config('filament-lms.show_exit_lms_link')) {
-            FilamentView::registerRenderHook(
+            $panel->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,
-                function () {
-                    if (Filament::getCurrentOrDefaultPanel()->getId() == 'lms') {
-                        return view('filament-lms::components.exit-lms');
-                    }
-                }
+                fn (): View => view('filament-lms::components.exit-lms'),
             );
         }
 
@@ -85,12 +81,24 @@ class LmsPanelProvider extends PanelProvider
             $panel->brandName(config('filament-lms.brand_name'));
         }
 
-        return $panel
+        $panel = $panel
             ->id('lms')
             ->path('lms')
             ->homeUrl(config('filament-lms.home_url'))
             ->font(config('filament-lms.font'))
-            ->darkMode(false)
+            ->darkMode(false);
+
+        // Add tenancy support if enabled
+        if (config('filament-lms.tenancy.enabled')) {
+            $tenantModel = config('filament-lms.tenancy.model');
+            if ($tenantModel) {
+                // Use the configured slug attribute for tenant URL routing
+                $slugAttribute = config('filament-lms.tenancy.slug_attribute', 'slug');
+                $panel->tenant($tenantModel, slugAttribute: $slugAttribute);
+            }
+        }
+
+        return $panel
             // ->renderHook(
                 // TODO how can we configure this
             //     PanelsRenderHook::BODY_END,

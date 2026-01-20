@@ -193,6 +193,21 @@ class Course extends Model implements HasMedia
         $requiredSteps = $this->steps()->where('is_optional', false)->get();
 
         if ($requiredSteps->isEmpty()) {
+            // If course has only optional steps, consider it complete when all optional steps have been viewed
+            $allSteps = $this->steps()->get();
+            if ($allSteps->isEmpty()) {
+                return null;
+            }
+
+            // Check if user has interacted with all optional steps
+            $stepUserEntries = StepUser::whereIn('step_id', $allSteps->pluck('id'))
+                ->where('user_id', $userId)
+                ->get();
+
+            if ($stepUserEntries->count() === $allSteps->count()) {
+                return $stepUserEntries->max('created_at');
+            }
+
             return null;
         }
 
@@ -254,7 +269,18 @@ class Course extends Model implements HasMedia
         $requiredSteps = $this->steps()->where('is_optional', false)->get();
 
         if ($requiredSteps->isEmpty()) {
-            return 0;
+            // If course has only optional steps, calculate based on optional step interactions
+            $allSteps = $this->steps()->get();
+            if ($allSteps->isEmpty()) {
+                return 0;
+            }
+
+            // Calculate percentage based on how many optional steps have been viewed
+            $stepUserEntries = StepUser::whereIn('step_id', $allSteps->pluck('id'))
+                ->where('user_id', $userId)
+                ->get();
+
+            return $stepUserEntries->count() / $allSteps->count() * 100;
         }
 
         // Get all completed required steps for this specific user

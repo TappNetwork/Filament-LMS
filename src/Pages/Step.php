@@ -120,15 +120,21 @@ class Step extends Page
             $nextStep = $this->step->next_step;
 
             // Create a StepUser entry to track that they've viewed it (but not completed)
-            StepUser::firstOrCreate([
+            $stepUser = StepUser::firstOrCreate([
                 'user_id' => Auth::id(),
                 'step_id' => $this->step->id,
             ]);
 
-            // Dispatch CourseStarted if this is the first step
-            if ($this->step->first_step) {
+            // Dispatch CourseStarted only when the record was just created (first time)
+            if ($this->step->first_step && $stepUser->wasRecentlyCreated) {
                 $user = Auth::user();
                 CourseStarted::dispatch($user, $this->course);
+            }
+
+            // For optional last step, dispatch CourseCompleted event
+            if ($this->step->last_step) {
+                $user = Auth::user();
+                \Tapp\FilamentLms\Events\CourseCompleted::dispatch($user, $this->course);
             }
         } else {
             // For required steps or already completed steps, use normal completion flow

@@ -116,22 +116,34 @@ class Step extends Page
     #[On('complete-step')]
     public function complete()
     {
-        // For optional steps, allow proceeding without completing
+        // For optional steps, mark as completed when user clicks Next
         if ($this->step->is_optional && ! $this->step->completed_at) {
-            // Just get the next step without marking this one as completed
-            $nextStep = $this->step->next_step;
+            $user = Auth::user();
             
-            // Create a StepUser entry to track that they've viewed it (but not completed)
-            StepUser::firstOrCreate([
-                'user_id' => Auth::id(),
-                'step_id' => $this->step->id,
-            ]);
+            // Check if StepUser already exists
+            $userStep = StepUser::where('user_id', $user->id)
+                ->where('step_id', $this->step->id)
+                ->first();
             
-            // Dispatch CourseStarted if this is the first step
-            if ($this->step->first_step) {
-                $user = Auth::user();
+            // Only dispatch CourseStarted if this is the first step AND it's the first time
+            if (! $userStep && $this->step->first_step) {
                 CourseStarted::dispatch($user, $this->course);
             }
+            
+            // Mark optional step as completed when user proceeds
+            if (! $userStep) {
+                StepUser::create([
+                    'user_id' => $user->id,
+                    'step_id' => $this->step->id,
+                    'completed_at' => now(),
+                ]);
+            } elseif (! $userStep->completed_at) {
+                $userStep->update([
+                    'completed_at' => now(),
+                ]);
+            }
+            
+            $nextStep = $this->step->next_step;
         } else {
             // For required steps or already completed steps, use normal completion flow
             $nextStep = $this->step->complete();

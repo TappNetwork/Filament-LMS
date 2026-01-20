@@ -192,7 +192,25 @@ class Course extends Model implements HasMedia
         // Get all required (non-optional) steps for this course
         $requiredSteps = $this->steps()->where('is_optional', false)->get();
 
+        // If course has only optional steps, check if all optional steps are viewed/completed
         if ($requiredSteps->isEmpty()) {
+            $allSteps = $this->steps()->get();
+            
+            if ($allSteps->isEmpty()) {
+                return null;
+            }
+            
+            // Get all viewed/completed optional steps for this specific user
+            $completedStepUsers = StepUser::whereIn('step_id', $allSteps->pluck('id'))
+                ->where('user_id', $userId)
+                ->whereNotNull('completed_at')
+                ->get();
+            
+            // Course is complete when all optional steps are viewed/completed
+            if ($completedStepUsers->count() === $allSteps->count()) {
+                return $completedStepUsers->max('completed_at');
+            }
+            
             return null;
         }
 
@@ -253,8 +271,21 @@ class Course extends Model implements HasMedia
         // Get all required (non-optional) steps for this course
         $requiredSteps = $this->steps()->where('is_optional', false)->get();
 
+        // If course has only optional steps, calculate based on all optional steps
         if ($requiredSteps->isEmpty()) {
-            return 0;
+            $allSteps = $this->steps()->get();
+            
+            if ($allSteps->isEmpty()) {
+                return 0;
+            }
+            
+            // Get all viewed/completed optional steps for this specific user
+            $completedStepUsers = StepUser::whereIn('step_id', $allSteps->pluck('id'))
+                ->where('user_id', $userId)
+                ->whereNotNull('completed_at')
+                ->get();
+            
+            return $completedStepUsers->count() / $allSteps->count() * 100;
         }
 
         // Get all completed required steps for this specific user

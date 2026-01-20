@@ -10,9 +10,13 @@ use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
+use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step as StepModel;
+use Tapp\FilamentLms\Models\StepUser;
+use Tapp\FilamentLms\Pages\CourseCompleted;
+use Tapp\FilamentLms\Pages\Dashboard;
 
 class Step extends Page
 {
@@ -75,7 +79,7 @@ class Step extends Page
                 ]);
 
                 // Redirect to dashboard instead to break the loop
-                return redirect()->to(\Tapp\FilamentLms\Pages\Dashboard::getUrl());
+                return redirect()->to(Dashboard::getUrl());
             }
 
             return redirect()->to($currentStepUrl);
@@ -112,9 +116,28 @@ class Step extends Page
     #[On('complete-step')]
     public function complete()
     {
-        $nextStep = $this->step->complete();
+        // For optional steps, allow proceeding without completing
+        if ($this->step->is_optional && ! $this->step->completed_at) {
+            // Just get the next step without marking this one as completed
+            $nextStep = $this->step->next_step;
+            
+            // Create a StepUser entry to track that they've viewed it (but not completed)
+            StepUser::firstOrCreate([
+                'user_id' => Auth::id(),
+                'step_id' => $this->step->id,
+            ]);
+            
+            // Dispatch CourseStarted if this is the first step
+            if ($this->step->first_step) {
+                $user = Auth::user();
+                CourseStarted::dispatch($user, $this->course);
+            }
+        } else {
+            // For required steps or already completed steps, use normal completion flow
+            $nextStep = $this->step->complete();
+        }
 
-        if (! $this->step->last_step) {
+        if (! $this->step->last_step && $nextStep) {
             return redirect()->to(Step::getUrlForStep($nextStep));
         }
 

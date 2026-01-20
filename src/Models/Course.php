@@ -189,21 +189,21 @@ class Course extends Model implements HasMedia
 
     public function completedByUserAt($userId): ?string
     {
-        // Get all steps for this course
-        $steps = $this->steps()->get();
+        // Get all required (non-optional) steps for this course
+        $requiredSteps = $this->steps()->where('is_optional', false)->get();
 
-        if ($steps->isEmpty()) {
+        if ($requiredSteps->isEmpty()) {
             return null;
         }
 
         // Get all completed steps for this specific user
-        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+        $completedStepUsers = StepUser::whereIn('step_id', $requiredSteps->pluck('id'))
             ->where('user_id', $userId)
             ->whereNotNull('completed_at')
             ->get();
 
-        // Check if all steps are completed
-        if ($completedStepUsers->count() === $steps->count()) {
+        // Check if all required steps are completed
+        if ($completedStepUsers->count() === $requiredSteps->count()) {
             return $completedStepUsers->max('completed_at');
         }
 
@@ -250,20 +250,20 @@ class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId): float
     {
-        // Get all steps for this course
-        $steps = $this->steps()->get();
+        // Get all required (non-optional) steps for this course
+        $requiredSteps = $this->steps()->where('is_optional', false)->get();
 
-        if ($steps->isEmpty()) {
+        if ($requiredSteps->isEmpty()) {
             return 0;
         }
 
-        // Get all completed steps for this specific user
-        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+        // Get all completed required steps for this specific user
+        $completedStepUsers = StepUser::whereIn('step_id', $requiredSteps->pluck('id'))
             ->where('user_id', $userId)
             ->whereNotNull('completed_at')
             ->get();
 
-        return $completedStepUsers->count() / $steps->count() * 100;
+        return $completedStepUsers->count() / $requiredSteps->count() * 100;
     }
 
     public function certificateUrl(): string

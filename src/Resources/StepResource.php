@@ -5,6 +5,7 @@ namespace Tapp\FilamentLms\Resources;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -72,6 +73,9 @@ class StepResource extends Resource
                     ->preload()
                     ->required(),
                 ...MorphToSelectWithCreate::make('material'),
+                Checkbox::make('is_optional')
+                    ->label('Optional Step')
+                    ->helperText('Optional steps can be skipped without completing them. Users can proceed to the next step without finishing optional steps.'),
                 MarkdownEditor::make('text')
                     ->label('Text Content')
                     ->placeholder('Enter step text content...')
@@ -95,6 +99,10 @@ class StepResource extends Resource
                     ->sortable(),
                 TextColumn::make('lesson.name')
                     ->searchable()
+                    ->sortable(),
+                TextColumn::make('is_optional')
+                    ->label('Optional')
+                    ->boolean()
                     ->sortable(),
             ])
             ->filters([])

@@ -238,11 +238,7 @@ class Step extends Model implements Sortable
             ->with('progress')
             ->get();
 
-        // Optional steps don't block access to next steps
-        // Only check completion for non-optional steps
-        return $previousSteps
-            ->filter(fn ($step) => ! $step->is_optional)
-            ->every(fn ($step) => $step->completed_at !== null);
+        return $previousSteps->every(fn ($step) => $step->completed_at !== null);
     }
 
     public function getSecondsAttribute()

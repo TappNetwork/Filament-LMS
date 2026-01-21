@@ -13,8 +13,6 @@ use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step as StepModel;
-use Tapp\FilamentLms\Pages\CourseCompleted;
-use Tapp\FilamentLms\Pages\Dashboard;
 
 class Step extends Page
 {

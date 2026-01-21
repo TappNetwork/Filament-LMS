@@ -11,6 +11,7 @@ use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Events\CourseStarted;
+use Tapp\FilamentLms\Events\StepCompleted;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step as StepModel;
@@ -135,10 +136,14 @@ class Step extends Page
                     'step_id' => $this->step->id,
                     'completed_at' => now(),
                 ]);
+
+                StepCompleted::dispatch($user, $this->step);
             } elseif (! $userStep->completed_at) {
                 $userStep->update([
                     'completed_at' => now(),
                 ]);
+
+                StepCompleted::dispatch($user, $this->step);
             }
 
             $nextStep = $this->step->next_step;

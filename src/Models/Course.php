@@ -195,14 +195,21 @@ class Course extends Model implements HasMedia
             return null;
         }
 
-        // Get all completed steps for this specific user
-        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+        // Filter to only required steps (exclude optional steps)
+        $requiredSteps = $steps->filter(fn ($step) => ! $step->is_optional);
+
+        if ($requiredSteps->isEmpty()) {
+            return null;
+        }
+
+        // Get all completed required steps for this specific user
+        $completedStepUsers = StepUser::whereIn('step_id', $requiredSteps->pluck('id'))
             ->where('user_id', $userId)
             ->whereNotNull('completed_at')
             ->get();
 
-        // Check if all steps are completed (including optional steps)
-        if ($completedStepUsers->count() === $steps->count()) {
+        // Check if all required steps are completed
+        if ($completedStepUsers->count() === $requiredSteps->count()) {
             return $completedStepUsers->max('completed_at');
         }
 
@@ -255,13 +262,20 @@ class Course extends Model implements HasMedia
             return 0;
         }
 
-        // Get all completed steps for this specific user (including optional steps)
-        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+        // Filter to only required steps (exclude optional steps)
+        $requiredSteps = $steps->filter(fn ($step) => ! $step->is_optional);
+
+        if ($requiredSteps->isEmpty()) {
+            return 0;
+        }
+
+        // Get all completed required steps for this specific user
+        $completedStepUsers = StepUser::whereIn('step_id', $requiredSteps->pluck('id'))
             ->where('user_id', $userId)
             ->whereNotNull('completed_at')
             ->get();
 
-        return $completedStepUsers->count() / $steps->count() * 100;
+        return $completedStepUsers->count() / $requiredSteps->count() * 100;
     }
 
     public function certificateUrl(): string

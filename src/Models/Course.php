@@ -189,39 +189,20 @@ class Course extends Model implements HasMedia
 
     public function completedByUserAt($userId): ?string
     {
-        // Get all required (non-optional) steps for this course
-        $requiredSteps = $this->steps()->where('is_optional', false)->get();
+        $steps = $this->steps()->get();
 
-        // If course has only optional steps, check if all optional steps are viewed/completed
-        if ($requiredSteps->isEmpty()) {
-            $allSteps = $this->steps()->get();
-            
-            if ($allSteps->isEmpty()) {
-                return null;
-            }
-            
-            // Get all viewed/completed optional steps for this specific user
-            $completedStepUsers = StepUser::whereIn('step_id', $allSteps->pluck('id'))
-                ->where('user_id', $userId)
-                ->whereNotNull('completed_at')
-                ->get();
-            
-            // Course is complete when all optional steps are viewed/completed
-            if ($completedStepUsers->count() === $allSteps->count()) {
-                return $completedStepUsers->max('completed_at');
-            }
-            
+        if ($steps->isEmpty()) {
             return null;
         }
 
         // Get all completed steps for this specific user
-        $completedStepUsers = StepUser::whereIn('step_id', $requiredSteps->pluck('id'))
+        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
             ->where('user_id', $userId)
             ->whereNotNull('completed_at')
             ->get();
 
-        // Check if all required steps are completed
-        if ($completedStepUsers->count() === $requiredSteps->count()) {
+        // Check if all steps are completed (including optional steps)
+        if ($completedStepUsers->count() === $steps->count()) {
             return $completedStepUsers->max('completed_at');
         }
 
@@ -268,33 +249,19 @@ class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId): float
     {
-        // Get all required (non-optional) steps for this course
-        $requiredSteps = $this->steps()->where('is_optional', false)->get();
+        $steps = $this->steps()->get();
 
-        // If course has only optional steps, calculate based on all optional steps
-        if ($requiredSteps->isEmpty()) {
-            $allSteps = $this->steps()->get();
-            
-            if ($allSteps->isEmpty()) {
-                return 0;
-            }
-            
-            // Get all viewed/completed optional steps for this specific user
-            $completedStepUsers = StepUser::whereIn('step_id', $allSteps->pluck('id'))
-                ->where('user_id', $userId)
-                ->whereNotNull('completed_at')
-                ->get();
-            
-            return $completedStepUsers->count() / $allSteps->count() * 100;
+        if ($steps->isEmpty()) {
+            return 0;
         }
 
-        // Get all completed required steps for this specific user
-        $completedStepUsers = StepUser::whereIn('step_id', $requiredSteps->pluck('id'))
+        // Get all completed steps for this specific user (including optional steps)
+        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
             ->where('user_id', $userId)
             ->whereNotNull('completed_at')
             ->get();
 
-        return $completedStepUsers->count() / $requiredSteps->count() * 100;
+        return $completedStepUsers->count() / $steps->count() * 100;
     }
 
     public function certificateUrl(): string

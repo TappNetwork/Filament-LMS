@@ -15,8 +15,6 @@ use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step as StepModel;
 use Tapp\FilamentLms\Models\StepUser;
-use Tapp\FilamentLms\Pages\CourseCompleted;
-use Tapp\FilamentLms\Pages\Dashboard;
 
 class Step extends Page
 {
@@ -119,17 +117,17 @@ class Step extends Page
         // For optional steps, mark as completed when user clicks Next
         if ($this->step->is_optional && ! $this->step->completed_at) {
             $user = Auth::user();
-            
+
             // Check if StepUser already exists
             $userStep = StepUser::where('user_id', $user->id)
                 ->where('step_id', $this->step->id)
                 ->first();
-            
+
             // Only dispatch CourseStarted if this is the first step AND it's the first time
             if (! $userStep && $this->step->first_step) {
                 CourseStarted::dispatch($user, $this->course);
             }
-            
+
             // Mark optional step as completed when user proceeds
             if (! $userStep) {
                 StepUser::create([
@@ -142,7 +140,7 @@ class Step extends Page
                     'completed_at' => now(),
                 ]);
             }
-            
+
             $nextStep = $this->step->next_step;
         } else {
             // For required steps or already completed steps, use normal completion flow

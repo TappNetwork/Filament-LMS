@@ -16,7 +16,7 @@
         "maatwebsite/excel": "^3.1",
         "spatie/browsershot": "^5.0",
         "spatie/eloquent-sortable": "^4.4.0",
-        "tapp/filament-form-builder": "^4.0"
+        "tapp/filament-form-builder": "^5.0|^4.0"
     },
     "require-dev": {
         "filament/upgrade": "^4.0",

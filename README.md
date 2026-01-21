@@ -3,11 +3,11 @@
 An opinionated LMS plugin for Filament containing a user facing LMS panel and Resources for an existing admin panel
 
 ## Version Compatibility
-
- Filament | Filament LMS
-:---------|:------------
- 3.x      | 1.x
- 4.x      | 4.x
+ 
+Filament | Filament LMS       | Documentation
+:--------|:-------------------|:--------------
+4.x/5.x  | 4.x                | Current
+3.x      | 1.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/1.x)
 
 ## Installation
 
@@ -46,12 +46,6 @@ or
     ],
 }
 ```
-
-### For Filament 3
-
-Please check the docs for [Filament 3 here](https://github.com/TappNetwork/Filament-LMS/tree/main)
-
-### For Filament 4
 
 ```bash
 composer require tapp/filament-lms:"^4.0"

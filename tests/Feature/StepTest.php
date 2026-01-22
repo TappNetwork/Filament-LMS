@@ -2,10 +2,14 @@
 
 namespace Tapp\FilamentLms\Tests\Feature;
 
+use Illuminate\Support\Facades\Event;
+use Livewire\Livewire;
+use Tapp\FilamentLms\Events\CourseCompleted;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Test;
+use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Tests\TestUser;
 
 test('step can be created with required fields', function () {
@@ -115,4 +119,47 @@ test('step can handle different material types', function () {
 
         expect($step->material_type)->toBe($type);
     }
+});
+
+test('optional last step dispatches CourseCompleted event when skipped', function () {
+    Event::fake([CourseCompleted::class]);
+
+    // Create a user and authenticate
+    $user = TestUser::create([
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    // Create a course with a single optional step (which is also the last step)
+    $course = Course::factory()->create([
+        'name' => 'Test Course',
+        'slug' => 'test-course',
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $step = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'is_optional' => true,
+        'order' => 1,
+    ]);
+
+    // Verify it's the last step
+    expect($step->last_step)->toBeTrue();
+    expect($step->is_optional)->toBeTrue();
+
+    // Mount the Step page and call complete()
+    $component = Livewire::actingAs($user)
+        ->test(StepPage::class, [
+            'courseSlug' => $course->slug,
+            'lessonSlug' => $lesson->slug,
+            'stepSlug' => $step->slug,
+        ]);
+
+    // Call the complete method (which simulates skipping the optional step)
+    $component->call('complete');
+
+    // Verify CourseCompleted event was dispatched
+    Event::assertDispatched(CourseCompleted::class, function ($event) use ($user, $course) {
+        return $event->user->id === $user->id && $event->course->id === $course->id;
+    });
 });

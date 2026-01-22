@@ -189,7 +189,6 @@ class Course extends Model implements HasMedia
 
     public function completedByUserAt($userId): ?string
     {
-        // Get all steps for this course
         $steps = $this->steps()->get();
 
         if ($steps->isEmpty()) {
@@ -202,7 +201,7 @@ class Course extends Model implements HasMedia
             ->whereNotNull('completed_at')
             ->get();
 
-        // Check if all steps are completed
+        // Check if all steps are completed (including optional steps)
         if ($completedStepUsers->count() === $steps->count()) {
             return $completedStepUsers->max('completed_at');
         }
@@ -250,14 +249,13 @@ class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId): float
     {
-        // Get all steps for this course
         $steps = $this->steps()->get();
 
         if ($steps->isEmpty()) {
             return 0;
         }
 
-        // Get all completed steps for this specific user
+        // Get all completed steps for this specific user (including optional steps)
         $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
             ->where('user_id', $userId)
             ->whereNotNull('completed_at')

@@ -75,7 +75,7 @@ class Step extends Page
                 ]);
 
                 // Redirect to dashboard instead to break the loop
-                return redirect()->to(\Tapp\FilamentLms\Pages\Dashboard::getUrl());
+                return redirect()->to(Dashboard::getUrl());
             }
 
             return redirect()->to($currentStepUrl);
@@ -112,9 +112,10 @@ class Step extends Page
     #[On('complete-step')]
     public function complete()
     {
+        // Use the Model's complete() method which handles all events and progress tracking
         $nextStep = $this->step->complete();
 
-        if (! $this->step->last_step) {
+        if (! $this->step->last_step && $nextStep) {
             return redirect()->to(Step::getUrlForStep($nextStep));
         }
 

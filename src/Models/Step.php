@@ -22,6 +22,7 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
  * @property int $id
  * @property int $lesson_id
  * @property int $order
+ * @property bool $is_optional
  * @property string $name
  * @property string $slug
  * @property string $type
@@ -47,6 +48,10 @@ class Step extends Model implements Sortable
     protected $guarded = [];
 
     protected $table = 'lms_steps';
+
+    protected $casts = [
+        'is_optional' => 'boolean',
+    ];
 
     protected static function newFactory()
     {

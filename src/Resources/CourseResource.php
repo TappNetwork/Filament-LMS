@@ -90,14 +90,9 @@ class CourseResource extends Resource
                     ->helperText('Used for urls.')
                     ->required(),
                 SpatieMediaLibraryFileUpload::make('image')
-                    ->helperText('Image will be automatically cropped to a square.')
+                    ->helperText('Upload a course image.')
                     ->collection('courses')
-                    ->image()
-                    ->automaticallyResizeImagesMode('cover')
-                    ->automaticallyResizeImagesToWidth('1080')
-                    ->automaticallyResizeImagesToHeight('1080')
-                    ->imageAspectRatio('1:1')
-                    ->automaticallyCropImagesToAspectRatio(),
+                    ->image(),
                 Textarea::make('description'),
                 Select::make('award')
                     ->options(config('filament-lms.awards'))

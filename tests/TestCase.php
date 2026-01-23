@@ -61,6 +61,7 @@ abstract class TestCase extends Orchestra
             $table->id();
             $table->foreignId('lesson_id')->references('id')->on('lms_lessons')->onDelete('cascade');
             $table->unsignedInteger('order');
+            $table->boolean('is_optional')->default(false);
             $table->string('name');
             $table->string('slug');
             $table->morphs('material');

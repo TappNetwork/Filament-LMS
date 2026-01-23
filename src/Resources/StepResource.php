@@ -96,6 +96,7 @@ class StepResource extends Resource
                         if (isset($livewire->record) && $livewire->record) {
                             return $livewire->record->material_type === 'test';
                         }
+
                         return false;
                     })
                     ->default(false)
@@ -137,6 +138,7 @@ class StepResource extends Resource
                         if (isset($livewire->record) && $livewire->record) {
                             return $livewire->record->require_perfect_score === true;
                         }
+
                         return false;
                     })
                     ->nullable(),

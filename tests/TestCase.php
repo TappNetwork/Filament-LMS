@@ -21,8 +21,8 @@ abstract class TestCase extends Orchestra
         $this->startSession();
 
         // Initialize view shared error bag for Livewire with a default MessageBag
-        $errorBag = new \Illuminate\Support\ViewErrorBag();
-        $errorBag->put('default', new \Illuminate\Support\MessageBag());
+        $errorBag = new \Illuminate\Support\ViewErrorBag;
+        $errorBag->put('default', new \Illuminate\Support\MessageBag);
         $this->app['view']->share('errors', $errorBag);
 
         // Set the current panel for testing

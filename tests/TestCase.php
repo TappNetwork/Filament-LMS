@@ -16,6 +16,9 @@ abstract class TestCase extends Orchestra
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Set the current panel for testing
+        \Filament\Facades\Filament::setCurrentPanel('lms');
     }
 
     protected function setUpDatabase($app)
@@ -165,6 +168,7 @@ abstract class TestCase extends Orchestra
             MediaLibraryServiceProvider::class,
             FilamentLmsServiceProvider::class,
             FilamentFormBuilderServiceProvider::class,
+            \Tapp\FilamentLms\LmsPanelProvider::class,
         ];
     }
 

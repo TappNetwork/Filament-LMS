@@ -83,6 +83,7 @@ test('test step cannot be completed if not all questions are correct', function 
         'material_type' => 'test',
         'material_id' => $test->id,
         'retry_step_id' => $reviewStep->id,
+        'require_perfect_score' => true,
     ]);
 
     // Create user entry with one wrong answer
@@ -173,6 +174,7 @@ test('test step can be completed if all questions are correct', function () {
         'slug' => 'test-step',
         'material_type' => 'test',
         'material_id' => $test->id,
+        'require_perfect_score' => true,
     ]);
 
     // Create user entry with all correct answers
@@ -263,6 +265,7 @@ test('test step shows retry link when test fails and retry step is configured', 
         'material_type' => 'test',
         'material_id' => $test->id,
         'retry_step_id' => $reviewStep->id,
+        'require_perfect_score' => true,
     ]);
 
     // Create user entry with wrong answer
@@ -286,6 +289,7 @@ test('test step shows retry link when test fails and retry step is configured', 
     expect($component->get('step')->retryStep)->not->toBeNull();
     expect($component->get('step')->retryStep->id)->toBe($reviewStep->id);
 
-    // Verify the view contains the retry link
-    $component->assertSee('Review Material and Retry');
+    // Verify the view contains the retry buttons
+    $component->assertSee('Review Material');
+    $component->assertSee('Retake Test');
 });

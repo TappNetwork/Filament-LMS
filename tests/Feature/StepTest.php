@@ -2,17 +2,13 @@
 
 namespace Tapp\FilamentLms\Tests\Feature;
 
-use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Event;
 use Tapp\FilamentLms\Events\CourseCompleted;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Test;
-use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Tests\TestUser;
-
-use function Pest\Livewire\livewire;
 
 test('step can be created with required fields', function () {
     $course = Course::factory()->create();

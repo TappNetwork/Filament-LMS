@@ -12,6 +12,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
@@ -100,7 +101,7 @@ class StepResource extends Resource
                 TextColumn::make('lesson.name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('is_optional')
+                IconColumn::make('is_optional')
                     ->label('Optional')
                     ->boolean()
                     ->sortable(),

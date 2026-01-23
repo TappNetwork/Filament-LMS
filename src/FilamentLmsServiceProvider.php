@@ -44,6 +44,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'create_lms_course_user_table',
                 'create_lms_images_table',
                 'rename_hidden_to_is_private_in_lms_courses_table',
+                'add_is_optional_to_lms_steps_table',
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command

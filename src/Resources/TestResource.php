@@ -10,6 +10,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\BooleanColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -87,13 +88,12 @@ class TestResource extends Resource
                     ->sortable(),
                 TextColumn::make('name')
                     ->searchable(),
-                IconColumn::make('filament_form_user_id')
+                BooleanColumn::make('filament_form_user_id')
                     ->label('Rubric Created?')
                     ->sortable()
                     ->getStateUsing(function ($record) {
                         return (bool) $record->filament_form_user_id;
-                    })
-                    ->boolean(),
+                    }),
             ])
             ->filters([
                 //

@@ -73,27 +73,35 @@ class ViewGradedEntry extends Component implements HasForms, HasInfolists
                     ->columns(2),
 
                 Section::make('Detailed Results')
-                    ->schema([
-                        GradedKeyValueEntry::make('graded_entry')
-                            ->label('Question Details')
-                            ->keyLabel('Question')
-                            ->valueLabel('Answer')
-                            ->getStateUsing(function (FilamentFormUser $record) use ($test) {
-                                try {
-                                    $result = $test->gradedKeyValueEntry($record);
-                                    if ($result instanceof Exception) {
-                                        return [];
-                                    }
+                    ->schema(function () use ($test) {
+                        try {
+                            $gradedResults = $test->gradedKeyValueEntry($this->entry);
+                            if ($gradedResults instanceof Exception) {
+                                return [];
+                            }
 
-                                    return $result;
-                                } catch (Exception $e) {
-                                    return [];
-                                }
-                            }),
-                    ])
+                            $components = [];
+                            foreach ($gradedResults as $question => $data) {
+                                $isCorrect = $data['correct'] ?? false;
+                                $answer = $data['answer'] ?? '';
+
+                                $components[] = TextEntry::make("question_{$question}")
+                                    ->label($question)
+                                    ->state("Your answer: {$answer}")
+                                    ->icon($isCorrect ? 'heroicon-s-check-circle' : 'heroicon-s-x-circle')
+                                    ->iconColor($isCorrect ? 'success' : 'danger')
+                                    ->columnSpanFull();
+                            }
+
+                            return $components;
+                        } catch (Exception $e) {
+                            return [];
+                        }
+                    })
                     ->collapsible()
                     ->collapsed()
-                    ->description('Click to view detailed question-by-question results'),
+                    ->description('Click to view detailed question-by-question results')
+                    ->extraAttributes(['class' => 'mb-8']),
             ]);
     }
 }

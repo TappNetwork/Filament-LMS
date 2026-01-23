@@ -65,6 +65,8 @@ abstract class TestCase extends Orchestra
             $table->string('slug');
             $table->morphs('material');
             $table->text('text')->nullable();
+            $table->foreignId('retry_step_id')->nullable()->constrained('lms_steps')->onDelete('set null');
+            $table->boolean('require_perfect_score')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

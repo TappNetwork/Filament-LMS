@@ -12,7 +12,6 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
-use Tapp\FilamentLms\Livewire\GradedKeyValueEntry;
 use Tapp\FilamentLms\Livewire\ImageStep;
 use Tapp\FilamentLms\Livewire\LinkStep;
 use Tapp\FilamentLms\Livewire\TestStep;
@@ -44,6 +43,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'create_lms_course_user_table',
                 'create_lms_images_table',
                 'rename_hidden_to_is_private_in_lms_courses_table',
+                'add_test_step_features_to_lms_steps_table',
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
@@ -70,7 +70,6 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('video-player', VideoPlayer::class);
         Livewire::component('create-test-entry', CreateTestEntry::class);
         Livewire::component('view-graded-entry', ViewGradedEntry::class);
-        Livewire::component('graded-key-value-entry', GradedKeyValueEntry::class);
         Livewire::component('image-step', ImageStep::class);
 
         FilamentAsset::register([

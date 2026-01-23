@@ -118,9 +118,7 @@
                     <div class="mb-4 text-lg font-semibold text-red-600">
                         The material for this step is missing or has been deleted.
                     </div>
-                    <x-filament::button color="gray" size="md" class="w-auto next-button" wire:click="$dispatch('complete-step')">
-                        Next
-                    </x-filament::button>
+                    <x-filament-lms::next-button :fixed="false" />
                 </div>
             </x-filament::card>
         </div>

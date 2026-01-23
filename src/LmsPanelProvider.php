@@ -86,7 +86,8 @@ class LmsPanelProvider extends PanelProvider
             ->path('lms')
             ->homeUrl(config('filament-lms.home_url'))
             ->font(config('filament-lms.font'))
-            ->darkMode(false);
+            ->darkMode(false)
+            ->login();
 
         // Add tenancy support if enabled
         if (config('filament-lms.tenancy.enabled')) {

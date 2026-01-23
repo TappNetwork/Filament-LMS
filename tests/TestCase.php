@@ -17,6 +17,14 @@ abstract class TestCase extends Orchestra
     {
         parent::setUp();
 
+        // Start session for Livewire tests
+        $this->startSession();
+
+        // Initialize view shared error bag for Livewire with a default MessageBag
+        $errorBag = new \Illuminate\Support\ViewErrorBag();
+        $errorBag->put('default', new \Illuminate\Support\MessageBag());
+        $this->app['view']->share('errors', $errorBag);
+
         // Set the current panel for testing
         \Filament\Facades\Filament::setCurrentPanel('lms');
     }
@@ -161,15 +169,21 @@ abstract class TestCase extends Orchestra
 
     protected function getPackageProviders($app)
     {
-        return [
+        $providers = [
             LivewireServiceProvider::class,
             FilamentServiceProvider::class,
             SupportServiceProvider::class,
             MediaLibraryServiceProvider::class,
             FilamentLmsServiceProvider::class,
-            FilamentFormBuilderServiceProvider::class,
             \Tapp\FilamentLms\LmsPanelProvider::class,
         ];
+
+        // Only add FilamentFormBuilderServiceProvider if it exists
+        if (class_exists(\Tapp\FilamentFormBuilder\FilamentFormBuilderServiceProvider::class)) {
+            $providers[] = \Tapp\FilamentFormBuilder\FilamentFormBuilderServiceProvider::class;
+        }
+
+        return $providers;
     }
 
     public function getEnvironmentSetUp($app)
@@ -188,6 +202,12 @@ abstract class TestCase extends Orchestra
             'driver' => 'local',
             'root' => storage_path('app'),
         ]);
+
+        // Set up session configuration
+        $app['config']->set('session.driver', 'array');
+
+        // Set up view error bag sharing
+        $app['config']->set('view.compiled', storage_path('framework/views'));
 
         // Set up media library configuration
         $app['config']->set('media-library.disk_name', 'local');

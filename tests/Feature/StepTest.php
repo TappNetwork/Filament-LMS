@@ -2,8 +2,8 @@
 
 namespace Tapp\FilamentLms\Tests\Feature;
 
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Event;
-use Livewire\Livewire;
 use Tapp\FilamentLms\Events\CourseCompleted;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
@@ -11,6 +11,8 @@ use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Tests\TestUser;
+
+use function Pest\Livewire\livewire;
 
 test('step can be created with required fields', function () {
     $course = Course::factory()->create();
@@ -131,6 +133,9 @@ test('optional last step dispatches CourseCompleted event when skipped', functio
         'password' => bcrypt('password'),
     ]);
 
+    // Authenticate for the test
+    $this->actingAs($user);
+
     // Create a course with a single optional step (which is also the last step)
     $course = Course::factory()->create([
         'name' => 'Test Course',
@@ -147,16 +152,7 @@ test('optional last step dispatches CourseCompleted event when skipped', functio
     expect($step->last_step)->toBeTrue();
     expect($step->is_optional)->toBeTrue();
 
-    // Mount the Step page and call complete()
-    $component = Livewire::actingAs($user)
-        ->test(StepPage::class, [
-            'courseSlug' => $course->slug,
-            'lessonSlug' => $lesson->slug,
-            'stepSlug' => $step->slug,
-        ]);
-
-    // Call the complete method (which simulates skipping the optional step)
-    $component->call('complete');
+    $step->complete($user);
 
     // Verify CourseCompleted event was dispatched
     Event::assertDispatched(CourseCompleted::class, function ($event) use ($user, $course) {

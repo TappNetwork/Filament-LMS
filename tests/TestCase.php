@@ -17,16 +17,20 @@ abstract class TestCase extends Orchestra
     {
         parent::setUp();
 
-        // Start session for Livewire tests
-        $this->startSession();
-
-        // Initialize view shared error bag for Livewire with a default MessageBag
-        $errorBag = new \Illuminate\Support\ViewErrorBag;
-        $errorBag->put('default', new \Illuminate\Support\MessageBag);
-        $this->app['view']->share('errors', $errorBag);
-
         // Set the current panel for testing
         \Filament\Facades\Filament::setCurrentPanel('lms');
+
+        // Initialize session
+        if (! $this->app->bound('session.store')) {
+            $this->startSession();
+        }
+
+        // Ensure ViewErrorBag is available
+        if ($this->app->bound('view')) {
+            $errorBag = new \Illuminate\Support\ViewErrorBag;
+            $errorBag->put('default', new \Illuminate\Support\MessageBag);
+            $this->app['view']->share('errors', $errorBag);
+        }
     }
 
     protected function setUpDatabase($app)

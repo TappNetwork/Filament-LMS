@@ -38,8 +38,3 @@
 .step-material-container iframe[src*=".pdf"] {
     min-height: 60vh;
 }
-
-/* Next button spacing */
-.next-button {
-    margin-top: 2rem !important;
-}

@@ -26,16 +26,9 @@
                                 </div>
                                 <div class="mt-4 flex gap-3">
                                     @if($step->retryStep)
-                                        @php
-                                            $retryStep = $step->retryStep;
-                                            if (!$retryStep->relationLoaded('lesson')) {
-                                                $retryStep->load('lesson.course');
-                                            }
-                                            $retryStepUrl = '/lms/courses/' . $retryStep->lesson->course->slug . '/' . $retryStep->lesson->slug . '/' . $retryStep->slug;
-                                        @endphp
                                         <x-filament::button
                                             tag="a"
-                                            :href="$retryStepUrl"
+                                            :href="$step->retryStep->url"
                                             color="danger"
                                             outlined
                                         >

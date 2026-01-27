@@ -171,6 +171,42 @@ abstract class TestCase extends Orchestra
             $table->unsignedInteger('order_column')->nullable();
             $table->nullableTimestamps();
         });
+
+        if (class_exists(\Tapp\FilamentFormBuilder\Models\FilamentForm::class)) {
+            $app['db']->connection()->getSchemaBuilder()->create('filament_forms', function (Blueprint $table) {
+                $table->id();
+                $table->timestamps();
+                $table->string('name');
+                $table->string('slug')->nullable();
+                $table->text('description')->nullable();
+                $table->text('redirect_url')->nullable();
+                $table->boolean('permit_guest_entries')->default(false);
+                $table->boolean('locked')->default(false);
+            });
+
+            $app['db']->connection()->getSchemaBuilder()->create('filament_form_fields', function (Blueprint $table) {
+                $table->id();
+                $table->timestamps();
+                $table->foreignId('filament_form_id')->constrained('filament_forms')->cascadeOnDelete();
+                $table->integer('order');
+                $table->string('field')->nullable();
+                $table->string('type');
+                $table->string('label');
+                $table->string('hint')->nullable();
+                $table->boolean('required')->default(false);
+                $table->json('rules')->nullable();
+                $table->json('options')->nullable();
+                $table->json('schema')->nullable();
+            });
+
+            $app['db']->connection()->getSchemaBuilder()->create('filament_form_user', function (Blueprint $table) {
+                $table->id();
+                $table->timestamps();
+                $table->foreignId('filament_form_id')->constrained('filament_forms')->cascadeOnDelete();
+                $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
+                $table->json('entry');
+            });
+        }
     }
 
     protected function getPackageProviders($app)

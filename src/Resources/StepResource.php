@@ -13,7 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\BooleanColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
@@ -177,7 +177,8 @@ class StepResource extends Resource
                 TextColumn::make('lesson.name')
                     ->searchable()
                     ->sortable(),
-                BooleanColumn::make('is_optional')
+                IconColumn::make('is_optional')
+                    ->boolean()
                     ->label('Optional')
                     ->sortable(),
             ])

@@ -53,7 +53,7 @@ class TestStep extends Component
     public function entrySaved(FilamentFormUser $entry)
     {
         // Verify the entry belongs to the current user
-        if ($entry->user_id !== Auth::id()) {
+        if ($entry->getAttribute('user_id') !== Auth::id()) {
             return;
         }
 

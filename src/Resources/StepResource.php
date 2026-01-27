@@ -73,7 +73,22 @@ class StepResource extends Resource
                 Select::make('lesson_id')
                     ->relationship(name: 'lesson', titleAttribute: 'name')
                     ->preload()
-                    ->required(),
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function (Set $set, ?string $state, $livewire) {
+                        // Clear retry_step_id if the lesson changes to a different course
+                        if ($state) {
+                            $newLesson = \Tapp\FilamentLms\Models\Lesson::find($state);
+                            $currentRetryStepId = $livewire->data['retry_step_id'] ?? null;
+
+                            if ($currentRetryStepId && $newLesson) {
+                                $retryStep = \Tapp\FilamentLms\Models\Step::find($currentRetryStepId);
+                                if ($retryStep && $retryStep->lesson->course_id !== $newLesson->course_id) {
+                                    $set('retry_step_id', null);
+                                }
+                            }
+                        }
+                    }),
                 Checkbox::make('is_optional')
                     ->label('Optional Step')
                     ->helperText('Optional steps can be skipped without completing them. Users can proceed to the next step without finishing optional steps.'),

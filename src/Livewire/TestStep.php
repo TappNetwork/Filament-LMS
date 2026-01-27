@@ -41,6 +41,8 @@ class TestStep extends Component
             // If step was completed but test wasn't passed (and perfect score is required), uncomplete it
             if ($this->testCompleted && $this->step->require_perfect_score && ! $this->testPassed) {
                 $this->testCompleted = false;
+                // Delete the progress record to properly uncomplete the step in the database
+                $this->step->progress()->delete();
             }
         }
     }

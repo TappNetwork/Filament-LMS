@@ -8,11 +8,13 @@ use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
+use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step as StepModel;
+use Tapp\FilamentLms\Models\Test;
 
 class Step extends Page
 {
@@ -112,6 +114,29 @@ class Step extends Page
     #[On('complete-step')]
     public function complete()
     {
+        // Server-side validation for test steps with require_perfect_score
+        if ($this->step->require_perfect_score && $this->step->material_type === 'test') {
+            /** @var Test $test */
+            $test = $this->step->material;
+            $user = Auth::user();
+
+            $entry = FilamentFormUser::where('filament_form_id', $test->form->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (! $entry) {
+                // No test submission, cannot complete
+                return;
+            }
+
+            $grade = $test->gradeEntry($entry);
+
+            // If grading failed or score is not perfect, don't allow completion
+            if ($grade instanceof \Exception || $grade !== 100.0) {
+                return;
+            }
+        }
+
         // Use the Model's complete() method which handles all events and progress tracking
         $nextStep = $this->step->complete();
 

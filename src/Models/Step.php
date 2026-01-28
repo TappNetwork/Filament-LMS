@@ -31,9 +31,12 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
  * @property \Carbon\Carbon|null $completed_at
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
+ * @property int|null $retry_step_id
+ * @property bool $require_perfect_score
  * @property-read Lesson $lesson
  * @property-read Model $material
  * @property-read StepUser|null $progress
+ * @property-read Step|null $retryStep
  */
 class Step extends Model implements Sortable
 {
@@ -51,6 +54,7 @@ class Step extends Model implements Sortable
 
     protected $casts = [
         'is_optional' => 'boolean',
+        'require_perfect_score' => 'boolean',
     ];
 
     protected static function newFactory()
@@ -66,6 +70,11 @@ class Step extends Model implements Sortable
     public function material(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function retryStep(): BelongsTo
+    {
+        return $this->belongsTo(Step::class, 'retry_step_id');
     }
 
     public function complete($user = null)

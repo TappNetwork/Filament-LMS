@@ -88,12 +88,12 @@ class TestResource extends Resource
                 TextColumn::make('name')
                     ->searchable(),
                 IconColumn::make('filament_form_user_id')
+                    ->boolean()
                     ->label('Rubric Created?')
                     ->sortable()
                     ->getStateUsing(function ($record) {
                         return (bool) $record->filament_form_user_id;
-                    })
-                    ->boolean(),
+                    }),
             ])
             ->filters([
                 //

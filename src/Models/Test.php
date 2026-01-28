@@ -106,7 +106,8 @@ class Test extends Model
             if ($entry->entry[$i]['type'] == 'Select Multiple') {
                 $field['correct'] = self::gradeMultiSelectField($entry->entry[$i]['answer'], $this->rubric->entry[$i]['answer']);
             } else {
-                $field['correct'] = ($entry->entry[$i] == $this->rubric->entry[$i]);
+                // Compare only the answer field, not the entire array
+                $field['correct'] = ($entry->entry[$i]['answer'] == $this->rubric->entry[$i]['answer']);
             }
 
             $field['correct_answer'] = $this->rubric->entry[$i]['answer'];

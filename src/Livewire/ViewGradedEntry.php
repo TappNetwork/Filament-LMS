@@ -100,8 +100,7 @@ class ViewGradedEntry extends Component implements HasForms, HasInfolists
                     })
                     ->collapsible()
                     ->collapsed()
-                    ->description('Click to view detailed question-by-question results')
-                    ->extraAttributes(['class' => 'mb-8']),
+                    ->description('Click to view detailed question-by-question results'),
             ]);
     }
 }

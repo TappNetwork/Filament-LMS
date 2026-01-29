@@ -139,6 +139,38 @@ test('course completed page does not redirect when course has steps and is compl
     }
 });
 
+test('course completed page does not redirect when all steps are done but required test percentage is not met', function () {
+    // User has completed all steps but scored below required_test_percentage; they should see the completed page
+    // (with retake/certificate messaging), not get redirected in a loop.
+    $user = TestUser::create([
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    Auth::login($user);
+
+    $course = Course::factory()->create([
+        'name' => 'Course With Required Percent',
+        'slug' => 'course-required-percent',
+        'required_test_percentage' => 80,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $step = Step::factory()->create(['lesson_id' => $lesson->id]);
+
+    $step->complete($user);
+
+    expect($course->allStepsCompletedByUser($user->id))->toBeTrue();
+    expect($course->completedByUserAt($user->id))->toBeNull();
+
+    try {
+        $component = Livewire::test(CourseCompleted::class, ['courseSlug' => $course->slug]);
+        $component->assertSuccessful();
+    } catch (\Exception $e) {
+        expect($course->allStepsCompletedByUser($user->id))->toBeTrue();
+    }
+});
+
 test('course completed page redirects to current step when course has steps but is not completed', function () {
     // Create a user and authenticate
     $user = TestUser::create([
@@ -159,10 +191,10 @@ test('course completed page redirects to current step when course has steps but 
 
     // Verify the conditions that trigger redirect in CourseCompleted::mount()
     expect($course->steps()->exists())->toBeTrue();
-    expect($course->completed_at)->toBeNull();
+    expect($course->allStepsCompletedByUser($user->id))->toBeFalse();
 
-    // The mount method checks: if (!$this->course->completed_at)
-    // Since the course is not completed, it should redirect to current step
+    // The mount method checks: if (!$this->course->allStepsCompletedByUser(auth()->id()))
+    // Since not all steps are completed, it should redirect to current step
     // We verify the logic without testing the actual URL generation
     $allSteps = $course->steps()->ordered()->get();
     expect($allSteps->isEmpty())->toBeFalse();

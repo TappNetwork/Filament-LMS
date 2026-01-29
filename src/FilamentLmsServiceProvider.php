@@ -45,6 +45,8 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'rename_hidden_to_is_private_in_lms_courses_table',
                 'add_is_optional_to_lms_steps_table',
                 'add_test_step_features_to_lms_steps_table',
+                'add_required_test_percentage_to_lms_courses_table',
+                'add_completed_at_to_lms_course_user_table',
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command

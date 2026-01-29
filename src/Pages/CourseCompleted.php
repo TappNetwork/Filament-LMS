@@ -100,7 +100,7 @@ final class CourseCompleted extends Page
             $test->load('rubric');
             $rubric = $test->rubric;
 
-            if (! $rubric) {
+            if (! $rubric instanceof \Tapp\FilamentFormBuilder\Models\FilamentFormUser) {
                 continue;
             }
 

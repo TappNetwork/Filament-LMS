@@ -10,6 +10,10 @@ use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
+/**
+ * @property int|null $filament_form_id
+ * @property int|null $filament_form_user_id
+ */
 class Test extends Model
 {
     use BelongsToTenant;

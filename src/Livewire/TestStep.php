@@ -90,6 +90,10 @@ class TestStep extends Component
         if ($this->step->completed_at) {
             $this->step->progress()->delete();
         }
+
+        // Clear course completion so it can be re-evaluated after the retake
+        $course = $this->step->lesson->course;
+        $course->users()->updateExistingPivot(Auth::id(), ['completed_at' => null]);
     }
 
     private function checkTestResults(): void

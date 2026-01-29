@@ -18,7 +18,7 @@
  const player = new Vimeo(iframe);
  const completed = {{ $step->completed_at ? 1 : 0 }};
  const seconds = {{ $step->seconds ?: 0 }};
- const lastSavedTime = seconds;
+ let lastSavedTime = seconds;
 
  // setup
  if (!completed && seconds > 0) {

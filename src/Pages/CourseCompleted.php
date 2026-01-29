@@ -22,8 +22,6 @@ final class CourseCompleted extends Page
 
     public ?int $requiredPercent = null;
 
-    public ?string $urlToFirstStepBelowPerfect = null;
-
     public array $testStepDetails = [];
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-trophy';
@@ -57,12 +55,15 @@ final class CourseCompleted extends Page
         }
 
         if ($this->course->required_test_percentage !== null) {
-            $overall = $this->course->getOverallTestPercentageForUser(auth()->id());
-            if ($overall < (float) $this->course->required_test_percentage) {
-                $this->qualifiedForCertificate = false;
-                $this->overallPercent = $overall;
-                $this->requiredPercent = (int) $this->course->required_test_percentage;
-                $this->urlToFirstStepBelowPerfect = $this->course->getUrlToFirstTestStepBelowPerfectForUser(auth()->id());
+            $testSteps = $this->course->getOrderedTestSteps();
+            // Only check test percentage if there are test steps
+            if ($testSteps->isNotEmpty()) {
+                $overall = $this->course->getOverallTestPercentageForUser(auth()->id());
+                if ($overall < (float) $this->course->required_test_percentage) {
+                    $this->qualifiedForCertificate = false;
+                    $this->overallPercent = $overall;
+                    $this->requiredPercent = (int) $this->course->required_test_percentage;
+                }
             }
         }
 

@@ -222,9 +222,13 @@ final class Course extends Model implements HasMedia
         }
 
         if ($this->required_test_percentage !== null) {
-            $overall = $this->getOverallTestPercentageForUser($userId);
-            if ($overall < (float) $this->required_test_percentage) {
-                return;
+            $testSteps = $this->getOrderedTestSteps();
+            // Only apply test percentage requirement if there are test steps
+            if ($testSteps->isNotEmpty()) {
+                $overall = $this->getOverallTestPercentageForUser($userId);
+                if ($overall < (float) $this->required_test_percentage) {
+                    return;
+                }
             }
         }
 

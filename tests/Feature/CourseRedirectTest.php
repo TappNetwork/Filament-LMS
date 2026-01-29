@@ -4,9 +4,14 @@ namespace Tapp\FilamentLms\Tests\Feature;
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Livewire;
+use Tapp\FilamentFormBuilder\Models\FilamentForm;
+use Tapp\FilamentFormBuilder\Models\FilamentFormField;
+use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Tests\TestUser;
@@ -140,8 +145,9 @@ test('course completed page does not redirect when course has steps and is compl
 });
 
 test('course completed page does not redirect when all steps are done but required test percentage is not met', function () {
-    // User has completed all steps but scored below required_test_percentage; they should see the completed page
-    // (with retake/certificate messaging), not get redirected in a loop.
+    // User has completed all steps but scored below required_test_percentage (80%); they should see the completed page
+    // (with retake/certificate messaging), not get redirected in a loop. Course has one document step and one test
+    // step; user completes both but scores 60% on the test, so course completed_at stays null.
     $user = TestUser::create([
         'name' => 'Test User',
         'email' => 'test@example.com',
@@ -155,12 +161,72 @@ test('course completed page does not redirect when all steps are done but requir
         'slug' => 'course-required-percent',
         'required_test_percentage' => 80,
     ]);
-    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
-    $step = Step::factory()->create(['lesson_id' => $lesson->id]);
+    $course->users()->attach($user->id);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id, 'order' => 1]);
 
-    $step->complete($user);
+    $document = Document::create(['name' => 'Doc', 'file_path' => '/tmp/test.pdf']);
+    $docStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 1,
+        'name' => 'Doc Step',
+        'slug' => 'doc-step',
+        'material_type' => 'document',
+        'material_id' => $document->id,
+    ]);
+
+    $form = FilamentForm::create(['name' => 'Test Form', 'slug' => 'test-form']);
+    foreach (['q1', 'q2', 'q3', 'q4', 'q5'] as $i => $field) {
+        FilamentFormField::create([
+            'filament_form_id' => $form->id,
+            'field' => $field,
+            'label' => "Question {$field}",
+            'type' => 'TEXT',
+            'required' => true,
+            'order' => $i + 1,
+        ]);
+    }
+    $rubric = FilamentFormUser::create([
+        'filament_form_id' => $form->id,
+        'user_id' => $user->id,
+        'entry' => [
+            ['field' => 'q1', 'type' => 'Text', 'answer' => 'A1'],
+            ['field' => 'q2', 'type' => 'Text', 'answer' => 'A2'],
+            ['field' => 'q3', 'type' => 'Text', 'answer' => 'A3'],
+            ['field' => 'q4', 'type' => 'Text', 'answer' => 'A4'],
+            ['field' => 'q5', 'type' => 'Text', 'answer' => 'A5'],
+        ],
+    ]);
+    $test = Test::create([
+        'name' => 'Test Quiz',
+        'filament_form_id' => $form->id,
+        'filament_form_user_id' => $rubric->id,
+    ]);
+    $testStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 2,
+        'name' => 'Test Step',
+        'slug' => 'test-step',
+        'material_type' => 'test',
+        'material_id' => $test->id,
+    ]);
+
+    FilamentFormUser::create([
+        'filament_form_id' => $form->id,
+        'user_id' => $user->id,
+        'entry' => [
+            ['field' => 'q1', 'type' => 'Text', 'answer' => 'A1'],
+            ['field' => 'q2', 'type' => 'Text', 'answer' => 'A2'],
+            ['field' => 'q3', 'type' => 'Text', 'answer' => 'A3'],
+            ['field' => 'q4', 'type' => 'Text', 'answer' => 'Wrong4'],
+            ['field' => 'q5', 'type' => 'Text', 'answer' => 'Wrong5'],
+        ],
+    ]);
+
+    $docStep->complete($user);
+    $testStep->complete($user);
 
     expect($course->allStepsCompletedByUser($user->id))->toBeTrue();
+    expect($course->getOverallTestPercentageForUser($user->id))->toBe(60.0);
     expect($course->completedByUserAt($user->id))->toBeNull();
 
     try {

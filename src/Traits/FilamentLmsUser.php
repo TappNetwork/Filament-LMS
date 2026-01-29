@@ -27,10 +27,13 @@ trait FilamentLmsUser
 {
     /**
      * Get all courses the user is assigned to (via lms_course_user).
+     * Pivot includes completed_at so integrations (e.g. HubSpot) can read completion from the column.
      */
     public function courses(): BelongsToMany
     {
-        return $this->belongsToMany(Course::class, 'lms_course_user', 'user_id', 'course_id')->withTimestamps();
+        return $this->belongsToMany(Course::class, 'lms_course_user', 'user_id', 'course_id')
+            ->withPivot('completed_at')
+            ->withTimestamps();
     }
 
     /**

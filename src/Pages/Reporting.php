@@ -136,11 +136,11 @@ class Reporting extends Page implements HasTable
                         return $query
                             ->when(
                                 $data['completed_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('lms_step_user.completed_at', '>=', $date),
+                                fn (Builder $q, $date): Builder => $q->whereDate('lms_course_user.completed_at', '>=', $date),
                             )
                             ->when(
                                 $data['completed_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('lms_step_user.completed_at', '<=', $date),
+                                fn (Builder $q, $date): Builder => $q->whereDate('lms_course_user.completed_at', '<=', $date),
                             );
                     })
                     ->indicateUsing(function (array $data): array {
@@ -163,36 +163,10 @@ class Reporting extends Page implements HasTable
                         'In Progress' => 'In Progress',
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        return $query->when($data['value'], function ($query, $status) {
-                            if ($status === 'Completed') {
-                                return $query->whereRaw('(SELECT COUNT(DISTINCT s2.step_id) FROM lms_step_user s2
-                                    WHERE s2.user_id = lms_step_user.user_id
-                                    AND s2.completed_at IS NOT NULL
-                                    AND s2.step_id IN (
-                                        SELECT s3.id FROM lms_steps s3
-                                        JOIN lms_lessons l3 ON s3.lesson_id = l3.id
-                                        WHERE l3.course_id = lms_courses.id
-                                    )) = (
-                                    SELECT COUNT(DISTINCT s4.id)
-                                    FROM lms_steps s4
-                                    JOIN lms_lessons l4 ON s4.lesson_id = l4.id
-                                    WHERE l4.course_id = lms_courses.id
-                                )');
-                            } else {
-                                return $query->whereRaw('(SELECT COUNT(DISTINCT s2.step_id) FROM lms_step_user s2
-                                    WHERE s2.user_id = lms_step_user.user_id
-                                    AND s2.completed_at IS NOT NULL
-                                    AND s2.step_id IN (
-                                        SELECT s3.id FROM lms_steps s3
-                                        JOIN lms_lessons l3 ON s3.lesson_id = l3.id
-                                        WHERE l3.course_id = lms_courses.id
-                                    )) < (
-                                    SELECT COUNT(DISTINCT s4.id)
-                                    FROM lms_steps s4
-                                    JOIN lms_lessons l4 ON s4.lesson_id = l4.id
-                                    WHERE l4.course_id = lms_courses.id
-                                )');
-                            }
+                        return $query->when($data['value'], function ($q, $status) {
+                            return $status === 'Completed'
+                                ? $q->whereNotNull('lms_course_user.completed_at')
+                                : $q->whereNull('lms_course_user.completed_at');
                         });
                     }),
 

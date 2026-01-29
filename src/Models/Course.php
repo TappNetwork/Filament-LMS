@@ -196,13 +196,34 @@ final class Course extends Model implements HasMedia
     {
         $pivot = $this->users()->where('user_id', $userId)->first()?->pivot;
 
-        if (! $pivot || $pivot->completed_at === null) {
+        if ($pivot && $pivot->completed_at !== null) {
+            $at = $pivot->completed_at;
+
+            return $at instanceof DateTimeInterface ? $at->format('Y-m-d H:i:s') : (string) $at;
+        }
+
+        // Fallback: Calculate from StepUser records for backward compatibility.
+        // This handles existing completions before the completed_at column was added.
+        if (! $this->allStepsCompletedByUser($userId)) {
             return null;
         }
 
-        $at = $pivot->completed_at;
+        // Check test percentage requirement (if any)
+        if ($this->required_test_percentage !== null) {
+            $testSteps = $this->getOrderedTestSteps();
+            if ($testSteps->isNotEmpty()) {
+                $overall = $this->getOverallTestPercentageForUser($userId);
+                if ($overall < (float) $this->required_test_percentage) {
+                    return null;
+                }
+            }
+        }
 
-        return $at instanceof DateTimeInterface ? $at->format('Y-m-d H:i:s') : (string) $at;
+        // Get the max completed_at from StepUser records
+        return StepUser::whereIn('step_id', $this->steps()->pluck('lms_steps.id'))
+            ->where('user_id', $userId)
+            ->whereNotNull('completed_at')
+            ->max('completed_at');
     }
 
     /**
@@ -223,12 +244,12 @@ final class Course extends Model implements HasMedia
 
         if ($this->required_test_percentage !== null) {
             $testSteps = $this->getOrderedTestSteps();
-            if ($testSteps->isEmpty()) {
-                return;
-            }
-            $overall = $this->getOverallTestPercentageForUser($userId);
-            if ($overall < (float) $this->required_test_percentage) {
-                return;
+            // Only check test percentage if there are test steps to check
+            if ($testSteps->isNotEmpty()) {
+                $overall = $this->getOverallTestPercentageForUser($userId);
+                if ($overall < (float) $this->required_test_percentage) {
+                    return;
+                }
             }
         }
 

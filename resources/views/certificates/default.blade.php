@@ -169,7 +169,7 @@
   </style>
   </head>
 
-  <body style="background-color: #f3f4f6;">
+  <body class="bg-gray-100">
     <div class="certificate">
       <div class="certificate-content">
         <div class="certificate-inner">

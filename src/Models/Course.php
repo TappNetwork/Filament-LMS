@@ -424,7 +424,7 @@ final class Course extends Model implements HasMedia
     /**
      * Get the percentage score for a single test step for a user (0–100), or 0 if no entry or on error.
      */
-    protected function getTestStepPercentageForUser(Step $step, int $userId): float
+    public function getTestStepPercentageForUser(Step $step, int $userId): float
     {
         $step->load('material');
         $test = $step->material;

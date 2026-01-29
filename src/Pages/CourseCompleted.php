@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Pages;
 
 use BackedEnum;
-use Exception;
 use Filament\Pages\Page;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Models\Course;
@@ -115,38 +114,8 @@ final class CourseCompleted extends Page
 
             $totalQuestions = count($rubric->entry);
 
-            $entry = \Tapp\FilamentFormBuilder\Models\FilamentFormUser::where('filament_form_id', $test->filament_form_id)
-                ->where('user_id', $userId)
-                ->when($test->filament_form_user_id, fn ($q) => $q->where('id', '!=', $test->filament_form_user_id))
-                ->first();
-
-            if (! $entry) {
-                $details[] = [
-                    'name' => $step->name,
-                    'total_questions' => $totalQuestions,
-                    'correct_questions' => 0,
-                    'percentage' => 0.0,
-                    'url' => Step::getUrlForStep($step),
-                ];
-
-                continue;
-            }
-
-            $grade = $test->gradeEntry($entry);
-
-            if ($grade instanceof Exception) {
-                $details[] = [
-                    'name' => $step->name,
-                    'total_questions' => $totalQuestions,
-                    'correct_questions' => 0,
-                    'percentage' => 0.0,
-                    'url' => Step::getUrlForStep($step),
-                ];
-
-                continue;
-            }
-
-            $percentage = (float) $grade;
+            // Use the shared grading method instead of duplicating the entry-fetching and grading logic
+            $percentage = $this->course->getTestStepPercentageForUser($step, $userId);
             $correctQuestions = (int) round(($percentage / 100) * $totalQuestions);
 
             $details[] = [

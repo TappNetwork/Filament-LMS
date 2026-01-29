@@ -159,20 +159,20 @@ class Step extends Model implements Sortable
     public function isActive()
     {
         $route = request()->route();
-        
+
         if (! $route) {
             return false;
         }
-        
+
         $courseSlug = $route->parameter('courseSlug');
         $lessonSlug = $route->parameter('lessonSlug');
         $stepSlug = $route->parameter('stepSlug');
-        
+
         // Only check if we're on a step page (has these parameters)
         if ($courseSlug === null || $lessonSlug === null || $stepSlug === null) {
             return false;
         }
-        
+
         return $courseSlug === $this->lesson->course->slug
             && $lessonSlug === $this->lesson->slug
             && $stepSlug === $this->slug;

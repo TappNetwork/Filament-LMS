@@ -11,7 +11,9 @@
 
 <style>
     .vidstack-player-custom {
-        @apply step-material-container;
+        height: 60vh;
+        max-width: calc(60vh * 16/9);
+        margin: 0 auto;
     }
 
     @if (! auth()->user()->is_admin)
@@ -25,7 +27,7 @@
 @script
 <script>
  let completed = {{ $step->completed_at ? 1 : 0 }};
- let lastTime = {{ $step->seconds }};
+ let lastTime = {{ $step->seconds ?: 0 }};
 
 const player = await VidstackPlayer.create({
      target: '#target',
@@ -51,6 +53,7 @@ const player = await VidstackPlayer.create({
  player.subscribe(({currentTime, ended}) => {
      const rounded = Math.round(currentTime);
      if (!completed && rounded > lastTime && rounded % 10 === 0) {
+         lastTime = rounded;
          $wire.videoProgress(rounded);
      } else if (ended) {
          $wire.videoEnded();

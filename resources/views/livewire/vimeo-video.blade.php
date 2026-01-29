@@ -14,10 +14,11 @@
 
 @script
 <script>
- const iframe = document.querySelector('iframe');
+ const iframe = $wire.$el.querySelector('iframe');
  const player = new Vimeo(iframe);
  const completed = {{ $step->completed_at ? 1 : 0 }};
  const seconds = {{ $step->seconds ?: 0 }};
+ const lastSavedTime = seconds;
 
  // setup
  if (!completed && seconds > 0) {
@@ -32,7 +33,8 @@
  player.on('timeupdate', time => {
      const rounded = Math.round(time.seconds);
 
-     if (rounded && rounded % 10 === 0) {
+     if (rounded && rounded > lastSavedTime && rounded % 10 === 0) {
+         lastSavedTime = rounded;
          $wire.videoProgress(rounded);
      }
  })

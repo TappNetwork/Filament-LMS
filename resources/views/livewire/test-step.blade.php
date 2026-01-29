@@ -81,6 +81,50 @@
                     </div>
                 </div>
             </x-filament::section>
+        @elseif($testGrade === null && !$testPassed)
+            {{-- Grading failed (e.g., missing rubric) - allow retry --}}
+            <x-filament::section class="mt-6">
+                <div class="space-y-4">
+                    <div class="rounded-lg bg-warning-50 dark:bg-warning-900/20 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <x-filament::icon
+                                    icon="heroicon-o-exclamation-triangle"
+                                    class="h-5 w-5 text-warning-600 dark:text-warning-400"
+                                />
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-warning-800 dark:text-warning-200">
+                                    Unable to Grade Test
+                                </h3>
+                                <div class="mt-2 text-sm text-warning-700 dark:text-warning-300">
+                                    <p>
+                                        There was an issue grading your test submission. Please try retaking the test.
+                                    </p>
+                                </div>
+                                <div class="mt-4 flex gap-3">
+                                    @if($step->retryStep)
+                                        <x-filament::button
+                                            tag="a"
+                                            :href="$step->retryStep->url"
+                                            color="warning"
+                                            outlined
+                                        >
+                                            Review Material
+                                        </x-filament::button>
+                                    @endif
+                                    <x-filament::button
+                                        wire:click="retakeTest"
+                                        color="primary"
+                                    >
+                                        Retake Test
+                                    </x-filament::button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </x-filament::section>
         @endif
     @else
         @livewire('create-test-entry', ['test' => $test])

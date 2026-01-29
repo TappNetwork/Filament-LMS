@@ -110,6 +110,15 @@ final class CourseCompleted extends Page
             $rubric = $test->rubric;
 
             if (! $rubric instanceof \Tapp\FilamentFormBuilder\Models\FilamentFormUser) {
+                // Include tests without rubrics as 0% to match getTestStepPercentageForUser() behavior
+                $details[] = [
+                    'name' => $step->name,
+                    'total_questions' => 0,
+                    'correct_questions' => 0,
+                    'percentage' => 0.0,
+                    'url' => Step::getUrlForStep($step),
+                ];
+
                 continue;
             }
 

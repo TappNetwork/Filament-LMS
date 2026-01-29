@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -14,6 +15,59 @@ return new class extends Migration
         Schema::table('lms_course_user', function (Blueprint $table): void {
             $table->timestamp('completed_at')->nullable()->after('updated_at');
         });
+
+        // Backfill completed_at for users who have already completed all steps of a course
+        $this->backfillExistingCompletions();
+    }
+
+    /**
+     * Backfill completed_at for existing course completions.
+     * A user is considered to have completed a course if they have completed all steps.
+     */
+    private function backfillExistingCompletions(): void
+    {
+        // Get all course-user pairs from the pivot table
+        $courseUsers = DB::table('lms_course_user')
+            ->whereNull('completed_at')
+            ->get();
+
+        foreach ($courseUsers as $courseUser) {
+            $courseId = $courseUser->course_id;
+            $userId = $courseUser->user_id;
+
+            // Get all step IDs for this course (through lessons)
+            $stepIds = DB::table('lms_steps')
+                ->join('lms_lessons', 'lms_steps.lesson_id', '=', 'lms_lessons.id')
+                ->where('lms_lessons.course_id', $courseId)
+                ->pluck('lms_steps.id');
+
+            if ($stepIds->isEmpty()) {
+                continue;
+            }
+
+            // Count how many steps have been completed by this user
+            $completedCount = DB::table('lms_step_user')
+                ->whereIn('step_id', $stepIds)
+                ->where('user_id', $userId)
+                ->whereNotNull('completed_at')
+                ->count();
+
+            // If all steps are completed, set completed_at to the latest step completion time
+            if ($completedCount === $stepIds->count()) {
+                $latestCompletion = DB::table('lms_step_user')
+                    ->whereIn('step_id', $stepIds)
+                    ->where('user_id', $userId)
+                    ->whereNotNull('completed_at')
+                    ->max('completed_at');
+
+                if ($latestCompletion) {
+                    DB::table('lms_course_user')
+                        ->where('course_id', $courseId)
+                        ->where('user_id', $userId)
+                        ->update(['completed_at' => $latestCompletion]);
+                }
+            }
+        }
     }
 
     /**

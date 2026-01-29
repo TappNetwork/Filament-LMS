@@ -74,10 +74,12 @@ abstract class TestCase extends Orchestra
 
     protected function setUpDatabase($app)
     {
-        // Create users table
+        // Create users table (first_name/last_name for course progress reporting query)
         $app['db']->connection()->getSchemaBuilder()->create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('first_name')->nullable();
+            $table->string('last_name')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');

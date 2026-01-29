@@ -3,6 +3,7 @@
 namespace Tapp\FilamentLms\Tests\Feature;
 
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Tests\TestUser;
@@ -71,6 +72,29 @@ test('course can check if completed by user', function () {
     // Now check if course is completed
     $completedAt = $course->completedByUserAt($userId);
     expect($completedAt)->not->toBeNull();
+});
+
+test('course with required_test_percentage but no test steps sets completed_at when all steps completed', function () {
+    $course = Course::factory()->create(['required_test_percentage' => 80]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $document = Document::create(['name' => 'Test Doc', 'file_path' => '/tmp/test.pdf']);
+    $step = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'material_type' => 'document',
+        'material_id' => $document->id,
+    ]);
+
+    $user = TestUser::create([
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    expect($course->completedByUserAt($user->id))->toBeNull();
+
+    $step->complete($user);
+
+    expect($course->completedByUserAt($user->id))->not->toBeNull();
 });
 
 test('course can calculate completion percentage', function () {

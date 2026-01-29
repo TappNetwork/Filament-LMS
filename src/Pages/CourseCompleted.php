@@ -70,6 +70,15 @@ final class CourseCompleted extends Page
         // Collect test step details for the table
         $this->testStepDetails = $this->getTestStepDetails();
 
+        // Backfill completed_at if user qualifies but it was never set (e.g. course had required_test_percentage but no test steps).
+        $this->course->maybeSetCompletedAtForUser(auth()->id());
+
+        // Only show certificate UI when the user has actually completed the course (completed_at set).
+        // Prevents 403 on download when e.g. required_test_percentage is set but course has no test steps.
+        if ($this->course->completedByUserAt(auth()->id()) === null) {
+            $this->qualifiedForCertificate = false;
+        }
+
         $this->registerCourseLayout();
     }
 

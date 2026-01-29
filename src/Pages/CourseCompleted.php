@@ -38,6 +38,11 @@ final class CourseCompleted extends Page
     {
         $this->course = Course::where('slug', $courseSlug)->firstOrFail();
 
+        // Redirect unauthenticated users to dashboard
+        if (! auth()->check()) {
+            return redirect()->to(Dashboard::getUrl());
+        }
+
         // If course has no steps, redirect to dashboard
         if (! $this->course->steps()->exists()) {
             return redirect()->to(Dashboard::getUrl());

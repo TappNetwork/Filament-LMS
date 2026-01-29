@@ -12,18 +12,21 @@ class CourseProgressQueryService
      * Build query for course progress reporting. Uses lms_course_user.completed_at as the source
      * of truth for completion (not step-derived calculation).
      *
+     * Starts from lms_step_user to capture all users with any progress (including public course
+     * users who haven't completed), and LEFT JOINs to lms_course_user for completion status.
+     *
      * @return Builder|QueryBuilder
      */
     public static function buildQuery()
     {
-        return DB::table('lms_course_user')
-            ->join('users', 'users.id', '=', 'lms_course_user.user_id')
-            ->join('lms_courses', 'lms_courses.id', '=', 'lms_course_user.course_id')
-            ->leftJoin('lms_lessons', 'lms_lessons.course_id', '=', 'lms_courses.id')
-            ->leftJoin('lms_steps', 'lms_steps.lesson_id', '=', 'lms_lessons.id')
-            ->leftJoin('lms_step_user', function ($join): void {
-                $join->on('lms_step_user.step_id', '=', 'lms_steps.id')
-                    ->on('lms_step_user.user_id', '=', 'lms_course_user.user_id');
+        return DB::table('lms_step_user')
+            ->join('users', 'users.id', '=', 'lms_step_user.user_id')
+            ->join('lms_steps', 'lms_steps.id', '=', 'lms_step_user.step_id')
+            ->join('lms_lessons', 'lms_lessons.id', '=', 'lms_steps.lesson_id')
+            ->join('lms_courses', 'lms_courses.id', '=', 'lms_lessons.course_id')
+            ->leftJoin('lms_course_user', function ($join): void {
+                $join->on('lms_course_user.course_id', '=', 'lms_courses.id')
+                    ->on('lms_course_user.user_id', '=', 'lms_step_user.user_id');
             })
             ->select([
                 'users.id as user_id',
@@ -33,13 +36,13 @@ class CourseProgressQueryService
                 'lms_courses.id as course_id',
                 'lms_courses.name as course_name',
                 DB::raw('MIN(lms_step_user.created_at) as started_at'),
-                'lms_course_user.completed_at as completed_at',
-                'lms_course_user.completed_at as completion_date',
+                DB::raw('MAX(lms_course_user.completed_at) as completed_at'),
+                DB::raw('MAX(lms_course_user.completed_at) as completion_date'),
                 DB::raw('COUNT(DISTINCT CASE WHEN lms_step_user.completed_at IS NOT NULL THEN lms_step_user.step_id END) as steps_completed'),
                 DB::raw('(SELECT COUNT(DISTINCT s.id) FROM lms_steps s JOIN lms_lessons l ON s.lesson_id = l.id WHERE l.course_id = lms_courses.id) as total_steps'),
-                DB::raw("CASE WHEN lms_course_user.completed_at IS NOT NULL THEN 'Completed' ELSE 'In Progress' END as status"),
+                DB::raw("CASE WHEN MAX(lms_course_user.completed_at) IS NOT NULL THEN 'Completed' ELSE 'In Progress' END as status"),
             ])
-            ->groupBy('lms_course_user.user_id', 'lms_course_user.course_id', 'lms_course_user.completed_at', 'users.id', 'users.first_name', 'users.last_name', 'users.email', 'lms_courses.id', 'lms_courses.name')
+            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'lms_courses.id', 'lms_courses.name')
             ->orderBy('users.id', 'asc')
             ->orderBy('lms_courses.id', 'asc');
     }
@@ -51,7 +54,7 @@ class CourseProgressQueryService
     public static function sortByStatus($query, $direction)
     {
         return $query->reorder()
-            ->orderByRaw("CASE WHEN lms_course_user.completed_at IS NOT NULL THEN 1 ELSE 0 END {$direction}")
+            ->orderByRaw("CASE WHEN MAX(lms_course_user.completed_at) IS NOT NULL THEN 1 ELSE 0 END {$direction}")
             ->orderBy('users.id', 'asc')
             ->orderBy('lms_courses.id', 'asc');
     }
@@ -135,7 +138,7 @@ class CourseProgressQueryService
     public static function sortByCompletedAt($query, $direction)
     {
         return $query->reorder()
-            ->orderBy('lms_course_user.completed_at', $direction)
+            ->orderByRaw("MAX(lms_course_user.completed_at) {$direction}")
             ->orderBy('users.id', 'asc')
             ->orderBy('lms_courses.id', 'asc');
     }

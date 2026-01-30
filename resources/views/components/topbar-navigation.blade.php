@@ -53,7 +53,7 @@
                                     $lists[count($lists) - 1][] = $item;
                                 }
 
-                                if (empty($lists[count($lists) - 1])) {
+                                if (!empty($lists) && empty($lists[count($lists) - 1])) {
                                     array_pop($lists);
                                 }
                             @endphp

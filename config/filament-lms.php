@@ -20,7 +20,7 @@ return [
     'vite_theme' => '',
     'colors' => [],
     'awards' => [
-        'Default' => 'default',
+        'default' => 'Default',
     ],
     // Enable top navigation on the LMS dashboard (courses list page).
     // Note: This only affects the dashboard. Course pages always use sidebar navigation.

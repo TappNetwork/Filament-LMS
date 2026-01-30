@@ -11,7 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('lms_steps', function (Blueprint $table) {
+        if (Schema::hasColumn('lms_steps', 'is_optional')) {
+            return;
+        }
+
+        Schema::table('lms_steps', function (Blueprint $table): void {
             $table->boolean('is_optional')->default(false)->after('order');
         });
     }
@@ -21,7 +25,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('lms_steps', function (Blueprint $table) {
+        if (! Schema::hasColumn('lms_steps', 'is_optional')) {
+            return;
+        }
+
+        Schema::table('lms_steps', function (Blueprint $table): void {
             $table->dropColumn('is_optional');
         });
     }

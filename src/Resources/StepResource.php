@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tapp\FilamentLms\Resources;
 
+use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -23,16 +26,17 @@ use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Resources\StepResource\Pages\CreateStep;
 use Tapp\FilamentLms\Resources\StepResource\Pages\EditStep;
 use Tapp\FilamentLms\Resources\StepResource\Pages\ListSteps;
+use UnitEnum;
 
-class StepResource extends Resource
+final class StepResource extends Resource
 {
     use HasLmsSlug;
 
     protected static ?string $model = Step::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-circle';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-check-circle';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'LMS';
+    protected static string|UnitEnum|null $navigationGroup = 'LMS';
 
     /**
      * Disable Filament's automatic tenant scoping.
@@ -82,7 +86,7 @@ class StepResource extends Resource
                             $currentRetryStepId = $livewire->data['retry_step_id'] ?? null;
 
                             if ($currentRetryStepId && $newLesson) {
-                                $retryStep = \Tapp\FilamentLms\Models\Step::find($currentRetryStepId);
+                                $retryStep = Step::find($currentRetryStepId);
                                 if ($retryStep && $retryStep->lesson->course_id !== $newLesson->course_id) {
                                     $set('retry_step_id', null);
                                 }
@@ -144,14 +148,13 @@ class StepResource extends Resource
                     ->searchable()
                     ->preload()
                     ->visible(function (Get $get, $livewire) {
-                        // Only show if require_perfect_score is checked
-                        $requirePerfect = $get('require_perfect_score');
-                        if ($requirePerfect) {
+                        // Show for test steps regardless of require_perfect_score
+                        $materialType = $get('material_type');
+                        if ($materialType === 'test') {
                             return true;
                         }
-                        // Check record when editing existing step
                         if (isset($livewire->record) && $livewire->record) {
-                            return $livewire->record->require_perfect_score === true;
+                            return $livewire->record->material_type === 'test';
                         }
 
                         return false;

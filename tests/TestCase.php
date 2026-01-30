@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tapp\FilamentLms\Tests;
 
 use Filament\FilamentServiceProvider;
@@ -33,12 +35,51 @@ abstract class TestCase extends Orchestra
         }
     }
 
+    final public function getEnvironmentSetUp($app)
+    {
+        // Set up the database connection for testing
+        $app['config']->set('database.default', 'testbench');
+        $app['config']->set('database.connections.testbench', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
+
+        // Set up filesystem for testing
+        $app['config']->set('filesystems.default', 'local');
+        $app['config']->set('filesystems.disks.local', [
+            'driver' => 'local',
+            'root' => storage_path('app'),
+        ]);
+
+        // Set up session configuration
+        $app['config']->set('session.driver', 'array');
+
+        // Set up view error bag sharing
+        $app['config']->set('view.compiled', storage_path('framework/views'));
+
+        // Set up media library configuration
+        $app['config']->set('media-library.disk_name', 'local');
+        $app['config']->set('media-library.media_model', \Spatie\MediaLibrary\MediaCollections\Models\Media::class);
+
+        // Set up app key for testing
+        $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
+
+        // Set up filament-lms user model for testing
+        $app['config']->set('filament-lms.user_model', TestUser::class);
+
+        // Set up database tables
+        $this->setUpDatabase($app);
+    }
+
     protected function setUpDatabase($app)
     {
-        // Create users table
+        // Create users table (first_name/last_name for course progress reporting query)
         $app['db']->connection()->getSchemaBuilder()->create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('first_name')->nullable();
+            $table->string('last_name')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
@@ -55,6 +96,7 @@ abstract class TestCase extends Orchestra
             $table->text('image')->nullable();
             $table->string('award')->nullable();
             $table->text('description')->nullable();
+            $table->unsignedTinyInteger('required_test_percentage')->nullable();
             $table->boolean('is_private')->default(false);
             $table->timestamps();
             $table->softDeletes();
@@ -221,47 +263,10 @@ abstract class TestCase extends Orchestra
         ];
 
         // Only add FilamentFormBuilderServiceProvider if it exists
-        if (class_exists(\Tapp\FilamentFormBuilder\FilamentFormBuilderServiceProvider::class)) {
-            $providers[] = \Tapp\FilamentFormBuilder\FilamentFormBuilderServiceProvider::class;
+        if (class_exists(FilamentFormBuilderServiceProvider::class)) {
+            $providers[] = FilamentFormBuilderServiceProvider::class;
         }
 
         return $providers;
-    }
-
-    public function getEnvironmentSetUp($app)
-    {
-        // Set up the database connection for testing
-        $app['config']->set('database.default', 'testbench');
-        $app['config']->set('database.connections.testbench', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-        ]);
-
-        // Set up filesystem for testing
-        $app['config']->set('filesystems.default', 'local');
-        $app['config']->set('filesystems.disks.local', [
-            'driver' => 'local',
-            'root' => storage_path('app'),
-        ]);
-
-        // Set up session configuration
-        $app['config']->set('session.driver', 'array');
-
-        // Set up view error bag sharing
-        $app['config']->set('view.compiled', storage_path('framework/views'));
-
-        // Set up media library configuration
-        $app['config']->set('media-library.disk_name', 'local');
-        $app['config']->set('media-library.media_model', \Spatie\MediaLibrary\MediaCollections\Models\Media::class);
-
-        // Set up app key for testing
-        $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
-
-        // Set up filament-lms user model for testing
-        $app['config']->set('filament-lms.user_model', \Tapp\FilamentLms\Tests\TestUser::class);
-
-        // Set up database tables
-        $this->setUpDatabase($app);
     }
 }

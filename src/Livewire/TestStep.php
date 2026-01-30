@@ -18,6 +18,8 @@ class TestStep extends Component
 
     public bool $testPassed = false;
 
+    public ?float $testGrade = null;
+
     public ?FilamentFormUser $entry = null;
 
     protected $listeners = ['entrySaved'];
@@ -25,7 +27,7 @@ class TestStep extends Component
     public function mount($step)
     {
         $this->step = $step;
-        $this->step->load(['retryStep.lesson.course']);
+        $this->step->load(['retryStep.lesson.course', 'lesson.course']);
         $this->test = $step->material;
         $this->testCompleted = (bool) $step->completed_at;
 
@@ -81,18 +83,24 @@ class TestStep extends Component
         // Reset entry and completion status
         $this->entry = null;
         $this->testPassed = false;
+        $this->testGrade = null;
         $this->testCompleted = false;
 
         // Reset step completion if it was marked as completed
         if ($this->step->completed_at) {
             $this->step->progress()->delete();
         }
+
+        // Clear course completion so it can be re-evaluated after the retake
+        $course = $this->step->lesson->course;
+        $course->users()->updateExistingPivot(Auth::id(), ['completed_at' => null]);
     }
 
     private function checkTestResults(): void
     {
         if (! $this->entry) {
             $this->testPassed = false;
+            $this->testGrade = null;
 
             return;
         }
@@ -102,9 +110,13 @@ class TestStep extends Component
         // Check if grade is an Exception (error)
         if ($grade instanceof \Exception) {
             $this->testPassed = false;
+            $this->testGrade = null;
 
             return;
         }
+
+        // Store the actual grade percentage
+        $this->testGrade = $grade;
 
         // If require_perfect_score is enabled, test passes only if 100% correct
         // Otherwise, any score passes

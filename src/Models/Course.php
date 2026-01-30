@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tapp\FilamentLms\Models;
 
+use DateTimeInterface;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +15,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
@@ -28,13 +33,14 @@ use Tapp\FilamentLms\Traits\HasMediaUrl;
  * @property string|null $award
  * @property array $award_content
  * @property string|null $description
+ * @property int|null $required_test_percentage
  * @property bool $is_private
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
  * @property-read \Illuminate\Database\Eloquent\Collection|Step[] $steps
  */
-class Course extends Model implements HasMedia
+final class Course extends Model implements HasMedia
 {
     use BelongsToTenant;
     use HasFactory;
@@ -90,11 +96,6 @@ class Course extends Model implements HasMedia
         })
         // Only include courses that have at least one step
             ->whereHas('steps');
-    }
-
-    protected static function newFactory()
-    {
-        return CourseFactory::new();
     }
 
     public function lessons(): HasMany
@@ -187,26 +188,50 @@ class Course extends Model implements HasMedia
             ->min('created_at');
     }
 
+    /**
+     * When the user completed this course (all steps + passing grade if required).
+     * Stored on lms_course_user.completed_at; set when they first qualify (including after retakes).
+     */
     public function completedByUserAt($userId): ?string
     {
-        $steps = $this->steps()->get();
+        $pivot = $this->users()->where('user_id', $userId)->first()?->pivot;
 
-        if ($steps->isEmpty()) {
+        if (! $pivot || $pivot->completed_at === null) {
             return null;
         }
 
-        // Get all completed steps for this specific user
-        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
-            ->where('user_id', $userId)
-            ->whereNotNull('completed_at')
-            ->get();
+        $at = $pivot->completed_at;
 
-        // Check if all steps are completed (including optional steps)
-        if ($completedStepUsers->count() === $steps->count()) {
-            return $completedStepUsers->max('completed_at');
+        return $at instanceof DateTimeInterface ? $at->format('Y-m-d H:i:s') : (string) $at;
+    }
+
+    /**
+     * Set course completed_at for the user on the pivot when they have completed all steps
+     * and (if required) met the test percentage. Called after any step completion so that
+     * retaking a test and passing will set completed_at.
+     */
+    public function maybeSetCompletedAtForUser(int $userId): void
+    {
+        $existing = $this->users()->where('user_id', $userId)->first()?->pivot?->completed_at;
+        if ($existing !== null) {
+            return;
         }
 
-        return null;
+        if (! $this->allStepsCompletedByUser($userId)) {
+            return;
+        }
+
+        if ($this->required_test_percentage !== null) {
+            $testSteps = $this->getOrderedTestSteps();
+            if ($testSteps->isNotEmpty()) {
+                $overall = $this->getOverallTestPercentageForUser($userId);
+                if ($overall < (float) $this->required_test_percentage) {
+                    return;
+                }
+            }
+        }
+
+        $this->users()->syncWithoutDetaching([$userId => ['completed_at' => now()]]);
     }
 
     public function getCompletedAtAttribute()
@@ -281,7 +306,29 @@ class Course extends Model implements HasMedia
     {
         $userModel = config('filament-lms.user_model');
 
-        return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')->withTimestamps();
+        return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')
+            ->withPivot('completed_at')
+            ->withTimestamps();
+    }
+
+    /**
+     * Check if all steps are completed by the user (regardless of test percentage requirement).
+     * This is useful for determining if a user has finished all steps but may not have met the test percentage requirement.
+     */
+    public function allStepsCompletedByUser(int $userId): bool
+    {
+        $steps = $this->steps()->get();
+
+        if ($steps->isEmpty()) {
+            return false;
+        }
+
+        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+            ->where('user_id', $userId)
+            ->whereNotNull('completed_at')
+            ->get();
+
+        return $completedStepUsers->count() === $steps->count();
     }
 
     /**
@@ -305,5 +352,102 @@ class Course extends Model implements HasMedia
 
         // Check if user is assigned to this course
         return $this->users()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Overall test percentage for the user across all test steps in this course (0–100).
+     * Steps with no entry or grading errors count as 0. Returns 0 if there are no test steps.
+     */
+    public function getOverallTestPercentageForUser(int $userId): float
+    {
+        $testSteps = $this->getOrderedTestSteps();
+
+        if ($testSteps->isEmpty()) {
+            return 0.0;
+        }
+
+        $sum = 0.0;
+        foreach ($testSteps as $step) {
+            $sum += $this->getTestStepPercentageForUser($step, $userId);
+        }
+
+        return round($sum / $testSteps->count(), 2);
+    }
+
+    /**
+     * First test step (in course order) where the user scored below 100%, or null if all are 100%.
+     */
+    public function getFirstTestStepBelowPerfectForUser(int $userId): ?Step
+    {
+        $testSteps = $this->getOrderedTestSteps();
+
+        foreach ($testSteps as $step) {
+            $pct = $this->getTestStepPercentageForUser($step, $userId);
+            if ($pct < 100) {
+                return $step;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * URL to the first test step below 100% for the user, or the dashboard URL if none.
+     */
+    public function getUrlToFirstTestStepBelowPerfectForUser(int $userId): string
+    {
+        $step = $this->getFirstTestStepBelowPerfectForUser($userId);
+
+        return $step ? StepPage::getUrlForStep($step) : Dashboard::getUrl();
+    }
+
+    /**
+     * Get all test steps for this course in lesson/step order.
+     *
+     * @return \Illuminate\Support\Collection<int, Step>
+     */
+    public function getOrderedTestSteps(): \Illuminate\Support\Collection
+    {
+        return $this->lessons()
+            ->with(['steps' => fn ($q) => $q->where('material_type', 'test')->orderBy('order')])
+            ->orderBy('order')
+            ->get()
+            ->pluck('steps')
+            ->flatten();
+    }
+
+    protected static function newFactory()
+    {
+        return CourseFactory::new();
+    }
+
+    /**
+     * Get the percentage score for a single test step for a user (0–100), or 0 if no entry or on error.
+     */
+    protected function getTestStepPercentageForUser(Step $step, int $userId): float
+    {
+        $step->load('material');
+        $test = $step->material;
+
+        if (! $test instanceof Test) {
+            return 0.0;
+        }
+
+        $entry = FilamentFormUser::where('filament_form_id', $test->filament_form_id)
+            ->where('user_id', $userId)
+            ->when($test->filament_form_user_id, fn ($q) => $q->where('id', '!=', $test->filament_form_user_id))
+            ->first();
+
+        if (! $entry) {
+            return 0.0;
+        }
+
+        $grade = $test->gradeEntry($entry);
+
+        if ($grade instanceof Exception) {
+            return 0.0;
+        }
+
+        return (float) $grade;
     }
 }

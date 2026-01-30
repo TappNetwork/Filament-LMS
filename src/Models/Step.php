@@ -118,9 +118,12 @@ class Step extends Model implements Sortable
                 'step_id' => $nextStep->id,
             ]);
 
+            $this->lesson->course->maybeSetCompletedAtForUser($user->id);
+
             return $nextStep;
         } else {
             CourseCompleted::dispatch($user, $this->lesson->course);
+            $this->lesson->course->maybeSetCompletedAtForUser($user->id);
         }
     }
 
@@ -155,7 +158,24 @@ class Step extends Model implements Sortable
 
     public function isActive()
     {
-        return request()->is('*'.$this->lesson->course->slug.'/'.$this->lesson->slug.'/'.$this->slug.'*');
+        $route = request()->route();
+
+        if (! $route) {
+            return false;
+        }
+
+        $courseSlug = $route->parameter('courseSlug');
+        $lessonSlug = $route->parameter('lessonSlug');
+        $stepSlug = $route->parameter('stepSlug');
+
+        // Only check if we're on a step page (has these parameters)
+        if ($courseSlug === null || $lessonSlug === null || $stepSlug === null) {
+            return false;
+        }
+
+        return $courseSlug === $this->lesson->course->slug
+            && $lessonSlug === $this->lesson->slug
+            && $stepSlug === $this->slug;
     }
 
     public function getUrlAttribute()

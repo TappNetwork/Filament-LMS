@@ -94,6 +94,14 @@ class CourseResource extends Resource
                     ->collection('courses')
                     ->image(),
                 Textarea::make('description'),
+                TextInput::make('required_test_percentage')
+                    ->label('Required Average Test Score (percentage)')
+                    ->helperText('User will not be able to complete the course until they have met this requirement.')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(100)
+                    ->default(0)
+                    ->nullable(),
                 Select::make('award')
                     ->options(config('filament-lms.awards'))
                     ->required()

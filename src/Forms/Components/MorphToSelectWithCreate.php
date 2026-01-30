@@ -31,6 +31,7 @@ class MorphToSelectWithCreate
                     'test' => 'Test',
                 ])
                 ->live()
+                ->placeholder('Select a material type if needed')
                 ->nullable()
                 ->afterStateUpdated(function (Set $set) {
                     $set('material_id', null);

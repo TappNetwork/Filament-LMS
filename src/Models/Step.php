@@ -26,15 +26,15 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
  * @property string $name
  * @property string $slug
  * @property string $type
- * @property int $material_id
- * @property string $material_type
+ * @property int|null $material_id
+ * @property string|null $material_type
  * @property \Carbon\Carbon|null $completed_at
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property int|null $retry_step_id
  * @property bool $require_perfect_score
  * @property-read Lesson $lesson
- * @property-read Model $material
+ * @property-read Model|null $material
  * @property-read StepUser|null $progress
  * @property-read Step|null $retryStep
  */

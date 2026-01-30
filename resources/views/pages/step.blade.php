@@ -112,16 +112,22 @@
     </style>
 
     @if (is_null($step->material))
-        <div class="flex items-center justify-center min-h-[60vh]">
-            <x-filament::card class="py-12 w-full max-w-md">
-                <div class="flex flex-col justify-center items-center text-center">
-                    <div class="mb-4 text-lg font-semibold text-red-600">
-                        The material for this step is missing or has been deleted.
+        @if(!$step->text)
+            {{-- No material and no text: show error --}}
+            <div class="flex items-center justify-center min-h-[60vh]">
+                <x-filament::card class="py-12 w-full max-w-md">
+                    <div class="flex flex-col justify-center items-center text-center">
+                        <div class="mb-4 text-lg font-semibold text-red-600">
+                            The material for this step is missing or has been deleted.
+                        </div>
+                        <x-filament-lms::next-button :fixed="false" />
                     </div>
-                    <x-filament-lms::next-button :fixed="false" />
-                </div>
-            </x-filament::card>
-        </div>
+                </x-filament::card>
+            </div>
+        @else
+            {{-- Text-only step: show the next button --}}
+            <x-filament-lms::next-button />
+        @endif
     @elseif ($step->material_type == 'video')
         <livewire:video-step :step="$step"/>
     @elseif ($step->material_type == 'form')

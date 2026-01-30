@@ -31,7 +31,7 @@ class MorphToSelectWithCreate
                     'test' => 'Test',
                 ])
                 ->live()
-                ->required()
+                ->nullable()
                 ->afterStateUpdated(function (Set $set) {
                     $set('material_id', null);
                 }),
@@ -62,7 +62,7 @@ class MorphToSelectWithCreate
                     return $className::query()->pluck('name', 'id');
                 })
                 ->searchable()
-                ->required()
+                ->requiredWith('material_type')
                 ->suffixActions([
                     Action::make('create_video')
                         ->label('New')

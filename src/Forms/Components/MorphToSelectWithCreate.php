@@ -62,7 +62,7 @@ class MorphToSelectWithCreate
                     return $className::query()->pluck('name', 'id');
                 })
                 ->searchable()
-                ->nullable()
+                ->requiredWith('material_type')
                 ->suffixActions([
                     Action::make('create_video')
                         ->label('New')

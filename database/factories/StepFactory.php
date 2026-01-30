@@ -34,4 +34,25 @@ class StepFactory extends Factory
             'material_id' => Video::factory()->lazy(),
         ];
     }
+
+    /**
+     * Indicate that the step should not have any material.
+     */
+    public function withoutMaterial(): static
+    {
+        return $this->state(fn () => [
+            'material_type' => null,
+            'material_id' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the step should have text content.
+     */
+    public function withText(?string $text = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'text' => $text ?? $this->faker->paragraphs(3, true),
+        ]);
+    }
 }

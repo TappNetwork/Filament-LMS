@@ -47,6 +47,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'add_test_step_features_to_lms_steps_table',
                 'add_required_test_percentage_to_lms_courses_table',
                 'add_completed_at_to_lms_course_user_table',
+                'make_material_nullable_in_lms_steps_table',
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command

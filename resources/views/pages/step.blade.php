@@ -111,7 +111,11 @@
     }
     </style>
 
-    @if (is_null($step->material))
+    @if (is_null($step->material_type))
+        {{-- Intentionally text-only step: show the next button --}}
+        <x-filament-lms::next-button />
+    @elseif (is_null($step->material))
+        {{-- Material type is set but material is missing (deleted): show error --}}
         <div class="flex items-center justify-center min-h-[60vh]">
             <x-filament::card class="py-12 w-full max-w-md">
                 <div class="flex flex-col justify-center items-center text-center">

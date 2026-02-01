@@ -69,9 +69,9 @@ final class StepResource extends Resource
         if (! $lessonId || $name === null || $name === '') {
             return null;
         }
-        
+
         $lesson = Lesson::find($lessonId);
-        
+
         return $lesson ? $lesson->slug.'-'.Str::slug($name) : null;
     }
 

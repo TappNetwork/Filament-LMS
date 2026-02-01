@@ -19,7 +19,6 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Forms\Components\MorphToSelectWithCreate;
 use Tapp\FilamentLms\Models\Lesson;

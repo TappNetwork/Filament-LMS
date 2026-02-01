@@ -23,12 +23,20 @@ class StepFactory extends Factory
     public function definition(): array
     {
         $name = $this->faker->unique()->word();
-        $slug = Str::slug($name);
 
         return [
             'name' => $name,
-            'slug' => $slug,
             'lesson_id' => Lesson::factory()->lazy(),
+            'slug' => function (array $attributes) {
+                $lessonId = $attributes['lesson_id'] ?? null;
+                $stepName = $attributes['name'] ?? $this->faker->unique()->word();
+                if (! $lessonId || ! is_numeric($lessonId)) {
+                    return Str::slug($stepName);
+                }
+                $lesson = Lesson::find($lessonId);
+
+                return $lesson ? $lesson->slug.'-'.Str::slug($stepName) : Str::slug($stepName);
+            },
             'order' => 1,
             'material_type' => 'video',
             'material_id' => Video::factory()->lazy(),

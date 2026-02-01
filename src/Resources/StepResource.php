@@ -22,6 +22,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Forms\Components\MorphToSelectWithCreate;
+use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Resources\StepResource\Pages\CreateStep;
 use Tapp\FilamentLms\Resources\StepResource\Pages\EditStep;
@@ -60,14 +61,37 @@ final class StepResource extends Resource
         return Step::getTenantRelationshipName();
     }
 
+    /**
+     * Generate a slug for a step based on its lesson and name.
+     */
+    private static function generateStepSlug(int|string|null $lessonId, ?string $name): ?string
+    {
+        // Cast lesson ID to int (Filament forms may pass string values)
+        $lessonId = $lessonId ? (int) $lessonId : null;
+
+        if (! $lessonId || $name === null || $name === '') {
+            return null;
+        }
+
+        $lesson = Lesson::find($lessonId);
+
+        return $lesson ? $lesson->slug.'-'.Str::slug($name) : null;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 TextInput::make('name')
                     ->live(onBlur: true)
-                    ->afterStateUpdated(function (Set $set, ?string $state) {
-                        $set('slug', Str::slug($state));
+                    ->afterStateUpdated(function (Set $set, Get $get, ?string $state, $livewire) {
+                        if (isset($livewire->record)) {
+                            return;
+                        }
+                        $slug = self::generateStepSlug($get('lesson_id'), $state);
+                        if ($slug) {
+                            $set('slug', $slug);
+                        }
                     })
                     ->required(),
                 TextInput::make('slug')
@@ -79,10 +103,9 @@ final class StepResource extends Resource
                     ->preload()
                     ->required()
                     ->live()
-                    ->afterStateUpdated(function (Set $set, ?string $state, $livewire) {
-                        // Clear retry_step_id if the lesson changes to a different course
+                    ->afterStateUpdated(function (Set $set, Get $get, $state, $livewire) {
                         if ($state) {
-                            $newLesson = \Tapp\FilamentLms\Models\Lesson::find($state);
+                            $newLesson = Lesson::find($state);
                             $currentRetryStepId = $livewire->data['retry_step_id'] ?? null;
 
                             if ($currentRetryStepId && $newLesson) {
@@ -91,6 +114,13 @@ final class StepResource extends Resource
                                     $set('retry_step_id', null);
                                 }
                             }
+                        }
+                        if (isset($livewire->record)) {
+                            return;
+                        }
+                        $slug = self::generateStepSlug($state, $get('name'));
+                        if ($slug) {
+                            $set('slug', $slug);
                         }
                     }),
                 Checkbox::make('is_optional')

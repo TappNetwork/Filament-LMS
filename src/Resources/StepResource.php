@@ -61,6 +61,20 @@ final class StepResource extends Resource
         return Step::getTenantRelationshipName();
     }
 
+    /**
+     * Generate a slug for a step based on its lesson and name.
+     */
+    private static function generateStepSlug(?int $lessonId, ?string $name): ?string
+    {
+        if (! $lessonId || $name === null || $name === '') {
+            return null;
+        }
+        
+        $lesson = Lesson::find($lessonId);
+        
+        return $lesson ? $lesson->slug.'-'.Str::slug($name) : null;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -71,13 +85,9 @@ final class StepResource extends Resource
                         if (isset($livewire->record)) {
                             return;
                         }
-                        $lessonId = $get('lesson_id');
-                        if (! $lessonId || $state === null || $state === '') {
-                            return;
-                        }
-                        $lesson = Lesson::find($lessonId);
-                        if ($lesson) {
-                            $set('slug', $lesson->slug.'-'.Str::slug($state));
+                        $slug = self::generateStepSlug($get('lesson_id'), $state);
+                        if ($slug) {
+                            $set('slug', $slug);
                         }
                     })
                     ->required(),
@@ -105,13 +115,9 @@ final class StepResource extends Resource
                         if (isset($livewire->record)) {
                             return;
                         }
-                        $name = $get('name');
-                        if (! $state || $name === null || $name === '') {
-                            return;
-                        }
-                        $lesson = Lesson::find($state);
-                        if ($lesson) {
-                            $set('slug', $lesson->slug.'-'.Str::slug($name));
+                        $slug = self::generateStepSlug($state, $get('name'));
+                        if ($slug) {
+                            $set('slug', $slug);
                         }
                     }),
                 Checkbox::make('is_optional')

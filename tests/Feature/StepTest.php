@@ -24,6 +24,17 @@ test('step can be created with required fields', function () {
     expect($step->lesson_id)->toBe($lesson->id);
 });
 
+test('step factory generates composite slug when slug not passed', function () {
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()->create(['course_id' => $course->id, 'slug' => 'intro-lesson']);
+    $step = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'name' => 'Watch the video',
+    ]);
+
+    expect($step->slug)->toBe('intro-lesson-watch-the-video');
+});
+
 test('step belongs to lesson', function () {
     $course = Course::factory()->create();
     $lesson = Lesson::factory()->create(['course_id' => $course->id]);

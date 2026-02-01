@@ -22,6 +22,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Forms\Components\MorphToSelectWithCreate;
+use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Resources\StepResource\Pages\CreateStep;
 use Tapp\FilamentLms\Resources\StepResource\Pages\EditStep;
@@ -66,8 +67,18 @@ final class StepResource extends Resource
             ->components([
                 TextInput::make('name')
                     ->live(onBlur: true)
-                    ->afterStateUpdated(function (Set $set, ?string $state) {
-                        $set('slug', Str::slug($state));
+                    ->afterStateUpdated(function (Set $set, Get $get, ?string $state, $livewire) {
+                        if (isset($livewire->record) && $livewire->record !== null) {
+                            return;
+                        }
+                        $lessonId = $get('lesson_id');
+                        if (! $lessonId || $state === null || $state === '') {
+                            return;
+                        }
+                        $lesson = Lesson::find($lessonId);
+                        if ($lesson) {
+                            $set('slug', $lesson->slug.'-'.Str::slug($state));
+                        }
                     })
                     ->required(),
                 TextInput::make('slug')
@@ -79,10 +90,9 @@ final class StepResource extends Resource
                     ->preload()
                     ->required()
                     ->live()
-                    ->afterStateUpdated(function (Set $set, ?string $state, $livewire) {
-                        // Clear retry_step_id if the lesson changes to a different course
+                    ->afterStateUpdated(function (Set $set, Get $get, $state, $livewire) {
                         if ($state) {
-                            $newLesson = \Tapp\FilamentLms\Models\Lesson::find($state);
+                            $newLesson = Lesson::find($state);
                             $currentRetryStepId = $livewire->data['retry_step_id'] ?? null;
 
                             if ($currentRetryStepId && $newLesson) {
@@ -91,6 +101,17 @@ final class StepResource extends Resource
                                     $set('retry_step_id', null);
                                 }
                             }
+                        }
+                        if (isset($livewire->record) && $livewire->record !== null) {
+                            return;
+                        }
+                        $name = $get('name');
+                        if (! $state || $name === null || $name === '') {
+                            return;
+                        }
+                        $lesson = Lesson::find($state);
+                        if ($lesson) {
+                            $set('slug', $lesson->slug.'-'.Str::slug($name));
                         }
                     }),
                 Checkbox::make('is_optional')

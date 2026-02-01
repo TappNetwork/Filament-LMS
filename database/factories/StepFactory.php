@@ -30,12 +30,10 @@ class StepFactory extends Factory
             'slug' => function (array $attributes) {
                 $lessonId = $attributes['lesson_id'] ?? null;
                 $stepName = $attributes['name'] ?? $this->faker->unique()->word();
-                if (! $lessonId || ! is_numeric($lessonId)) {
-                    return Str::slug($stepName);
-                }
-                $lesson = Lesson::find($lessonId);
 
-                return $lesson ? $lesson->slug.'-'.Str::slug($stepName) : Str::slug($stepName);
+                $slug = Step::generateSlug($lessonId, $stepName);
+
+                return $slug ?? Str::slug($stepName);
             },
             'order' => 1,
             'material_type' => 'video',

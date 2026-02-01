@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
@@ -60,6 +61,23 @@ class Step extends Model implements Sortable
     protected static function newFactory()
     {
         return StepFactory::new();
+    }
+
+    /**
+     * Generate a slug for a step based on its lesson and name.
+     */
+    public static function generateSlug(int|string|null $lessonId, ?string $name): ?string
+    {
+        // Cast lesson ID to int
+        $lessonId = $lessonId ? (int) $lessonId : null;
+
+        if (! $lessonId || $name === null || $name === '') {
+            return null;
+        }
+
+        $lesson = Lesson::find($lessonId);
+
+        return $lesson ? $lesson->slug.'-'.Str::slug($name) : null;
     }
 
     public function lesson(): BelongsTo

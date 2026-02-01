@@ -61,23 +61,6 @@ final class StepResource extends Resource
         return Step::getTenantRelationshipName();
     }
 
-    /**
-     * Generate a slug for a step based on its lesson and name.
-     */
-    private static function generateStepSlug(int|string|null $lessonId, ?string $name): ?string
-    {
-        // Cast lesson ID to int (Filament forms may pass string values)
-        $lessonId = $lessonId ? (int) $lessonId : null;
-
-        if (! $lessonId || $name === null || $name === '') {
-            return null;
-        }
-
-        $lesson = Lesson::find($lessonId);
-
-        return $lesson ? $lesson->slug.'-'.Str::slug($name) : null;
-    }
-
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -88,7 +71,7 @@ final class StepResource extends Resource
                         if (isset($livewire->record)) {
                             return;
                         }
-                        $slug = self::generateStepSlug($get('lesson_id'), $state);
+                        $slug = Step::generateSlug($get('lesson_id'), $state);
                         if ($slug) {
                             $set('slug', $slug);
                         }
@@ -118,7 +101,7 @@ final class StepResource extends Resource
                         if (isset($livewire->record)) {
                             return;
                         }
-                        $slug = self::generateStepSlug($state, $get('name'));
+                        $slug = Step::generateSlug($state, $get('name'));
                         if ($slug) {
                             $set('slug', $slug);
                         }

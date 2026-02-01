@@ -68,7 +68,7 @@ final class StepResource extends Resource
                 TextInput::make('name')
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Set $set, Get $get, ?string $state, $livewire) {
-                        if (isset($livewire->record) && $livewire->record !== null) {
+                        if (isset($livewire->record)) {
                             return;
                         }
                         $lessonId = $get('lesson_id');
@@ -102,7 +102,7 @@ final class StepResource extends Resource
                                 }
                             }
                         }
-                        if (isset($livewire->record) && $livewire->record !== null) {
+                        if (isset($livewire->record)) {
                             return;
                         }
                         $name = $get('name');

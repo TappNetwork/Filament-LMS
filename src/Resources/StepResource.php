@@ -64,8 +64,11 @@ final class StepResource extends Resource
     /**
      * Generate a slug for a step based on its lesson and name.
      */
-    private static function generateStepSlug(?int $lessonId, ?string $name): ?string
+    private static function generateStepSlug(int|string|null $lessonId, ?string $name): ?string
     {
+        // Cast lesson ID to int (Filament forms may pass string values)
+        $lessonId = $lessonId ? (int) $lessonId : null;
+
         if (! $lessonId || $name === null || $name === '') {
             return null;
         }

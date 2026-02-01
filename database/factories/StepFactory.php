@@ -30,7 +30,7 @@ class StepFactory extends Factory
             'slug' => function (array $attributes) {
                 $lessonId = $attributes['lesson_id'] ?? null;
                 $stepName = $attributes['name'] ?? $this->faker->unique()->word();
-                if (! $lessonId) {
+                if (! $lessonId || ! is_numeric($lessonId)) {
                     return Str::slug($stepName);
                 }
                 $lesson = Lesson::find($lessonId);

@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Tapp\FilamentLms\Exports\CourseProgressExport;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\CourseProgressReportRow;
 use Tapp\FilamentLms\Services\CourseProgressQueryService;
 
 class Reporting extends Page implements HasTable
@@ -59,8 +60,11 @@ class Reporting extends Page implements HasTable
 
     public function table(Table $table): Table
     {
+        $rawQuery = CourseProgressQueryService::buildQuery();
+        $query = CourseProgressReportRow::query()->fromSub($rawQuery, 'report');
+
         return $table
-            ->query(CourseProgressQueryService::buildQuery())
+            ->query($query)
             ->columns([
                 TextColumn::make('user_first_name')
                     ->label('First Name')
@@ -136,11 +140,11 @@ class Reporting extends Page implements HasTable
                         return $query
                             ->when(
                                 $data['completed_from'],
-                                fn (Builder $q, $date): Builder => $q->whereDate('lms_course_user.completed_at', '>=', $date),
+                                fn (Builder $q, $date): Builder => $q->whereDate('completed_at', '>=', $date),
                             )
                             ->when(
                                 $data['completed_until'],
-                                fn (Builder $q, $date): Builder => $q->whereDate('lms_course_user.completed_at', '<=', $date),
+                                fn (Builder $q, $date): Builder => $q->whereDate('completed_at', '<=', $date),
                             );
                     })
                     ->indicateUsing(function (array $data): array {
@@ -163,10 +167,10 @@ class Reporting extends Page implements HasTable
                         'In Progress' => 'In Progress',
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        return $query->when($data['value'], function ($q, $status) {
+                        return $query->when($data['value'], function (Builder $q, $status): Builder {
                             return $status === 'Completed'
-                                ? $q->whereNotNull('lms_course_user.completed_at')
-                                : $q->whereNull('lms_course_user.completed_at');
+                                ? $q->whereNotNull('completed_at')
+                                : $q->whereNull('completed_at');
                         });
                     }),
 

@@ -41,6 +41,10 @@ return [
         'email',
     ],
 
+    // User name columns for the course progress report. Use ['first_name', 'last_name'] when the
+    // users table has first_name and last_name, or ['name'] when it has a single name column.
+    'report_user_name_columns' => ['first_name', 'last_name'],
+
     // Media URL configuration
     'media' => [
         // If true, generates signed URLs for private storage (S3, etc.)

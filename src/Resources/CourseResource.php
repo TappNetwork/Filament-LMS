@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Resources;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
@@ -154,8 +156,10 @@ class CourseResource extends Resource
                 //
             ])
             ->recordActions([
-                EditAction::make(),
-            ])
+                ActionGroup::make([
+                    EditAction::make(),
+                ]),
+            ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

@@ -3,6 +3,7 @@
 namespace Tapp\FilamentLms\Resources;
 
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -12,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Test;
@@ -99,24 +101,26 @@ class TestResource extends Resource
                 //
             ])
             ->recordActions([
-                EditAction::make(),
-                Action::make('create_rubric')
-                    ->color('success')
-                    ->action(function (Test $record) {
-                        return redirect(route('filament.admin.pages.create-rubric', ['test' => $record]));
-                    })
-                    ->visible(function (Test $record) {
-                        return ! $record->filament_form_user_id;
-                    }),
-                Action::make('view_rubric')
-                    ->color('success')
-                    ->action(function (Test $record) {
-                        return redirect(route('filament.admin.pages.view-rubric', ['test' => $record]));
-                    })
-                    ->visible(function (Test $record) {
-                        return $record->filament_form_user_id;
-                    }),
-            ])
+                ActionGroup::make([
+                    EditAction::make(),
+                    Action::make('create_rubric')
+                        ->color('success')
+                        ->action(function (Test $record) {
+                            return redirect(route('filament.admin.pages.create-rubric', ['test' => $record]));
+                        })
+                        ->visible(function (Test $record) {
+                            return ! $record->filament_form_user_id;
+                        }),
+                    Action::make('view_rubric')
+                        ->color('success')
+                        ->action(function (Test $record) {
+                            return redirect(route('filament.admin.pages.view-rubric', ['test' => $record]));
+                        })
+                        ->visible(function (Test $record) {
+                            return $record->filament_form_user_id;
+                        }),
+                ]),
+            ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

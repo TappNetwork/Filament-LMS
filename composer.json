@@ -1,5 +1,6 @@
 {
     "name": "tapp/filament-lms",
+    "version": "4.1.9",
     "type": "library",
     "license": "MIT",
     "authors": [

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Resources;
 
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -18,6 +19,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
@@ -217,8 +219,10 @@ final class StepResource extends Resource
             ])
             ->filters([])
             ->recordActions([
-                EditAction::make(),
-            ])
+                ActionGroup::make([
+                    EditAction::make(),
+                ]),
+            ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

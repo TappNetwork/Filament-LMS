@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Resources\CourseResource\RelationManagers;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -13,6 +14,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Resources\LessonResource\Pages\CreateLesson;
@@ -60,10 +62,12 @@ class LessonsRelationManager extends RelationManager
                     ->url(fn () => CreateLesson::getUrl(['course_id' => $this->ownerRecord])),
             ])
             ->recordActions([
-                EditAction::make()
-                    ->url(fn ($record) => EditLesson::getUrl([$record])),
-                DeleteAction::make(),
-            ])
+                ActionGroup::make([
+                    EditAction::make()
+                        ->url(fn ($record) => EditLesson::getUrl([$record])),
+                    DeleteAction::make(),
+                ]),
+            ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

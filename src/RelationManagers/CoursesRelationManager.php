@@ -2,10 +2,12 @@
 
 namespace Tapp\FilamentLms\RelationManagers;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\AttachAction;
 use Filament\Actions\DetachAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 
 class CoursesRelationManager extends RelationManager
@@ -35,7 +37,9 @@ class CoursesRelationManager extends RelationManager
                 AttachAction::make()->label('Add Course')->preloadRecordSelect(),
             ])
             ->recordActions([
-                DetachAction::make()->label('Remove'),
-            ]);
+                ActionGroup::make([
+                    DetachAction::make()->label('Remove'),
+                ]),
+            ], position: RecordActionsPosition::BeforeColumns);
     }
 }

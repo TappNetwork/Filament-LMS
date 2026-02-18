@@ -70,9 +70,10 @@ class CourseResource extends Resource
                         // Always update slug when name changes
                         $set('slug', Str::slug($state));
 
-                        // Only auto-generate external_id on create or if it's empty
+                        // Only auto-generate external_id on create or if it's empty.
+                        // Use slug with underscore so acronyms stay together (e.g. DNS Cloudflare -> dns_cloudflare not d_n_s_cloudflare).
                         if ($operation === 'create' || empty($get('external_id'))) {
-                            $set('external_id', Str::snake($state));
+                            $set('external_id', Str::slug($state ?? '', '_'));
                         }
                     })
                     ->required(),

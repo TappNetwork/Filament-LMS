@@ -25,9 +25,10 @@ class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
 
     public function headings(): array
     {
-        return [
-            'First Name',
-            'Last Name',
+        $singleName = CourseProgressQueryService::reportUsesSingleNameColumn();
+        $nameHeadings = $singleName ? ['Name'] : ['First Name', 'Last Name'];
+
+        return array_merge($nameHeadings, [
             'Email',
             'Course',
             'Status',
@@ -35,14 +36,17 @@ class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
             'Date Started',
             'Date Completed',
             'Completion Date',
-        ];
+        ]);
     }
 
     public function map($record): array
     {
-        return [
-            $record->user_first_name,
-            $record->user_last_name,
+        $singleName = CourseProgressQueryService::reportUsesSingleNameColumn();
+        $nameValues = $singleName
+            ? [$record->user_first_name]
+            : [$record->user_first_name, $record->user_last_name];
+
+        return array_merge($nameValues, [
             $record->user_email,
             $record->course_name,
             $record->status,
@@ -50,6 +54,6 @@ class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
             $record->started_at ? Carbon::parse($record->started_at)->format('Y-m-d') : null,
             $record->completed_at ? Carbon::parse($record->completed_at)->format('Y-m-d') : null,
             $record->completion_date ? Carbon::parse($record->completion_date)->format('Y-m-d') : null,
-        ];
+        ]);
     }
 }

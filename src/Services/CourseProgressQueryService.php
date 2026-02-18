@@ -10,6 +10,17 @@ use Illuminate\Support\Facades\DB;
 class CourseProgressQueryService
 {
     /**
+     * Whether the report uses a single "name" column (true) or separate first_name/last_name (false).
+     * Used by the report table and export to show one "Name" column vs "First Name" + "Last Name".
+     */
+    public static function reportUsesSingleNameColumn(): bool
+    {
+        $nameColumns = Config::get('filament-lms.report_user_name_columns', ['first_name', 'last_name']);
+
+        return $nameColumns === ['name'] || (count($nameColumns) === 1 && $nameColumns[0] === 'name');
+    }
+
+    /**
      * Build query for course progress reporting. Starts from step activity (lms_step_user) so
      * in-progress users appear even when they are not yet in lms_course_user. Completion comes
      * from lms_course_user.completed_at when present.

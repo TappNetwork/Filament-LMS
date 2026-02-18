@@ -62,22 +62,34 @@ class Reporting extends Page implements HasTable
     {
         $rawQuery = CourseProgressQueryService::buildQuery();
         $query = CourseProgressReportRow::query()->fromSub($rawQuery, 'report');
+        $singleName = CourseProgressQueryService::reportUsesSingleNameColumn();
 
-        return $table
-            ->query($query)
-            ->columns([
+        $nameColumns = $singleName
+            ? [
+                TextColumn::make('user_first_name')
+                    ->label('Name')
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return CourseProgressQueryService::sortByFirstName($query, $direction);
+                    }),
+            ]
+            : [
                 TextColumn::make('user_first_name')
                     ->label('First Name')
                     ->sortable(query: function (Builder $query, string $direction): Builder {
                         return CourseProgressQueryService::sortByFirstName($query, $direction);
                     }),
-
                 TextColumn::make('user_last_name')
                     ->label('Last Name')
                     ->sortable(query: function (Builder $query, string $direction): Builder {
                         return CourseProgressQueryService::sortByLastName($query, $direction);
                     }),
+            ];
 
+        return $table
+            ->query($query)
+            ->columns(array_merge(
+                $nameColumns,
+                [
                 TextColumn::make('user_email')
                     ->label('User Email')
                     ->sortable(query: function (Builder $query, string $direction): Builder {
@@ -127,7 +139,7 @@ class Reporting extends Page implements HasTable
                     ->sortable(query: function (Builder $query, string $direction): Builder {
                         return CourseProgressQueryService::sortByCompletedAt($query, $direction);
                     }),
-            ])
+            ]))
             ->filters([
                 Filter::make('date_range')
                     ->schema([

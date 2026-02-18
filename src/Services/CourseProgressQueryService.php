@@ -32,8 +32,7 @@ class CourseProgressQueryService
      */
     public static function buildQuery()
     {
-        $nameColumns = Config::get('filament-lms.report_user_name_columns', ['first_name', 'last_name']);
-        $isSingleName = $nameColumns === ['name'] || (count($nameColumns) === 1 && $nameColumns[0] === 'name');
+        $isSingleName = self::reportUsesSingleNameColumn();
 
         $userNameSelect = $isSingleName
             ? ['users.name as user_first_name', DB::raw("'' as user_last_name")]

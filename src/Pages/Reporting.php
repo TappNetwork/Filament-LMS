@@ -90,56 +90,56 @@ class Reporting extends Page implements HasTable
             ->columns(array_merge(
                 $nameColumns,
                 [
-                TextColumn::make('user_email')
-                    ->label('User Email')
-                    ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return CourseProgressQueryService::sortByEmail($query, $direction);
-                    }),
+                    TextColumn::make('user_email')
+                        ->label('User Email')
+                        ->sortable(query: function (Builder $query, string $direction): Builder {
+                            return CourseProgressQueryService::sortByEmail($query, $direction);
+                        }),
 
-                TextColumn::make('course_name')
-                    ->label('Course')
-                    ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return CourseProgressQueryService::sortByCourseName($query, $direction);
-                    }),
+                    TextColumn::make('course_name')
+                        ->label('Course')
+                        ->sortable(query: function (Builder $query, string $direction): Builder {
+                            return CourseProgressQueryService::sortByCourseName($query, $direction);
+                        }),
 
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(function (string $state): string {
-                        if ($state === 'Completed') {
-                            return 'success';
-                        }
-                        if ($state === 'In Progress') {
-                            return 'warning';
-                        }
+                    TextColumn::make('status')
+                        ->label('Status')
+                        ->badge()
+                        ->color(function (string $state): string {
+                            if ($state === 'Completed') {
+                                return 'success';
+                            }
+                            if ($state === 'In Progress') {
+                                return 'warning';
+                            }
 
-                        return 'gray';
-                    })
-                    ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return CourseProgressQueryService::sortByStatus($query, $direction);
-                    }),
+                            return 'gray';
+                        })
+                        ->sortable(query: function (Builder $query, string $direction): Builder {
+                            return CourseProgressQueryService::sortByStatus($query, $direction);
+                        }),
 
-                TextColumn::make('steps_completed')
-                    ->label('Progress')
-                    ->formatStateUsing(fn ($record) => "{$record['steps_completed']} / {$record['total_steps']}")
-                    ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return CourseProgressQueryService::sortByStepsCompleted($query, $direction);
-                    }),
+                    TextColumn::make('steps_completed')
+                        ->label('Progress')
+                        ->formatStateUsing(fn ($record) => "{$record['steps_completed']} / {$record['total_steps']}")
+                        ->sortable(query: function (Builder $query, string $direction): Builder {
+                            return CourseProgressQueryService::sortByStepsCompleted($query, $direction);
+                        }),
 
-                TextColumn::make('started_at')
-                    ->label('Date Started')
-                    ->date()
-                    ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return CourseProgressQueryService::sortByStartedAt($query, $direction);
-                    }),
+                    TextColumn::make('started_at')
+                        ->label('Date Started')
+                        ->date()
+                        ->sortable(query: function (Builder $query, string $direction): Builder {
+                            return CourseProgressQueryService::sortByStartedAt($query, $direction);
+                        }),
 
-                TextColumn::make('completed_at')
-                    ->label('Date Completed')
-                    ->date()
-                    ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return CourseProgressQueryService::sortByCompletedAt($query, $direction);
-                    }),
-            ]))
+                    TextColumn::make('completed_at')
+                        ->label('Date Completed')
+                        ->date()
+                        ->sortable(query: function (Builder $query, string $direction): Builder {
+                            return CourseProgressQueryService::sortByCompletedAt($query, $direction);
+                        }),
+                ]))
             ->filters([
                 Filter::make('date_range')
                     ->schema([

@@ -17,7 +17,7 @@ class CourseFactory extends Factory
     {
         $name = $this->faker->unique()->word();
         $slug = Str::slug($name);
-        $externalId = Str::snake($name);
+        $externalId = Str::slug($name, '_');
 
         return [
             'name' => $name,

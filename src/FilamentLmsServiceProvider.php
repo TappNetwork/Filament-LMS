@@ -10,6 +10,7 @@ use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Tapp\FilamentLms\Console\Commands\BackfillCourseCompletedAt;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\ImageStep;
@@ -48,7 +49,9 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'add_required_test_percentage_to_lms_courses_table',
                 'add_completed_at_to_lms_course_user_table',
                 'make_material_nullable_in_lms_steps_table',
+                'backfill_lms_course_user_completed_at_from_step_dates',
             ])
+            ->hasCommand(BackfillCourseCompletedAt::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishMigrations()

@@ -178,7 +178,9 @@ final class Course extends Model implements HasMedia
 
     public function steps(): HasManyThrough
     {
-        return $this->hasManyThrough(Step::class, Lesson::class)->orderBy('lms_steps.order');
+        return $this->hasManyThrough(Step::class, Lesson::class)
+            ->select('lms_steps.*')
+            ->orderBy('lms_steps.order');
     }
 
     public function startedByUserAt($userId): ?string

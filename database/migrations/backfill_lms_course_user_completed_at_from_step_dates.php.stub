@@ -1,0 +1,25 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Artisan;
+
+return new class extends Migration
+{
+    /**
+     * Backfill lms_course_user.completed_at for users who had already completed all
+     * steps (and meet required_test_percentage when set) before the column existed.
+     * Sets completed_at to the most recent step completed_at for that user (not now()).
+     */
+    public function up(): void
+    {
+        Artisan::call('filament-lms:backfill-course-completed-at');
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Cannot reliably identify rows that were only set by this backfill.
+    }
+};

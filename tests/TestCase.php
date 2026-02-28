@@ -8,6 +8,7 @@ use Filament\FilamentServiceProvider;
 use Filament\Support\SupportServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
 use Livewire\LivewireServiceProvider;
+use Maatwebsite\Excel\ExcelServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
 use Tapp\FilamentFormBuilder\FilamentFormBuilderServiceProvider;
@@ -113,7 +114,7 @@ abstract class TestCase extends Orchestra
             $table->softDeletes();
         });
 
-        // Create lms_steps table
+        // Create lms_steps table (material nullable to match make_material_nullable migration)
         $app['db']->connection()->getSchemaBuilder()->create('lms_steps', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lesson_id')->references('id')->on('lms_lessons')->onDelete('cascade');
@@ -121,7 +122,8 @@ abstract class TestCase extends Orchestra
             $table->boolean('is_optional')->default(false);
             $table->string('name');
             $table->string('slug');
-            $table->morphs('material');
+            $table->unsignedBigInteger('material_id')->nullable();
+            $table->string('material_type')->nullable();
             $table->text('text')->nullable();
             $table->foreignId('retry_step_id')->nullable()->constrained('lms_steps')->onDelete('set null');
             $table->boolean('require_perfect_score')->default(false);
@@ -256,6 +258,7 @@ abstract class TestCase extends Orchestra
         $providers = [
             LivewireServiceProvider::class,
             FilamentServiceProvider::class,
+            ExcelServiceProvider::class,
             SupportServiceProvider::class,
             MediaLibraryServiceProvider::class,
             FilamentLmsServiceProvider::class,

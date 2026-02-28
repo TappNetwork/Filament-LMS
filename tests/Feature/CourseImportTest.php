@@ -7,10 +7,7 @@ namespace Tapp\FilamentLms\Tests\Feature;
 use Maatwebsite\Excel\Facades\Excel;
 use Tapp\FilamentLms\Imports\CourseStepsImport;
 use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Models\Lesson;
-use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
-use Tapp\FilamentLms\Tests\TestCase;
 
 beforeEach(function () {
     config(['filament-lms.user_model' => \Tapp\FilamentLms\Tests\TestUser::class]);

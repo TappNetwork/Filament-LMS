@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Imports;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -62,6 +63,13 @@ class CourseStepsImport implements ToCollection, WithHeadingRow
             throw new \InvalidArgumentException('Unrecognized CSV format. Expected at least "Step Name" or "Lesson Name" column.');
         }
 
+        DB::transaction(function () use ($rows, $hasStepNameColumn, $hasScriptColumn): void {
+            $this->importRows($rows, $hasStepNameColumn, $hasScriptColumn);
+        });
+    }
+
+    protected function importRows(Collection $rows, bool $hasStepNameColumn, bool $hasScriptColumn): void
+    {
         $course = Course::create([
             'name' => $this->courseName,
             'slug' => Str::slug($this->courseName),

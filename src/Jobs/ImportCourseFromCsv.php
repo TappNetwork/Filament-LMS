@@ -28,10 +28,8 @@ class ImportCourseFromCsv implements ShouldQueue
             return;
         }
 
-        try {
-            Excel::import(new CourseStepsImport($this->courseName), $this->filePath);
-        } finally {
-            File::delete($this->filePath);
-        }
+        Excel::import(new CourseStepsImport($this->courseName), $this->filePath);
+
+        File::delete($this->filePath);
     }
 }

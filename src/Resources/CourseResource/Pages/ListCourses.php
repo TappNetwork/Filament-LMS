@@ -24,7 +24,7 @@ class ListCourses extends ListRecords
             Action::make('import_course')
                 ->label('Import Course')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->form([
+                ->schema([
                     FileUpload::make('file')
                         ->label('CSV file')
                         ->required()

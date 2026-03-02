@@ -90,7 +90,8 @@ class CourseStepsImport implements ToCollection, WithHeadingRow
 
             if ($hasStepNameColumn) {
                 $lessonName = $this->value($row, 'lesson_name');
-                $lessonName = $lessonName !== null ? trim((string) $lessonName) : $this->courseName;
+                $lessonNameTrimmed = $lessonName !== null ? trim((string) $lessonName) : '';
+                $lessonName = $lessonNameTrimmed !== '' ? $lessonNameTrimmed : $this->courseName;
                 if (! isset($lessons[$lessonName])) {
                     $lessonOrder++;
                     $lessons[$lessonName] = Lesson::create([

@@ -7,7 +7,10 @@ namespace Tapp\FilamentLms\Tests\Feature;
 use Maatwebsite\Excel\Facades\Excel;
 use Tapp\FilamentLms\Imports\CourseStepsImport;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\Lesson;
+use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Tests\TestCase;
 
 beforeEach(function () {
     config(['filament-lms.user_model' => \Tapp\FilamentLms\Tests\TestUser::class]);
@@ -35,6 +38,20 @@ test('course steps import format a creates course lessons steps and videos', fun
     $firstStep = $steps->first();
     expect($firstStep->material_type)->toBe('video');
     expect($firstStep->material_id)->toBe($videos->first()->id);
+});
+
+test('course steps import format a falls back to course name when lesson name is empty', function () {
+    $path = __DIR__.'/../fixtures/course-import-format-a-empty-lesson-name.csv';
+
+    Excel::import(new CourseStepsImport('My Course'), $path);
+
+    $course = Course::where('name', 'My Course')->first();
+    expect($course)->not->toBeNull();
+
+    $lessons = $course->lessons()->orderBy('order')->get();
+    expect($lessons)->toHaveCount(1);
+    expect($lessons->first()->name)->toBe('My Course');
+    expect($lessons->first()->slug)->toBe('my-course');
 });
 
 test('course steps import format b creates course with steps and text', function () {

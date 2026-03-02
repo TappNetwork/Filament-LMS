@@ -31,7 +31,7 @@ class Video extends Model
     {
         $url = $this->url ?? '';
 
-        if (str_contains($url, 'youtube.com') || str_contains($url, 'youtu.be')) {
+        if (str_contains($url, 'youtube.com') || str_contains($url, 'youtube-nocookie.com') || str_contains($url, 'youtu.be')) {
             return 'youtube';
         }
 

@@ -9,6 +9,7 @@ use Tapp\FilamentLms\Pages\CreateRubric;
 use Tapp\FilamentLms\Pages\Reporting;
 use Tapp\FilamentLms\Pages\ViewRubric;
 use Tapp\FilamentLms\Resources\CourseResource;
+use Tapp\FilamentLms\Resources\CreditCategoryResource;
 use Tapp\FilamentLms\Resources\DocumentResource;
 use Tapp\FilamentLms\Resources\ImageResource;
 use Tapp\FilamentLms\Resources\LessonResource;
@@ -28,6 +29,7 @@ class Lms implements Plugin
     {
         $panel->resources([
             CourseResource::class,
+            CreditCategoryResource::class,
             LessonResource::class,
             StepResource::class,
             VideoResource::class,

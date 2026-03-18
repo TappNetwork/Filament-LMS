@@ -12,7 +12,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
@@ -296,11 +298,24 @@ final class Course extends Model implements HasMedia
         return CourseCompleted::getUrl([$this->slug]);
     }
 
-    public function getImageUrlAttribute()
+    public function getImageUrlAttribute(): ?string
     {
-        $mediaUrl = $this->getMediaUrl('courses');
+        return $this->getMediaUrl('courses');
+    }
 
-        return $mediaUrl ?: 'https://picsum.photos/200';
+    /**
+     * True only when the course has course media and the file exists on disk.
+     * Use this to decide whether to show the image or the placeholder (e.g. broken/missing files).
+     */
+    public function hasValidCourseImage(): bool
+    {
+        $media = $this->getFirstMedia('courses');
+
+        if (! $media) {
+            return false;
+        }
+
+        return Storage::disk($media->disk)->exists($media->getPathRelativeToRoot());
     }
 
     // Add the users() relationship for the pivot table
@@ -311,6 +326,34 @@ final class Course extends Model implements HasMedia
         return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')
             ->withPivot('completed_at')
             ->withTimestamps();
+    }
+
+    public function courseCreditCategories(): HasMany
+    {
+        return $this->hasMany(CourseCreditCategory::class);
+    }
+
+    /**
+     * Total credits across all categories for this course.
+     */
+    public function getTotalCreditsAttribute(): float
+    {
+        return (float) $this->courseCreditCategories->sum('credits');
+    }
+
+    /**
+     * Credits grouped by category: Collection of ['category' => CreditCategory, 'credits' => float].
+     *
+     * @return BaseCollection<int, array{category: CreditCategory, credits: float}>
+     */
+    public function getCreditsByCategoryAttribute(): BaseCollection
+    {
+        return $this->courseCreditCategories
+            ->load('creditCategory')
+            ->map(fn (CourseCreditCategory $ccc) => [
+                'category' => $ccc->creditCategory,
+                'credits' => (float) $ccc->credits,
+            ]);
     }
 
     /**

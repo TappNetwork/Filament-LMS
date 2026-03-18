@@ -53,6 +53,10 @@ return [
         'signed_url_expiration' => 60,
     ],
 
+    // Credits configuration
+    'credits_enabled' => false,
+    'credits_label' => 'Credits',
+
     // Multi-Tenancy configuration
     'tenancy' => [
         // Enable tenancy support

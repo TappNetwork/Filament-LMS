@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,8 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $course_id
  * @property int $credit_category_id
  * @property float $credits
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read Course $course
  * @property-read CreditCategory $creditCategory
  */

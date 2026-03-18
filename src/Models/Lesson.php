@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,8 +19,8 @@ use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
  * @property int $order
  * @property string $name
  * @property string $slug
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read Course $course
  * @property-read Collection<int, Step> $steps
  */

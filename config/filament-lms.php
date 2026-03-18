@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
     'theme' => 'default',
     'font' => 'Poppins',
@@ -32,7 +34,7 @@ return [
 
     // User model class for course assignments
     // @phpstan-ignore-next-line - User model is defined in consuming application
-    'user_model' => \App\Models\User::class,
+    'user_model' => User::class,
 
     // User search columns for relation managers
     'user_search_columns' => [

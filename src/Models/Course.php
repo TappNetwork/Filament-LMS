@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Models;
 
+use Carbon\Carbon;
 use DateTimeInterface;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -37,8 +39,8 @@ use Tapp\FilamentLms\Traits\HasMediaUrl;
  * @property string|null $description
  * @property int|null $required_test_percentage
  * @property bool $is_private
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
  * @property-read \Illuminate\Database\Eloquent\Collection|Step[] $steps
  */
@@ -449,9 +451,9 @@ final class Course extends Model implements HasMedia
     /**
      * Get all test steps for this course in lesson/step order.
      *
-     * @return \Illuminate\Support\Collection<int, Step>
+     * @return Collection<int, Step>
      */
-    public function getOrderedTestSteps(): \Illuminate\Support\Collection
+    public function getOrderedTestSteps(): Collection
     {
         return $this->lessons()
             ->with(['steps' => fn ($q) => $q->where('material_type', 'test')->orderBy('order')])

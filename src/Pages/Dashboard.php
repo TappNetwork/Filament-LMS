@@ -5,6 +5,7 @@ namespace Tapp\FilamentLms\Pages;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\CreditCategory;
@@ -55,7 +56,7 @@ class Dashboard extends \Filament\Pages\Dashboard
         ]);
     }
 
-    public function getFilteredCoursesProperty(): \Illuminate\Support\Collection
+    public function getFilteredCoursesProperty(): Collection
     {
         $courses = $this->courses ?? collect();
 

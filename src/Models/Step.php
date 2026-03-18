@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,9 +29,9 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
  * @property string $type
  * @property int|null $material_id
  * @property string|null $material_type
- * @property \Carbon\Carbon|null $completed_at
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
+ * @property Carbon|null $completed_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property int|null $retry_step_id
  * @property bool $require_perfect_score
  * @property-read Lesson $lesson

@@ -1,15 +1,14 @@
 @php
     $creditsEnabled = config('filament-lms.credits_enabled');
-    $creditCategories = $course->courseCreditCategories ?? collect();
-    $hasImage = $course->hasValidCourseImage();
+    $creditCategories = $creditsEnabled ? $course->courseCreditCategories : collect();
     $isCompleted = $course->completed_at !== null;
     $isInProgress = ! $isCompleted && $course->completion_percentage > 0;
-    $moduleCount = $course->lessons()->count();
+    $moduleCount = (int) ($course->lessons_count ?? $course->lessons()->count());
 @endphp
 <div class="flex overflow-hidden relative flex-col bg-white rounded-lg border border-gray-200 group">
   {{-- Image section: fixed height, image or grey + icon --}}
   <div class="relative h-28 shrink-0 overflow-hidden bg-gray-200">
-    @if ($hasImage && $course->image_url)
+    @if (filled($course->image_url))
       <img src="{{ $course->image_url }}" alt="" class="object-cover w-full h-full group-hover:opacity-90" />
     @else
       <div class="flex items-center justify-center w-full h-full bg-gray-300" aria-hidden="true">

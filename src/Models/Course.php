@@ -10,11 +10,12 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
@@ -200,15 +201,21 @@ final class Course extends Model implements HasMedia
      */
     public function completedByUserAt($userId): ?string
     {
-        $pivot = $this->users()->where('user_id', $userId)->first()?->pivot;
+        if (
+            Auth::check()
+            && $this->relationLoaded('authEnrollment')
+            && (int) $userId === (int) Auth::id()
+        ) {
+            $first = $this->authEnrollment->first();
+            $pivot = $first ? $first->getRelationValue('pivot') : null;
 
-        if (! $pivot || $pivot->completed_at === null) {
-            return null;
+            return $this->formatPivotCompletedAt($pivot instanceof Pivot ? $pivot : null);
         }
 
-        $at = $pivot->completed_at;
+        $attached = $this->users()->where('user_id', $userId)->first();
+        $pivot = $attached ? $attached->getRelationValue('pivot') : null;
 
-        return $at instanceof DateTimeInterface ? $at->format('Y-m-d H:i:s') : (string) $at;
+        return $this->formatPivotCompletedAt($pivot instanceof Pivot ? $pivot : null);
     }
 
     /**
@@ -218,7 +225,8 @@ final class Course extends Model implements HasMedia
      */
     public function maybeSetCompletedAtForUser(int $userId): void
     {
-        $existing = $this->users()->where('user_id', $userId)->first()?->pivot?->completed_at;
+        $pivot = $this->users()->where('user_id', $userId)->first()?->getRelationValue('pivot');
+        $existing = $pivot instanceof Pivot ? $pivot->getAttribute('completed_at') : null;
         if ($existing !== null) {
             return;
         }
@@ -240,7 +248,7 @@ final class Course extends Model implements HasMedia
         $this->users()->syncWithoutDetaching([$userId => ['completed_at' => now()]]);
     }
 
-    public function getCompletedAtAttribute()
+    public function getCompletedAtAttribute(): ?string
     {
         if (! Auth::check()) {
             return null;
@@ -300,14 +308,25 @@ final class Course extends Model implements HasMedia
         return CourseCompleted::getUrl([$this->slug]);
     }
 
-    public function getImageUrlAttribute(): ?string
+    public function getImageUrlAttribute(): string
     {
-        return $this->getMediaUrl('courses');
+        $mediaUrl = $this->getMediaUrl('courses');
+
+        if (filled($mediaUrl)) {
+            return $mediaUrl;
+        }
+
+        return (string) config(
+            'filament-lms.media.course_image_placeholder_url',
+            'https://picsum.photos/200'
+        );
     }
 
     /**
-     * True only when the course has course media and the file exists on disk.
-     * Use this to decide whether to show the image or the placeholder (e.g. broken/missing files).
+     * True when the course has course media and the file exists on disk.
+     *
+     * Performs a storage exists() check — avoid in list views (e.g. dashboards). For a display URL that
+     * is never null, use {@see getImageUrlAttribute}; for raw media only, use {@see getMediaUrl}.
      */
     public function hasValidCourseImage(): bool
     {
@@ -321,13 +340,42 @@ final class Course extends Model implements HasMedia
     }
 
     // Add the users() relationship for the pivot table
-    public function users()
+    public function users(): BelongsToMany
     {
         $userModel = config('filament-lms.user_model');
 
         return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')
             ->withPivot('completed_at')
             ->withTimestamps();
+    }
+
+    /**
+     * The authenticated user's row on lms_course_user (0 or 1). Eager-load on course lists (e.g. dashboard)
+     * so {@see getCompletedAtAttribute} does not run a pivot query per course.
+     */
+    public function authEnrollment(): BelongsToMany
+    {
+        $userModel = config('filament-lms.user_model');
+
+        return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')
+            ->withPivot('completed_at')
+            ->withTimestamps()
+            ->where('lms_course_user.user_id', Auth::id());
+    }
+
+    private function formatPivotCompletedAt(?Pivot $pivot): ?string
+    {
+        if ($pivot === null) {
+            return null;
+        }
+
+        $at = $pivot->getAttribute('completed_at');
+
+        if ($at === null) {
+            return null;
+        }
+
+        return $at instanceof DateTimeInterface ? $at->format('Y-m-d H:i:s') : (string) $at;
     }
 
     public function courseCreditCategories(): HasMany
@@ -346,9 +394,9 @@ final class Course extends Model implements HasMedia
     /**
      * Credits grouped by category: Collection of ['category' => CreditCategory, 'credits' => float].
      *
-     * @return BaseCollection<int, array{category: CreditCategory, credits: float}>
+     * @return Collection<int, array{category: CreditCategory, credits: float}>
      */
-    public function getCreditsByCategoryAttribute(): BaseCollection
+    public function getCreditsByCategoryAttribute(): Collection
     {
         return $this->courseCreditCategories
             ->load('creditCategory')

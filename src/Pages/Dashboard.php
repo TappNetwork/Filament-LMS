@@ -28,14 +28,21 @@ class Dashboard extends \Filament\Pages\Dashboard
     {
         $user = Auth::user();
 
-        $eagerLoad = config('filament-lms.credits_enabled')
+        $creditEager = config('filament-lms.credits_enabled')
             ? ['courseCreditCategories.creditCategory']
             : [];
 
         if ($user) {
-            $courses = Course::accessibleTo($user)->with($eagerLoad)->get();
+            $courses = Course::accessibleTo($user)
+                ->with(array_merge($creditEager, ['authEnrollment']))
+                ->withCount('lessons')
+                ->get();
         } else {
-            $courses = Course::where('is_private', false)->whereHas('steps')->with($eagerLoad)->get();
+            $courses = Course::where('is_private', false)
+                ->whereHas('steps')
+                ->with($creditEager)
+                ->withCount('lessons')
+                ->get();
         }
 
         $this->courses = $courses;

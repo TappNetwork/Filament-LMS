@@ -308,18 +308,9 @@ final class Course extends Model implements HasMedia
         return CourseCompleted::getUrl([$this->slug]);
     }
 
-    public function getImageUrlAttribute(): string
+    public function getImageUrlAttribute(): ?string
     {
-        $mediaUrl = $this->getMediaUrl('courses');
-
-        if (filled($mediaUrl)) {
-            return $mediaUrl;
-        }
-
-        return (string) config(
-            'filament-lms.media.course_image_placeholder_url',
-            'https://picsum.photos/200'
-        );
+        return $this->getMediaUrl('courses');
     }
 
     /**

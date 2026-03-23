@@ -53,9 +53,6 @@ return [
         'use_signed_urls' => false,
         // Default expiration time for signed URLs in minutes (default: 60 minutes)
         'signed_url_expiration' => 60,
-        // Used when a course has no course image media (or URL resolution fails).
-        // Keeps $course->image_url a non-empty string for templates and APIs.
-        'course_image_placeholder_url' => 'https://picsum.photos/200',
     ],
 
     // Credits configuration

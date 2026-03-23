@@ -12,8 +12,6 @@ To enable signed URLs, update your `config/filament-lms.php` file:
     'use_signed_urls' => true,
     // Expiration time in minutes (default: 60)
     'signed_url_expiration' => 60,
-    // Shown as $course->image_url when the course has no course image (default: picsum)
-    'course_image_placeholder_url' => 'https://picsum.photos/200',
 ],
 ```
 
@@ -26,10 +24,10 @@ Course images will automatically use signed URLs when the configuration is enabl
 ```php
 // This will return a signed URL if use_signed_urls is true
 $course = Course::find(1);
-$imageUrl = $course->image_url; // Always a string: media URL or placeholder; signed when configured
+$imageUrl = $course->image_url; // Returns the media URL (signed when configured), or null if no image
 ```
 
-When there is no media (or URL resolution fails), `image_url` falls back to `course_image_placeholder_url`. For a nullable URL, call `$course->getMediaUrl('courses')` instead.
+When there is no media (or URL resolution fails), `image_url` returns `null`.
 
 ### For Other Media
 

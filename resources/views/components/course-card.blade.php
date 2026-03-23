@@ -2,7 +2,8 @@
     $creditsEnabled = config('filament-lms.credits_enabled');
     $creditCategories = $creditsEnabled ? $course->courseCreditCategories : collect();
     $isCompleted = $course->completed_at !== null;
-    $isInProgress = ! $isCompleted && $course->completion_percentage > 0;
+    $completionPercentage = $course->completion_percentage;
+    $isInProgress = ! $isCompleted && $completionPercentage > 0;
     $moduleCount = (int) ($course->lessons_count ?? $course->lessons()->count());
 @endphp
 <div class="flex overflow-hidden relative flex-col bg-white rounded-lg border border-gray-200 group">
@@ -66,7 +67,7 @@
   <div class="shrink-0 overflow-hidden rounded-b-lg bg-gray-300">
     <div
       class="h-2 rounded-full transition-[width] {{ $progressBarFillClass }}"
-      style="width: {{ min(100, (float) $course->completion_percentage) }}%"
+      style="width: {{ min(100, (float) $completionPercentage) }}%"
     ></div>
   </div>
 </div>

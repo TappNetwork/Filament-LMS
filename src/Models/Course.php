@@ -17,7 +17,6 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
@@ -308,26 +307,9 @@ final class Course extends Model implements HasMedia
         return CourseCompleted::getUrl([$this->slug]);
     }
 
-    public function getImageUrlAttribute(): ?string
+    public function getImageUrlAttribute(): string
     {
-        return $this->getMediaUrl('courses');
-    }
-
-    /**
-     * True when the course has course media and the file exists on disk.
-     *
-     * Performs a storage exists() check — avoid in list views (e.g. dashboards). For a display URL that
-     * is never null, use {@see getImageUrlAttribute}; for raw media only, use {@see getMediaUrl}.
-     */
-    public function hasValidCourseImage(): bool
-    {
-        $media = $this->getFirstMedia('courses');
-
-        if (! $media) {
-            return false;
-        }
-
-        return Storage::disk($media->disk)->exists($media->getPathRelativeToRoot());
+        return $this->getMediaUrl('courses') ?? config('filament-lms.course_image_placeholder_url', 'https://picsum.photos/200');
     }
 
     // Add the users() relationship for the pivot table

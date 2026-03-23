@@ -7,6 +7,7 @@ use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\CreditCategory;
 
@@ -63,6 +64,7 @@ class Dashboard extends \Filament\Pages\Dashboard
         ]);
     }
 
+    #[Computed]
     public function getFilteredCoursesProperty(): Collection
     {
         $courses = $this->courses ?? collect();

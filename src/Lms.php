@@ -27,9 +27,8 @@ class Lms implements Plugin
 
     public function register(Panel $panel): void
     {
-        $panel->resources([
+        $resources = [
             CourseResource::class,
-            CreditCategoryResource::class,
             LessonResource::class,
             StepResource::class,
             VideoResource::class,
@@ -37,7 +36,13 @@ class Lms implements Plugin
             LinkResource::class,
             TestResource::class,
             ImageResource::class,
-        ]);
+        ];
+
+        if (config('filament-lms.credits_enabled', false)) {
+            $resources[] = CreditCategoryResource::class;
+        }
+
+        $panel->resources($resources);
 
         $panel->pages([
             Reporting::class,

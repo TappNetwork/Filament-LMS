@@ -357,29 +357,6 @@ final class Course extends Model implements HasMedia
     }
 
     /**
-     * Total credits across all categories for this course.
-     */
-    public function getTotalCreditsAttribute(): float
-    {
-        return (float) $this->courseCreditCategories->sum('credits');
-    }
-
-    /**
-     * Credits grouped by category: Collection of ['category' => CreditCategory, 'credits' => float].
-     *
-     * @return Collection<int, array{category: CreditCategory, credits: float}>
-     */
-    public function getCreditsByCategoryAttribute(): Collection
-    {
-        return $this->courseCreditCategories
-            ->load('creditCategory')
-            ->map(fn (CourseCreditCategory $ccc) => [
-                'category' => $ccc->creditCategory,
-                'credits' => (float) $ccc->credits,
-            ]);
-    }
-
-    /**
      * Check if all steps are completed by the user (regardless of test percentage requirement).
      * This is useful for determining if a user has finished all steps but may not have met the test percentage requirement.
      */

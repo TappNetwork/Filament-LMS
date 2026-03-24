@@ -65,7 +65,7 @@ class Dashboard extends \Filament\Pages\Dashboard
     }
 
     #[Computed]
-    public function getFilteredCoursesProperty(): Collection
+    public function filteredCourses(): Collection
     {
         $courses = $this->courses ?? collect();
 

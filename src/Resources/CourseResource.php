@@ -140,8 +140,8 @@ class CourseResource extends Resource
                         TextInput::make('credits')
                             ->numeric()
                             ->required()
-                            ->minValue(0.01)
-                            ->step(0.01),
+                            ->minValue(0.5)
+                            ->step(0.5),
                     ])
                     ->columns(2)
                     ->defaultItems(0)

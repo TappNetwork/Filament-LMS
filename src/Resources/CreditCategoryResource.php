@@ -6,11 +6,13 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
@@ -47,6 +49,14 @@ class CreditCategoryResource extends Resource
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
                 Textarea::make('description'),
+                Select::make('color')
+                    ->options(
+                        collect(CreditCategory::COLORS)->mapWithKeys(
+                            fn (string $hex, string $name): array => [$name => ucfirst($name)]
+                        )->toArray()
+                    )
+                    ->default(fn (): string => CreditCategory::nextAvailableColor())
+                    ->required(),
             ]);
     }
 
@@ -59,6 +69,10 @@ class CreditCategoryResource extends Resource
                     ->sortable(),
                 TextColumn::make('slug')
                     ->searchable(),
+                TextColumn::make('color')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                    ->color(fn (CreditCategory $record): array => Color::hex($record->hexColor())),
                 TextColumn::make('course_credit_categories_count')
                     ->counts('courseCreditCategories')
                     ->label('Courses')

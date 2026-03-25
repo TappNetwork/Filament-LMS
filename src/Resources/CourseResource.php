@@ -15,6 +15,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
@@ -136,7 +137,8 @@ class CourseResource extends Resource
                             ->relationship('creditCategory', 'name', modifyQueryUsing: fn ($query) => $query->orderBy('name'))
                             ->required()
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                         TextInput::make('credits')
                             ->numeric()
                             ->required()
@@ -185,6 +187,14 @@ class CourseResource extends Resource
                     })
                     ->placeholder('—')
                     ->badge()
+                    ->color(function (string $state): array {
+                        static $colorMap = null;
+                        $colorMap ??= CreditCategory::query()->pluck('color', 'name')->all();
+                        $categoryName = Str::before($state, ':');
+                        $colorName = $colorMap[$categoryName] ?? 'gray';
+
+                        return Color::all()[$colorName] ?? Color::all()['gray'];
+                    })
                     ->limitList(3)
                     ->expandableLimitedList()
                     ->visible(fn (): bool => config('filament-lms.credits_enabled', false)),

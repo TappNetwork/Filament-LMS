@@ -67,7 +67,7 @@ final class CreditCategory extends Model
 
     public static function nextAvailableColor(): string
     {
-        $usedColors = static::query()->pluck('color')->toArray();
+        $usedColors = self::query()->pluck('color')->toArray();
 
         foreach (array_keys(self::COLORS) as $color) {
             if (! in_array($color, $usedColors)) {

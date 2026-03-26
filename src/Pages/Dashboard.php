@@ -58,7 +58,7 @@ class Dashboard extends \Filament\Pages\Dashboard
         return $schema->components([
             Select::make('credit_category_id')
                 ->label('Credit Category')
-                ->options(fn (): array => CreditCategory::query()->orderBy('name')->pluck('name', 'id')->all())
+                ->options(fn (): array => ['any' => 'Any credit category'] + CreditCategory::query()->orderBy('name')->pluck('name', 'id')->all())
                 ->placeholder('All categories')
                 ->native(false),
         ]);
@@ -72,6 +72,10 @@ class Dashboard extends \Filament\Pages\Dashboard
         $creditCategoryId = $this->filters['credit_category_id'] ?? null;
         if (blank($creditCategoryId)) {
             return $courses;
+        }
+
+        if ($creditCategoryId === 'any') {
+            return $courses->filter(fn (Course $course): bool => $course->courseCreditCategories->isNotEmpty())->values();
         }
 
         return $courses->filter(function (Course $course) use ($creditCategoryId): bool {

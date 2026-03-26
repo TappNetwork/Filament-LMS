@@ -58,13 +58,6 @@ final class CreditCategory extends Model
         return self::COLORS[$this->color] ?? '#6b7280';
     }
 
-    public function badgeStyle(): string
-    {
-        $hex = $this->hexColor();
-
-        return "background-color: {$hex}1a; color: {$hex};";
-    }
-
     public static function nextAvailableColor(): string
     {
         $usedColors = self::query()->pluck('color')->toArray();

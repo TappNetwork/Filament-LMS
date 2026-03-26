@@ -15,8 +15,8 @@
       class="object-cover w-full h-full group-hover:opacity-90"
       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
     />
-    <div style="display:none" class="items-center justify-center w-full h-full bg-gray-300" aria-hidden="true">
-      <x-heroicon-o-academic-cap class="size-12 shrink-0 text-gray-400" />
+    <div style="display:none" class="items-center justify-center w-full h-full bg-gray-100" aria-hidden="true">
+      <x-heroicon-o-academic-cap class="size-12 shrink-0 text-gray-300" />
     </div>
 
     {{-- Credits overlay: top-right, one badge per category --}}
@@ -24,9 +24,9 @@
       <div class="absolute top-2 right-2 flex flex-col items-end gap-1.5">
         @foreach ($creditCategories as $ccc)
           @if ($ccc->creditCategory)
-            <span class="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-medium text-gray-800 shadow-sm">
-              <span>{{ number_format((float) $ccc->credits, 1) }} {{ $ccc->creditCategory->name }}</span>
-            </span>
+            <x-filament-lms::credit-badge :category="$ccc->creditCategory" class="gap-1.5 px-2.5 py-1 shadow-sm">
+              {{ number_format((float) $ccc->credits, 1) }} {{ $ccc->creditCategory->name }}
+            </x-filament-lms::credit-badge>
           @endif
         @endforeach
       </div>

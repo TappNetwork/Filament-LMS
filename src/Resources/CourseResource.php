@@ -188,12 +188,11 @@ class CourseResource extends Resource
                     ->placeholder('—')
                     ->badge()
                     ->color(function (string $state): array {
-                        static $colorMap = null;
-                        $colorMap ??= CreditCategory::query()->pluck('color', 'name')->all();
+                        static $hexMap = null;
+                        $hexMap ??= CreditCategory::all()->mapWithKeys(fn ($cat) => [$cat->name => $cat->hexColor()])->all();
                         $categoryName = Str::before($state, ':');
-                        $colorName = $colorMap[$categoryName] ?? 'gray';
 
-                        return Color::all()[$colorName] ?? Color::all()['gray'];
+                        return Color::hex($hexMap[$categoryName] ?? '#6b7280');
                     })
                     ->limitList(3)
                     ->expandableLimitedList()
@@ -202,10 +201,15 @@ class CourseResource extends Resource
             ->filters([
                 SelectFilter::make('credit_category_id')
                     ->label('Credit Category')
-                    ->options(fn (): array => CreditCategory::query()->orderBy('name')->pluck('name', 'id')->all())
+                    ->options(fn (): array => ['any' => 'Any credit category'] + CreditCategory::query()->orderBy('name')->pluck('name', 'id')->all())
                     ->query(function (Builder $query, array $data): void {
                         $value = $data['value'] ?? null;
                         if (blank($value)) {
+                            return;
+                        }
+                        if ($value === 'any') {
+                            $query->whereHas('courseCreditCategories');
+
                             return;
                         }
                         $query->whereHas('courseCreditCategories', fn (Builder $q): Builder => $q->where('credit_category_id', $value));

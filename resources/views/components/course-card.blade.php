@@ -8,16 +8,21 @@
 @endphp
 <div class="flex overflow-hidden relative flex-col bg-white rounded-lg border border-gray-200 group">
   {{-- Image section: fixed height, image or grey + icon --}}
-  <div class="relative h-28 shrink-0 overflow-hidden bg-gray-200">
-    <img
-      src="{{ $course->image_url }}"
-      alt=""
-      class="object-cover w-full h-full group-hover:opacity-90"
-      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-    />
-    <div style="display:none" class="items-center justify-center w-full h-full bg-gray-100" aria-hidden="true">
+  <div class="relative h-28 shrink-0 overflow-hidden bg-gray-100">
+    {{-- Fallback icon: always rendered as base layer --}}
+    <div class="flex items-center justify-center w-full h-full" aria-hidden="true">
       <x-heroicon-o-academic-cap class="size-12 shrink-0 text-gray-300" />
     </div>
+
+    {{-- Image: layered on top, covers icon when loaded successfully --}}
+    @if ($course->image_url)
+      <img
+        src="{{ $course->image_url }}"
+        alt=""
+        class="absolute inset-0 object-cover w-full h-full group-hover:opacity-90"
+        onerror="this.style.visibility='hidden';"
+      />
+    @endif
 
     {{-- Credits overlay: top-right, one badge per category --}}
     @if ($creditsEnabled && $creditCategories->isNotEmpty())

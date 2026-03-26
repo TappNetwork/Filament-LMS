@@ -24,8 +24,10 @@ Course images will automatically use signed URLs when the configuration is enabl
 ```php
 // This will return a signed URL if use_signed_urls is true
 $course = Course::find(1);
-$imageUrl = $course->image_url; // Automatically signed if configured
+$imageUrl = $course->image_url; // Returns the media URL (signed when configured), or null if no image
 ```
+
+When there is no media (or URL resolution fails), `image_url` returns `null`.
 
 ### For Other Media
 

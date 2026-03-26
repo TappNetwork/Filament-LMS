@@ -167,7 +167,7 @@ final class StepResource extends Resource
                             $lessonId = $get('lesson_id');
                             if ($lessonId) {
                                 $query->whereHas('lesson', function ($q) use ($lessonId) {
-                                    $lesson = \Tapp\FilamentLms\Models\Lesson::find($lessonId);
+                                    $lesson = Lesson::find($lessonId);
                                     if ($lesson) {
                                         $q->where('course_id', $lesson->course_id);
                                     }

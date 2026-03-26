@@ -5,6 +5,9 @@ namespace Tapp\FilamentLms\Actions;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
+use Tapp\FilamentLms\Models\Course;
 
 class AssignCoursesBulkAction extends BulkAction
 {
@@ -23,14 +26,14 @@ class AssignCoursesBulkAction extends BulkAction
                 Select::make('courses')
                     ->label('Courses to Assign')
                     ->multiple()
-                    ->options(\Tapp\FilamentLms\Models\Course::all()->pluck('name', 'id'))
+                    ->options(Course::all()->pluck('name', 'id'))
                     ->searchable()
                     ->preload()
                     ->required(),
             ])
             ->action(function (Collection $records, array $data) {
                 foreach ($records as $record) {
-                    /** @var \Illuminate\Database\Eloquent\Model&\Tapp\FilamentLms\Contracts\FilamentLmsUserInterface $record */
+                    /** @var Model&FilamentLmsUserInterface $record */
                     if (method_exists($record, 'courses')) {
                         // @phpstan-ignore-next-line - courses() method is provided by FilamentLmsUser trait
                         $record->courses()->syncWithoutDetaching($data['courses']);

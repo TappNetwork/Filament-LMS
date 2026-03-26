@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Models;
 
+use Carbon\Carbon;
 use DateTimeInterface;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -35,8 +39,8 @@ use Tapp\FilamentLms\Traits\HasMediaUrl;
  * @property string|null $description
  * @property int|null $required_test_percentage
  * @property bool $is_private
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
  * @property-read \Illuminate\Database\Eloquent\Collection|Step[] $steps
  */
@@ -196,15 +200,21 @@ final class Course extends Model implements HasMedia
      */
     public function completedByUserAt($userId): ?string
     {
-        $pivot = $this->users()->where('user_id', $userId)->first()?->pivot;
+        if (
+            Auth::check()
+            && $this->relationLoaded('authEnrollment')
+            && (int) $userId === (int) Auth::id()
+        ) {
+            $first = $this->authEnrollment->first();
+            $pivot = $first ? $first->getRelationValue('pivot') : null;
 
-        if (! $pivot || $pivot->completed_at === null) {
-            return null;
+            return $this->formatPivotCompletedAt($pivot instanceof Pivot ? $pivot : null);
         }
 
-        $at = $pivot->completed_at;
+        $attached = $this->users()->where('user_id', $userId)->first();
+        $pivot = $attached ? $attached->getRelationValue('pivot') : null;
 
-        return $at instanceof DateTimeInterface ? $at->format('Y-m-d H:i:s') : (string) $at;
+        return $this->formatPivotCompletedAt($pivot instanceof Pivot ? $pivot : null);
     }
 
     /**
@@ -214,7 +224,8 @@ final class Course extends Model implements HasMedia
      */
     public function maybeSetCompletedAtForUser(int $userId): void
     {
-        $existing = $this->users()->where('user_id', $userId)->first()?->pivot?->completed_at;
+        $pivot = $this->users()->where('user_id', $userId)->first()?->getRelationValue('pivot');
+        $existing = $pivot instanceof Pivot ? $pivot->getAttribute('completed_at') : null;
         if ($existing !== null) {
             return;
         }
@@ -236,7 +247,7 @@ final class Course extends Model implements HasMedia
         $this->users()->syncWithoutDetaching([$userId => ['completed_at' => now()]]);
     }
 
-    public function getCompletedAtAttribute()
+    public function getCompletedAtAttribute(): ?string
     {
         if (! Auth::check()) {
             return null;
@@ -276,13 +287,26 @@ final class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId): float
     {
-        $steps = $this->steps()->get();
+        // Use eager-loaded steps when available to avoid N+1 queries on dashboard
+        $steps = $this->relationLoaded('steps') ? $this->steps : $this->steps()->get();
 
         if ($steps->isEmpty()) {
             return 0;
         }
 
-        // Get all completed steps for this specific user (including optional steps)
+        // When steps have eager-loaded progress (e.g. from dashboard), use it directly
+        // Only safe when $userId matches the authenticated user, since progress is scoped to Auth::id()
+        if (
+            Auth::check()
+            && (int) $userId === (int) Auth::id()
+            && $steps->first()->relationLoaded('progress')
+        ) {
+            $completedCount = $steps->filter(fn (Step $step) => $step->progress?->completed_at !== null)->count();
+
+            return $completedCount / $steps->count() * 100;
+        }
+
+        // Fallback: query for completed steps
         $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
             ->where('user_id', $userId)
             ->whereNotNull('completed_at')
@@ -296,21 +320,53 @@ final class Course extends Model implements HasMedia
         return CourseCompleted::getUrl([$this->slug]);
     }
 
-    public function getImageUrlAttribute()
+    public function getImageUrlAttribute(): ?string
     {
-        $mediaUrl = $this->getMediaUrl('courses');
-
-        return $mediaUrl ?: 'https://picsum.photos/200';
+        return $this->getMediaUrl('courses');
     }
 
     // Add the users() relationship for the pivot table
-    public function users()
+    public function users(): BelongsToMany
     {
         $userModel = config('filament-lms.user_model');
 
         return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')
             ->withPivot('completed_at')
             ->withTimestamps();
+    }
+
+    /**
+     * The authenticated user's row on lms_course_user (0 or 1). Eager-load on course lists (e.g. dashboard)
+     * so {@see getCompletedAtAttribute} does not run a pivot query per course.
+     */
+    public function authEnrollment(): BelongsToMany
+    {
+        $userModel = config('filament-lms.user_model');
+
+        return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')
+            ->withPivot('completed_at')
+            ->withTimestamps()
+            ->where('lms_course_user.user_id', Auth::id());
+    }
+
+    private function formatPivotCompletedAt(?Pivot $pivot): ?string
+    {
+        if ($pivot === null) {
+            return null;
+        }
+
+        $at = $pivot->getAttribute('completed_at');
+
+        if ($at === null) {
+            return null;
+        }
+
+        return $at instanceof DateTimeInterface ? $at->format('Y-m-d H:i:s') : (string) $at;
+    }
+
+    public function courseCreditCategories(): HasMany
+    {
+        return $this->hasMany(CourseCreditCategory::class);
     }
 
     /**
@@ -406,9 +462,9 @@ final class Course extends Model implements HasMedia
     /**
      * Get all test steps for this course in lesson/step order.
      *
-     * @return \Illuminate\Support\Collection<int, Step>
+     * @return Collection<int, Step>
      */
-    public function getOrderedTestSteps(): \Illuminate\Support\Collection
+    public function getOrderedTestSteps(): Collection
     {
         return $this->lessons()
             ->with(['steps' => fn ($q) => $q->where('material_type', 'test')->orderBy('order')])

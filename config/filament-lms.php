@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
     'theme' => 'default',
     'font' => 'Poppins',
@@ -32,7 +34,7 @@ return [
 
     // User model class for course assignments
     // @phpstan-ignore-next-line - User model is defined in consuming application
-    'user_model' => \App\Models\User::class,
+    'user_model' => User::class,
 
     // User search columns for relation managers
     'user_search_columns' => [
@@ -52,6 +54,12 @@ return [
         // Default expiration time for signed URLs in minutes (default: 60 minutes)
         'signed_url_expiration' => 60,
     ],
+
+    // Credits configuration
+    'credits_enabled' => false,
+    'credits_label' => 'Credits',
+    'credits_repeater_label' => 'Credits',
+    'credits_add_action_label' => 'Add credits',
 
     // Multi-Tenancy configuration
     'tenancy' => [

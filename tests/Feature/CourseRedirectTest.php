@@ -3,6 +3,7 @@
 namespace Tapp\FilamentLms\Tests\Feature;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormField;
@@ -391,4 +392,79 @@ test('dashboard filters out courses without steps for authenticated users', func
     // The private course might not be visible if user is not assigned/admin
     // But the public course should be visible
     expect($courseSlugs)->toContain('public-course-with-steps');
+});
+
+test('dashboard mount query eager loads lessons count', function () {
+    config(['filament-lms.credits_enabled' => false]);
+
+    $user = TestUser::create([
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    Auth::login($user);
+
+    $course = Course::factory()->create([
+        'name' => 'Multi Lesson Course',
+        'slug' => 'multi-lesson-course',
+        'is_private' => false,
+    ]);
+
+    $lessonOne = Lesson::factory()->create(['course_id' => $course->id, 'order' => 1]);
+    $lessonTwo = Lesson::factory()->create(['course_id' => $course->id, 'order' => 2]);
+    Step::factory()->create(['lesson_id' => $lessonOne->id]);
+    Step::factory()->create(['lesson_id' => $lessonTwo->id]);
+
+    $creditEager = config('filament-lms.credits_enabled')
+        ? ['courseCreditCategories.creditCategory']
+        : [];
+
+    $courses = Course::accessibleTo($user)
+        ->with(array_merge($creditEager, ['authEnrollment']))
+        ->withCount('lessons')
+        ->get();
+
+    expect($courses)->toHaveCount(1);
+    expect((int) $courses->first()->lessons_count)->toBe(2);
+});
+
+test('course list with authEnrollment does not query pivot again when reading completed_at per course', function (): void {
+    config(['filament-lms.credits_enabled' => false]);
+
+    $user = TestUser::create([
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    Auth::login($user);
+
+    $courses = collect([
+        Course::factory()->create(['is_private' => false]),
+        Course::factory()->create(['is_private' => false]),
+        Course::factory()->create(['is_private' => false]),
+    ]);
+
+    foreach ($courses as $course) {
+        $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+        Step::factory()->create(['lesson_id' => $lesson->id]);
+        $course->users()->attach($user->id, ['completed_at' => now()]);
+    }
+
+    $loaded = Course::accessibleTo($user)
+        ->with(['authEnrollment'])
+        ->withCount('lessons')
+        ->get();
+
+    expect($loaded)->toHaveCount(3);
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    foreach ($loaded as $course) {
+        expect($course->completed_at)->not->toBeNull();
+    }
+
+    expect(DB::getQueryLog())->toHaveCount(0);
 });

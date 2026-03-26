@@ -180,7 +180,7 @@ class LmsPanelProvider extends PanelProvider
                     ->collapsed(fn (): bool => ! $lesson->isActive())
                     // ->collapsible(true)
                     ->items($lesson->steps->map(function ($step) {
-                        /** @var \Tapp\FilamentLms\Models\Step $step */
+                        /** @var Models\Step $step */
                         return NavigationItem::make($step->name)
                             ->icon(fn (): string => $step->completed_at ? 'heroicon-o-check-circle' : '')
                             ->isActiveWhen(fn (): bool => $step->isActive())

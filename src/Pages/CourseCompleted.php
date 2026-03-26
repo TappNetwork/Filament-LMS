@@ -7,8 +7,10 @@ namespace Tapp\FilamentLms\Pages;
 use BackedEnum;
 use Exception;
 use Filament\Pages\Page;
+use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\Test;
 
 final class CourseCompleted extends Page
 {
@@ -102,20 +104,20 @@ final class CourseCompleted extends Page
             $step->load('material');
             $test = $step->material;
 
-            if (! $test instanceof \Tapp\FilamentLms\Models\Test) {
+            if (! $test instanceof Test) {
                 continue;
             }
 
             $test->load('rubric');
             $rubric = $test->rubric;
 
-            if (! $rubric instanceof \Tapp\FilamentFormBuilder\Models\FilamentFormUser) {
+            if (! $rubric instanceof FilamentFormUser) {
                 continue;
             }
 
             $totalQuestions = count($rubric->entry);
 
-            $entry = \Tapp\FilamentFormBuilder\Models\FilamentFormUser::where('filament_form_id', $test->filament_form_id)
+            $entry = FilamentFormUser::where('filament_form_id', $test->filament_form_id)
                 ->where('user_id', $userId)
                 ->when($test->filament_form_user_id, fn ($q) => $q->where('id', '!=', $test->filament_form_user_id))
                 ->first();

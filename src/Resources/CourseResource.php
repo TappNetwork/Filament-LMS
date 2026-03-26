@@ -6,8 +6,8 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
@@ -17,11 +17,14 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\CreditCategory;
 use Tapp\FilamentLms\RelationManagers\CourseUsersRelationManager;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\CreateCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
@@ -124,12 +127,27 @@ class CourseResource extends Resource
                     ->label('Private Course')
                     ->helperText('Private courses are only visible to assigned users and LMS admins'),
 
-                /*
-                     * TODO: Implement award layout and content
-                     */
-                // Forms\Components\Select::make('award_layout')
-                //     ->relationship(name: 'award', titleAttribute: 'name')
-                //     ->required(),
+                Repeater::make('courseCreditCategories')
+                    ->relationship()
+                    ->label(config('filament-lms.credits_repeater_label', 'Credits'))
+                    ->schema([
+                        Select::make('credit_category_id')
+                            ->label('Category')
+                            ->relationship('creditCategory', 'name', modifyQueryUsing: fn ($query) => $query->orderBy('name'))
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                        TextInput::make('credits')
+                            ->numeric()
+                            ->required()
+                            ->minValue(0.5)
+                            ->step(0.5),
+                    ])
+                    ->columns(2)
+                    ->defaultItems(0)
+                    ->addActionLabel(config('filament-lms.credits_add_action_label', 'Add credits'))
+                    ->visible(fn (): bool => config('filament-lms.credits_enabled', false)),
             ]);
     }
 
@@ -152,9 +170,44 @@ class CourseResource extends Resource
                     ->badge()
                     ->color(fn (bool $state): string => $state ? 'danger' : 'success')
                     ->formatStateUsing(fn (bool $state): string => $state ? 'Private (Manual Assignment)' : 'Public'),
+                TextColumn::make('credits_summary')
+                    ->label(config('filament-lms.credits_label', 'Credits'))
+                    ->getStateUsing(function ($record): array {
+                        $items = $record->courseCreditCategories
+                            ->loadMissing('creditCategory')
+                            ->groupBy('credit_category_id')
+                            ->map(fn ($group) => [
+                                'name' => $group->first()->creditCategory->name,
+                                'credits' => (float) $group->sum('credits'),
+                            ])
+                            ->values();
+
+                        return $items->map(fn ($item) => $item['name'].': '.number_format($item['credits'], 2))->values()->all();
+                    })
+                    ->placeholder('—')
+                    ->badge()
+                    ->color(CreditCategory::badgeColor(...))
+                    ->limitList(3)
+                    ->expandableLimitedList()
+                    ->visible(fn (): bool => config('filament-lms.credits_enabled', false)),
             ])
             ->filters([
-                //
+                SelectFilter::make('credit_category_id')
+                    ->label('Credit Category')
+                    ->options(fn (): array => ['any' => 'Any credit category'] + CreditCategory::query()->orderBy('name')->pluck('name', 'id')->all())
+                    ->query(function (Builder $query, array $data): void {
+                        $value = $data['value'] ?? null;
+                        if (blank($value)) {
+                            return;
+                        }
+                        if ($value === 'any') {
+                            $query->whereHas('courseCreditCategories');
+
+                            return;
+                        }
+                        $query->whereHas('courseCreditCategories', fn (Builder $q): Builder => $q->where('credit_category_id', $value));
+                    })
+                    ->visible(fn (): bool => config('filament-lms.credits_enabled', false)),
             ])
             ->recordActions([
                 ActionGroup::make([

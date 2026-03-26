@@ -309,7 +309,7 @@ final class Course extends Model implements HasMedia
 
     public function getImageUrlAttribute(): ?string
     {
-        return $this->getMediaUrl('courses') ?? config('filament-lms.course_image_placeholder_url');
+        return $this->getMediaUrl('courses');
     }
 
     // Add the users() relationship for the pivot table

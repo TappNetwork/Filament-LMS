@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Filament\Support\Colors\Color;
+use Illuminate\Support\Str;
 use Tapp\FilamentLms\Database\Factories\CreditCategoryFactory;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
@@ -59,6 +61,16 @@ class CreditCategory extends Model
     public function hexColor(): string
     {
         return self::COLORS[$this->color] ?? '#6b7280';
+    }
+
+    /** @return array{int, int, int} */
+    public static function badgeColor(string $state): array
+    {
+        static $hexMap = null;
+        $hexMap ??= static::all()->mapWithKeys(fn ($cat) => [$cat->name => $cat->hexColor()])->all();
+        $categoryName = Str::beforeLast($state, ':');
+
+        return Color::hex($hexMap[$categoryName] ?? '#6b7280');
     }
 
     protected static function newFactory(): CreditCategoryFactory

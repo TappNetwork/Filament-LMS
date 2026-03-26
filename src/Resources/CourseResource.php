@@ -15,7 +15,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
@@ -187,13 +186,7 @@ class CourseResource extends Resource
                     })
                     ->placeholder('—')
                     ->badge()
-                    ->color(function (string $state): array {
-                        static $hexMap = null;
-                        $hexMap ??= CreditCategory::all()->mapWithKeys(fn ($cat) => [$cat->name => $cat->hexColor()])->all();
-                        $categoryName = Str::before($state, ':');
-
-                        return Color::hex($hexMap[$categoryName] ?? '#6b7280');
-                    })
+                    ->color(CreditCategory::badgeColor(...))
                     ->limitList(3)
                     ->expandableLimitedList()
                     ->visible(fn (): bool => config('filament-lms.credits_enabled', false)),

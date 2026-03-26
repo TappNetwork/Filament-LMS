@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Models;
 
 use Carbon\Carbon;
+use Filament\Support\Colors\Color;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Filament\Support\Colors\Color;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Database\Factories\CreditCategoryFactory;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;

@@ -63,7 +63,7 @@ class CreditCategory extends Model
         return self::COLORS[$this->color] ?? '#6b7280';
     }
 
-    /** @return array{int, int, int} */
+    /** @return array<int, string> */
     public static function badgeColor(string $state): array
     {
         static $hexMap = null;

@@ -66,8 +66,7 @@ class CreditCategory extends Model
     /** @return array<int, string> */
     public static function badgeColor(string $state): array
     {
-        static $hexMap = null;
-        $hexMap ??= static::all()->mapWithKeys(fn ($cat) => [$cat->name => $cat->hexColor()])->all();
+        $hexMap = once(fn () => static::all()->mapWithKeys(fn ($cat) => [$cat->name => $cat->hexColor()])->all());
         $categoryName = Str::beforeLast($state, ':');
 
         return Color::hex($hexMap[$categoryName] ?? '#6b7280');

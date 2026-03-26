@@ -295,7 +295,7 @@ final class Course extends Model implements HasMedia
         }
 
         // When steps have eager-loaded progress (e.g. from dashboard), use it directly
-        if ($steps->first()?->relationLoaded('progress')) {
+        if ($steps->first()->relationLoaded('progress')) {
             $completedCount = $steps->filter(fn (Step $step) => $step->progress?->completed_at !== null)->count();
 
             return $completedCount / $steps->count() * 100;

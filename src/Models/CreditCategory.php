@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Tapp\FilamentLms\Database\Factories\CreditCategoryFactory;
+use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
 /**
  * @property int $id
@@ -20,8 +22,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property Carbon $updated_at
  * @property-read Collection<int, CourseCreditCategory> $courseCreditCategories
  */
-final class CreditCategory extends Model
+class CreditCategory extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     /** @var array<string, string> */
@@ -56,6 +59,11 @@ final class CreditCategory extends Model
     public function hexColor(): string
     {
         return self::COLORS[$this->color] ?? '#6b7280';
+    }
+
+    protected static function newFactory(): CreditCategoryFactory
+    {
+        return CreditCategoryFactory::new();
     }
 
     public static function nextAvailableColor(): string

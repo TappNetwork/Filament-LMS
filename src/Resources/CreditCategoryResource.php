@@ -4,6 +4,7 @@ namespace Tapp\FilamentLms\Resources;
 
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
@@ -16,6 +17,7 @@ use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Models\CreditCategory;
 use Tapp\FilamentLms\Resources\CreditCategoryResource\Pages\CreateCreditCategory;
@@ -33,6 +35,17 @@ class CreditCategoryResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return config('filament-lms.credits_enabled', false);
+    }
+
+    /**
+     * Prevent deletion of credit categories that are used by courses.
+     *
+     * TODO: Future — add swap functionality: move all credits from one category to another before deleting.
+     */
+    public static function canDelete(Model $record): bool
+    {
+        /** @var CreditCategory $record */
+        return ! $record->courseCreditCategories()->exists();
     }
 
     public static function form(Schema $schema): Schema
@@ -81,6 +94,8 @@ class CreditCategoryResource extends Resource
             ->recordActions([
                 ActionGroup::make([
                     EditAction::make(),
+                    DeleteAction::make()
+                        ->hidden(fn (CreditCategory $record): bool => $record->courseCreditCategories()->exists()),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([

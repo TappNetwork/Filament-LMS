@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Tapp\FilamentLms\Database\Factories\CourseCreditCategoryFactory;
+use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
 /**
  * @property int $id
@@ -18,11 +21,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read Course $course
  * @property-read CreditCategory $creditCategory
  */
-final class CourseCreditCategory extends Model
+class CourseCreditCategory extends Model
 {
+    use BelongsToTenant;
+    use HasFactory;
+
     protected $guarded = [];
 
     protected $table = 'lms_course_credit_category';
+
+    protected static function newFactory(): CourseCreditCategoryFactory
+    {
+        return CourseCreditCategoryFactory::new();
+    }
 
     protected function casts(): array
     {

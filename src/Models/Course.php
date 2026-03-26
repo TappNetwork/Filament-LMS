@@ -287,13 +287,21 @@ final class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId): float
     {
-        $steps = $this->steps()->get();
+        // Use eager-loaded steps when available to avoid N+1 queries on dashboard
+        $steps = $this->relationLoaded('steps') ? $this->steps : $this->steps()->get();
 
         if ($steps->isEmpty()) {
             return 0;
         }
 
-        // Get all completed steps for this specific user (including optional steps)
+        // When steps have eager-loaded progress (e.g. from dashboard), use it directly
+        if ($steps->first()?->relationLoaded('progress')) {
+            $completedCount = $steps->filter(fn (Step $step) => $step->progress?->completed_at !== null)->count();
+
+            return $completedCount / $steps->count() * 100;
+        }
+
+        // Fallback: query for completed steps
         $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
             ->where('user_id', $userId)
             ->whereNotNull('completed_at')

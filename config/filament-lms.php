@@ -58,6 +58,8 @@ return [
     // Credits configuration
     'credits_enabled' => false,
     'credits_label' => 'Credits',
+    'credits_repeater_label' => 'Credits',
+    'credits_add_action_label' => 'Add credits',
 
     // Multi-Tenancy configuration
     'tenancy' => [

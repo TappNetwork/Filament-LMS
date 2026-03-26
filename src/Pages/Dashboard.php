@@ -11,6 +11,10 @@ use Livewire\Attributes\Computed;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\CreditCategory;
 
+/**
+ * @property Collection $courses
+ * @property Collection $filteredCourses
+ */
 class Dashboard extends \Filament\Pages\Dashboard
 {
     use HasFiltersForm;
@@ -23,9 +27,13 @@ class Dashboard extends \Filament\Pages\Dashboard
 
     protected static ?string $title = 'Courses';
 
-    public $courses;
-
     public function mount(): void
+    {
+        // Courses loaded via computed property
+    }
+
+    #[Computed]
+    public function courses(): Collection
     {
         $user = Auth::user();
 
@@ -33,20 +41,20 @@ class Dashboard extends \Filament\Pages\Dashboard
             ? ['courseCreditCategories.creditCategory']
             : [];
 
+        $stepEager = $user ? ['steps.progress'] : [];
+
         if ($user) {
-            $courses = Course::accessibleTo($user)
-                ->with(array_merge($creditEager, ['authEnrollment']))
-                ->withCount('lessons')
-                ->get();
-        } else {
-            $courses = Course::where('is_private', false)
-                ->whereHas('steps')
-                ->with($creditEager)
+            return Course::accessibleTo($user)
+                ->with(array_merge($creditEager, $stepEager, ['authEnrollment']))
                 ->withCount('lessons')
                 ->get();
         }
 
-        $this->courses = $courses;
+        return Course::where('is_private', false)
+            ->whereHas('steps')
+            ->with(array_merge($creditEager, $stepEager))
+            ->withCount('lessons')
+            ->get();
     }
 
     public function filtersForm(Schema $schema): Schema
@@ -67,7 +75,7 @@ class Dashboard extends \Filament\Pages\Dashboard
     #[Computed]
     public function filteredCourses(): Collection
     {
-        $courses = $this->courses ?? collect();
+        $courses = $this->courses;
 
         $creditCategoryId = $this->filters['credit_category_id'] ?? null;
         if (blank($creditCategoryId)) {

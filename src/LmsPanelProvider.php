@@ -18,7 +18,7 @@ use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
@@ -128,7 +128,7 @@ class LmsPanelProvider extends PanelProvider
                 StartSession::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
-                VerifyCsrfToken::class,
+                $this->csrfMiddleware(),
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
@@ -217,5 +217,14 @@ class LmsPanelProvider extends PanelProvider
                 ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
                 ->url(fn (): string => Dashboard::getUrl()),
         ]);
+    }
+
+    private function csrfMiddleware(): string
+    {
+        if (class_exists(PreventRequestForgery::class)) {
+            return PreventRequestForgery::class;
+        }
+
+        return 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken';
     }
 }

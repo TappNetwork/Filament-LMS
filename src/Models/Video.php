@@ -27,12 +27,18 @@ class Video extends Model
         return $this->morphTo(Step::class);
     }
 
-    public function getProviderAttribute()
+    public function getProviderAttribute(): string
     {
-        if (str_contains($this->url, 'youtube')) {
+        $url = $this->url ?? '';
+
+        if (str_contains($url, 'youtube.com') || str_contains($url, 'youtube-nocookie.com') || str_contains($url, 'youtu.be')) {
             return 'youtube';
         }
 
-        return 'vimeo';
+        if (str_contains($url, 'vimeo.com') || str_contains($url, 'player.vimeo.com')) {
+            return 'vimeo';
+        }
+
+        return 'external';
     }
 }

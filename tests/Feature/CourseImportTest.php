@@ -8,9 +8,10 @@ use Maatwebsite\Excel\Facades\Excel;
 use Tapp\FilamentLms\Imports\CourseStepsImport;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Tests\TestUser;
 
 beforeEach(function () {
-    config(['filament-lms.user_model' => \Tapp\FilamentLms\Tests\TestUser::class]);
+    config(['filament-lms.user_model' => TestUser::class]);
 });
 
 test('course steps import format a creates course lessons steps and videos', function () {

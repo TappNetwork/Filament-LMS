@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Tests;
 
+use Filament\Facades\Filament;
 use Filament\FilamentServiceProvider;
 use Filament\Support\SupportServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
 use Livewire\LivewireServiceProvider;
 use Maatwebsite\Excel\ExcelServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
 use Tapp\FilamentFormBuilder\FilamentFormBuilderServiceProvider;
+use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\FilamentLmsServiceProvider;
+use Tapp\FilamentLms\LmsPanelProvider;
 
 abstract class TestCase extends Orchestra
 {
@@ -21,7 +27,7 @@ abstract class TestCase extends Orchestra
         parent::setUp();
 
         // Set the current panel for testing
-        \Filament\Facades\Filament::setCurrentPanel('lms');
+        Filament::setCurrentPanel('lms');
 
         // Initialize session
         if (! $this->app->bound('session.store')) {
@@ -30,8 +36,8 @@ abstract class TestCase extends Orchestra
 
         // Ensure ViewErrorBag is available
         if ($this->app->bound('view')) {
-            $errorBag = new \Illuminate\Support\ViewErrorBag;
-            $errorBag->put('default', new \Illuminate\Support\MessageBag);
+            $errorBag = new ViewErrorBag;
+            $errorBag->put('default', new MessageBag);
             $this->app['view']->share('errors', $errorBag);
         }
     }
@@ -61,7 +67,7 @@ abstract class TestCase extends Orchestra
 
         // Set up media library configuration
         $app['config']->set('media-library.disk_name', 'local');
-        $app['config']->set('media-library.media_model', \Spatie\MediaLibrary\MediaCollections\Models\Media::class);
+        $app['config']->set('media-library.media_model', Media::class);
 
         // Set up app key for testing
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
@@ -216,7 +222,7 @@ abstract class TestCase extends Orchestra
             $table->nullableTimestamps();
         });
 
-        if (class_exists(\Tapp\FilamentFormBuilder\Models\FilamentForm::class)) {
+        if (class_exists(FilamentForm::class)) {
             $app['db']->connection()->getSchemaBuilder()->create('filament_forms', function (Blueprint $table) {
                 $table->id();
                 $table->timestamps();
@@ -262,7 +268,7 @@ abstract class TestCase extends Orchestra
             SupportServiceProvider::class,
             MediaLibraryServiceProvider::class,
             FilamentLmsServiceProvider::class,
-            \Tapp\FilamentLms\LmsPanelProvider::class,
+            LmsPanelProvider::class,
         ];
 
         // Only add FilamentFormBuilderServiceProvider if it exists

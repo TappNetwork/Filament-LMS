@@ -9,7 +9,7 @@ test('course image url fallback to placeholder when no media', function () {
 
     $imageUrl = $course->image_url;
 
-    expect($imageUrl)->toBe('https://picsum.photos/200');
+    expect($imageUrl)->toBeNull();
 });
 
 test('course image url uses regular url when signed urls disabled', function () {
@@ -20,8 +20,8 @@ test('course image url uses regular url when signed urls disabled', function () 
 
     $imageUrl = $course->image_url;
 
-    // Should return placeholder since no media is attached
-    expect($imageUrl)->toBe('https://picsum.photos/200');
+    // Should return null since no media is attached (UI handles with icon)
+    expect($imageUrl)->toBeNull();
 });
 
 test('has media url trait returns null when no media', function () {

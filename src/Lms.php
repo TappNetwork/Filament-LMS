@@ -9,6 +9,7 @@ use Tapp\FilamentLms\Pages\CreateRubric;
 use Tapp\FilamentLms\Pages\Reporting;
 use Tapp\FilamentLms\Pages\ViewRubric;
 use Tapp\FilamentLms\Resources\CourseResource;
+use Tapp\FilamentLms\Resources\CreditCategoryResource;
 use Tapp\FilamentLms\Resources\DocumentResource;
 use Tapp\FilamentLms\Resources\ImageResource;
 use Tapp\FilamentLms\Resources\LessonResource;
@@ -26,7 +27,7 @@ class Lms implements Plugin
 
     public function register(Panel $panel): void
     {
-        $panel->resources([
+        $resources = [
             CourseResource::class,
             LessonResource::class,
             StepResource::class,
@@ -35,7 +36,13 @@ class Lms implements Plugin
             LinkResource::class,
             TestResource::class,
             ImageResource::class,
-        ]);
+        ];
+
+        if (config('filament-lms.credits_enabled', false)) {
+            $resources[] = CreditCategoryResource::class;
+        }
+
+        $panel->resources($resources);
 
         $panel->pages([
             Reporting::class,

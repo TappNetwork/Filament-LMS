@@ -6,6 +6,7 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Image;
@@ -70,7 +71,7 @@ class MorphToSelectWithCreate
                         ->icon('heroicon-o-plus')
                         ->color('primary')
                         ->visible(fn (Get $get) => $get('material_type') === 'video')
-                        ->schema(VideoResource::form(\Filament\Schemas\Schema::make())->getComponents())
+                        ->schema(VideoResource::form(Schema::make())->getComponents())
                         ->action(function (array $data, Set $set) {
                             // Convert the URL (validation already happened in the form rules)
                             $data['url'] = VideoUrlService::convertToEmbedUrl($data['url']);

@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Tests\Feature;
 
+use Filament\Schemas\Schema;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
@@ -33,8 +34,8 @@ class StepResourceTest extends TestCase
 
     public function test_step_form_can_be_rendered_without_errors(): void
     {
-        $schema = StepResource::form(\Filament\Schemas\Schema::make());
-        $this->assertInstanceOf(\Filament\Schemas\Schema::class, $schema);
+        $schema = StepResource::form(Schema::make());
+        $this->assertInstanceOf(Schema::class, $schema);
     }
 
     public function test_lesson_select_has_preload(): void

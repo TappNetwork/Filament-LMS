@@ -9,8 +9,9 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use RuntimeException;
 use Tapp\FilamentLms\Imports\CourseStepsImport;
 
 class ImportCourseFromCsv implements ShouldQueue
@@ -19,17 +20,25 @@ class ImportCourseFromCsv implements ShouldQueue
 
     public function __construct(
         protected string $courseName,
-        protected string $filePath
+        protected string $storedPath
     ) {}
 
     public function handle(): void
     {
-        if (! File::isReadable($this->filePath)) {
-            return;
+        $disk = Storage::disk('local');
+
+        if (! $disk->exists($this->storedPath)) {
+            throw new RuntimeException("Course import file does not exist on local disk: {$this->storedPath}");
         }
 
-        Excel::import(new CourseStepsImport($this->courseName), $this->filePath);
+        $filePath = $disk->path($this->storedPath);
 
-        File::delete($this->filePath);
+        if (! is_readable($filePath)) {
+            throw new RuntimeException("Course import file is not readable: {$filePath}");
+        }
+
+        Excel::import(new CourseStepsImport($this->courseName), $filePath);
+
+        $disk->delete($this->storedPath);
     }
 }

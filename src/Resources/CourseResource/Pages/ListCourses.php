@@ -59,7 +59,8 @@ class ListCourses extends ListRecords
 
                     $storedPath = $file->storeAs(
                         'filament-lms/course-imports',
-                        Str::uuid().'.csv'
+                        Str::uuid().'.csv',
+                        'local'
                     );
 
                     if ($storedPath === false) {
@@ -72,7 +73,7 @@ class ListCourses extends ListRecords
                         return;
                     }
 
-                    ImportCourseFromCsv::dispatch($courseName, Storage::path($storedPath));
+                    ImportCourseFromCsv::dispatch($courseName, $storedPath);
 
                     Notification::make()
                         ->title('Import queued')

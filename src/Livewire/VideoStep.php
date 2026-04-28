@@ -39,6 +39,11 @@ class VideoStep extends Component
         $this->step->complete();
     }
 
+    public function markExternalOpened(): void
+    {
+        $this->videoCompleted = true;
+    }
+
     public function render()
     {
         return view('filament-lms::livewire.video-step');

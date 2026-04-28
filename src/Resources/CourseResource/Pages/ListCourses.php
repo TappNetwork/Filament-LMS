@@ -9,7 +9,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Jobs\ImportCourseFromCsv;
 use Tapp\FilamentLms\Resources\CourseResource;

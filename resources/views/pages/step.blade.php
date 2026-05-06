@@ -43,6 +43,10 @@
         <livewire:test-step :step="$step"/>
     @elseif ($step->material_type == 'image')
         <livewire:image-step :step="$step"/>
+    @elseif ($step->material_type == 'library_file')
+        <livewire:library-file-step :step="$step"/>
+    @elseif ($step->material_type == 'library_link')
+        <livewire:library-link-step :step="$step"/>
     @else
         unsupported material type: {{ $step->material_type }}
     @endif

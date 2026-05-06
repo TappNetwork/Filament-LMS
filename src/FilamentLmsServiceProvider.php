@@ -82,19 +82,33 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('view-graded-entry', ViewGradedEntry::class);
         Livewire::component('image-step', ImageStep::class);
 
+        if (config('filament-lms.integrations.filament_library.enabled', false)
+            && class_exists(\Tapp\FilamentLibrary\Models\LibraryItem::class)) {
+            Livewire::component('library-file-step', \Tapp\FilamentLms\Livewire\LibraryFileStep::class);
+            Livewire::component('library-link-step', \Tapp\FilamentLms\Livewire\LibraryLinkStep::class);
+        }
+
         FilamentAsset::register([
             Css::make('filament-lms', __DIR__.'/../dist/filament-lms.css'),
             Js::make('filament-lms', __DIR__.'/../dist/filament-lms.js'),
         ], package: 'tapp/filament-lms');
 
-        Relation::morphMap([
+        $morphMap = [
             'video' => 'Tapp\FilamentLms\Models\Video',
             'document' => 'Tapp\FilamentLms\Models\Document',
             'link' => 'Tapp\FilamentLms\Models\Link',
             'form' => 'Tapp\FilamentFormBuilder\Models\FilamentForm',
             'test' => 'Tapp\FilamentLms\Models\Test',
             'image' => 'Tapp\FilamentLms\Models\Image',
-        ]);
+        ];
+
+        if (config('filament-lms.integrations.filament_library.enabled', false)
+            && class_exists(\Tapp\FilamentLibrary\Models\LibraryItem::class)) {
+            $morphMap['library_file'] = \Tapp\FilamentLibrary\Models\LibraryItem::class;
+            $morphMap['library_link'] = \Tapp\FilamentLibrary\Models\LibraryItem::class;
+        }
+
+        Relation::morphMap($morphMap);
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
     }

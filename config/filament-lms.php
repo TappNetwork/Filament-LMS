@@ -115,4 +115,22 @@ return [
         //     return $this->teams()->whereKey($tenant)->exists();
         // }
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Plugin integrations
+    |--------------------------------------------------------------------------
+    |
+    | Optional integrations with other Filament packages.
+    |
+    */
+    'integrations' => [
+        'filament_library' => [
+            // When true (and tapp/filament-library is installed), Step materials may reference Library items.
+            'enabled' => false,
+
+            // Max rows returned when searching library files or links on the Step form.
+            'material_select_limit' => 200,
+        ],
+    ],
 ];

@@ -4,11 +4,12 @@ namespace Tapp\FilamentLms\Livewire;
 
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
+use Tapp\FilamentLibrary\Models\LibraryItem;
 use Tapp\FilamentLms\Models\Step;
 
 class LibraryFileStep extends Component
 {
-    /** @var \Tapp\FilamentLibrary\Models\LibraryItem&Model */
+    /** @var LibraryItem&Model */
     public Model $libraryItem;
 
     public Step $step;

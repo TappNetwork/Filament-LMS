@@ -7,6 +7,7 @@ use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Model;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Image;
@@ -67,7 +68,7 @@ class MorphToSelectWithCreate
     {
         $limit = self::libraryMaterialSelectLimit();
 
-        /** @var class-string<\Illuminate\Database\Eloquent\Model> $modelClass */
+        /** @var class-string<Model> $modelClass */
         $modelClass = self::LIBRARY_ITEM_CLASS;
 
         $query = $modelClass::query()

@@ -10,10 +10,13 @@ use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Tapp\FilamentLibrary\Models\LibraryItem;
 use Tapp\FilamentLms\Console\Commands\BackfillCourseCompletedAt;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\ImageStep;
+use Tapp\FilamentLms\Livewire\LibraryFileStep;
+use Tapp\FilamentLms\Livewire\LibraryLinkStep;
 use Tapp\FilamentLms\Livewire\LinkStep;
 use Tapp\FilamentLms\Livewire\TestStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;
@@ -83,9 +86,9 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('image-step', ImageStep::class);
 
         if (config('filament-lms.integrations.filament_library.enabled', false)
-            && class_exists(\Tapp\FilamentLibrary\Models\LibraryItem::class)) {
-            Livewire::component('library-file-step', \Tapp\FilamentLms\Livewire\LibraryFileStep::class);
-            Livewire::component('library-link-step', \Tapp\FilamentLms\Livewire\LibraryLinkStep::class);
+            && class_exists(LibraryItem::class)) {
+            Livewire::component('library-file-step', LibraryFileStep::class);
+            Livewire::component('library-link-step', LibraryLinkStep::class);
         }
 
         FilamentAsset::register([
@@ -103,9 +106,9 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         ];
 
         if (config('filament-lms.integrations.filament_library.enabled', false)
-            && class_exists(\Tapp\FilamentLibrary\Models\LibraryItem::class)) {
-            $morphMap['library_file'] = \Tapp\FilamentLibrary\Models\LibraryItem::class;
-            $morphMap['library_link'] = \Tapp\FilamentLibrary\Models\LibraryItem::class;
+            && class_exists(LibraryItem::class)) {
+            $morphMap['library_file'] = LibraryItem::class;
+            $morphMap['library_link'] = LibraryItem::class;
         }
 
         Relation::morphMap($morphMap);

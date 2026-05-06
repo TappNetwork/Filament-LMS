@@ -20,7 +20,7 @@
         "tapp/filament-form-builder": "^4.0"
     },
     "suggest": {
-        "tapp/filament-library": "Required for Library file / Library link step materials (enable filament-lms.integrations.filament_library)."
+        "tapp/filament-library": "Required for Library file / Library link step materials (set filament-lms.integrations.filament_library.enabled for the admin material picker)."
     },
     "require-dev": {
         "filament/upgrade": "^4.0",

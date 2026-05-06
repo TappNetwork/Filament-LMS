@@ -85,8 +85,10 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('view-graded-entry', ViewGradedEntry::class);
         Livewire::component('image-step', ImageStep::class);
 
-        if (config('filament-lms.integrations.filament_library.enabled', false)
-            && class_exists(LibraryItem::class)) {
+        // Register library step components whenever the optional package is present.
+        // Config `integrations.filament_library.enabled` only gates admin UI (material picker);
+        // morph resolution and learner-facing steps must work for existing DB rows even when disabled.
+        if (class_exists(LibraryItem::class)) {
             Livewire::component('library-file-step', LibraryFileStep::class);
             Livewire::component('library-link-step', LibraryLinkStep::class);
         }
@@ -105,8 +107,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             'image' => 'Tapp\FilamentLms\Models\Image',
         ];
 
-        if (config('filament-lms.integrations.filament_library.enabled', false)
-            && class_exists(LibraryItem::class)) {
+        if (class_exists(LibraryItem::class)) {
             $morphMap['library_file'] = LibraryItem::class;
             $morphMap['library_link'] = LibraryItem::class;
         }

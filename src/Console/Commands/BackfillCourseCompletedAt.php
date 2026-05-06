@@ -74,7 +74,7 @@ class BackfillCourseCompletedAt extends Command
                 if ($course->required_test_percentage !== null) {
                     $testSteps = $course->getOrderedTestSteps();
                     if ($testSteps->isNotEmpty()) {
-                        $overall = $course->getOverallTestPercentageForUser((int) $userId);
+                        $overall = $course->getOverallTestPercentageForUser($userId);
                         if ($overall < (float) $course->required_test_percentage) {
                             $totalSkippedTestPct++;
                             if ($logEach) {

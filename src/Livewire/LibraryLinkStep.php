@@ -4,12 +4,10 @@ namespace Tapp\FilamentLms\Livewire;
 
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
-use Tapp\FilamentLibrary\Models\LibraryItem;
 use Tapp\FilamentLms\Models\Step;
 
 class LibraryLinkStep extends Component
 {
-    /** @var LibraryItem&Model */
     public Model $libraryItem;
 
     public Step $step;
@@ -20,9 +18,10 @@ class LibraryLinkStep extends Component
     {
         $this->step = $step;
         $material = $step->material;
-        if (! $material instanceof Model) {
+        if (! is_object($material) || ! is_a($material, 'Tapp\FilamentLibrary\Models\LibraryItem', false)) {
             abort(404);
         }
+
         $this->libraryItem = $material;
         $this->visited = (bool) $step->completed_at;
     }

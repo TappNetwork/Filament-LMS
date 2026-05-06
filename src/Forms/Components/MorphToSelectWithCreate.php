@@ -68,10 +68,11 @@ class MorphToSelectWithCreate
     {
         $limit = self::libraryMaterialSelectLimit();
 
-        /** @var class-string<Model> $modelClass */
-        $modelClass = self::LIBRARY_ITEM_CLASS;
+        if (! is_a(self::LIBRARY_ITEM_CLASS, Model::class, true)) {
+            return [];
+        }
 
-        $query = $modelClass::query()
+        $query = self::LIBRARY_ITEM_CLASS::query()
             ->orderBy('name')
             ->limit($limit);
 

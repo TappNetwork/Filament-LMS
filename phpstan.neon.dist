@@ -30,3 +30,13 @@ parameters:
         - '#Call to method .* on an unknown class Tapp\\FilamentFormBuilder\\Models\\FilamentFormUser#'
         - '#Parameter .* has invalid type Tapp\\FilamentFormBuilder\\Models\\FilamentForm#'
         - '#Parameter .* has invalid type Tapp\\FilamentFormBuilder\\Models\\FilamentFormUser#'
+        # Optional filament-library integration (classes loaded only when the consuming app installs tapp/filament-library)
+        -
+            message: '#Property .+::\$libraryItem \(Illuminate\\Database\\Eloquent\\Model\) does not accept Tapp\\FilamentLibrary\\Models\\LibraryItem#'
+            paths:
+                - src/Livewire/LibraryFileStep.php
+                - src/Livewire/LibraryLinkStep.php
+        -
+            message: '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::(getFirstMedia|getSecureUrl)\(\)#'
+            paths:
+                - src/Livewire/LibraryFileStep.php

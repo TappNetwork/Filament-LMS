@@ -203,7 +203,7 @@ final class Course extends Model implements HasMedia
         if (
             Auth::check()
             && $this->relationLoaded('authEnrollment')
-            && (int) $userId === (int) Auth::id()
+            && (string) $userId === (string) Auth::id()
         ) {
             $first = $this->authEnrollment->first();
             $pivot = $first ? $first->getRelationValue('pivot') : null;
@@ -222,7 +222,7 @@ final class Course extends Model implements HasMedia
      * and (if required) met the test percentage. Called after any step completion so that
      * retaking a test and passing will set completed_at.
      */
-    public function maybeSetCompletedAtForUser(int $userId): void
+    public function maybeSetCompletedAtForUser(int|string $userId): void
     {
         $pivot = $this->users()->where('user_id', $userId)->first()?->getRelationValue('pivot');
         $existing = $pivot instanceof Pivot ? $pivot->getAttribute('completed_at') : null;
@@ -298,7 +298,7 @@ final class Course extends Model implements HasMedia
         // Only safe when $userId matches the authenticated user, since progress is scoped to Auth::id()
         if (
             Auth::check()
-            && (int) $userId === (int) Auth::id()
+            && (string) $userId === (string) Auth::id()
             && $steps->first()->relationLoaded('progress')
         ) {
             $completedCount = $steps->filter(fn (Step $step) => $step->progress?->completed_at !== null)->count();
@@ -373,7 +373,7 @@ final class Course extends Model implements HasMedia
      * Check if all steps are completed by the user (regardless of test percentage requirement).
      * This is useful for determining if a user has finished all steps but may not have met the test percentage requirement.
      */
-    public function allStepsCompletedByUser(int $userId): bool
+    public function allStepsCompletedByUser(int|string $userId): bool
     {
         $steps = $this->steps()->get();
 
@@ -416,7 +416,7 @@ final class Course extends Model implements HasMedia
      * Overall test percentage for the user across all test steps in this course (0–100).
      * Steps with no entry or grading errors count as 0. Returns 0 if there are no test steps.
      */
-    public function getOverallTestPercentageForUser(int $userId): float
+    public function getOverallTestPercentageForUser(int|string $userId): float
     {
         $testSteps = $this->getOrderedTestSteps();
 
@@ -435,7 +435,7 @@ final class Course extends Model implements HasMedia
     /**
      * First test step (in course order) where the user scored below 100%, or null if all are 100%.
      */
-    public function getFirstTestStepBelowPerfectForUser(int $userId): ?Step
+    public function getFirstTestStepBelowPerfectForUser(int|string $userId): ?Step
     {
         $testSteps = $this->getOrderedTestSteps();
 
@@ -452,7 +452,7 @@ final class Course extends Model implements HasMedia
     /**
      * URL to the first test step below 100% for the user, or the dashboard URL if none.
      */
-    public function getUrlToFirstTestStepBelowPerfectForUser(int $userId): string
+    public function getUrlToFirstTestStepBelowPerfectForUser(int|string $userId): string
     {
         $step = $this->getFirstTestStepBelowPerfectForUser($userId);
 
@@ -482,7 +482,7 @@ final class Course extends Model implements HasMedia
     /**
      * Get the percentage score for a single test step for a user (0–100), or 0 if no entry or on error.
      */
-    protected function getTestStepPercentageForUser(Step $step, int $userId): float
+    protected function getTestStepPercentageForUser(Step $step, int|string $userId): float
     {
         $step->load('material');
         $test = $step->material;

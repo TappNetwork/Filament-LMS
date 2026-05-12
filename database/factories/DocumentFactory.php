@@ -18,15 +18,19 @@ class DocumentFactory extends Factory
 
     /**
      * Associate media after creating
+     *
+     * @return $this
      */
-    public function configure(): static
+    public function configure()
     {
-        return $this->afterCreating(function ($document) {
+        $this->afterCreating(function ($document) {
             /** @var Document $document */
             $testFile = './vendor/tapp/filament-lms/test.pdf';
             $document->addMedia($testFile)
                 ->preservingOriginal()
                 ->toMediaCollection();
         });
+
+        return $this;
     }
 }

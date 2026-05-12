@@ -10,10 +10,13 @@ use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Tapp\FilamentLibrary\Models\LibraryItem;
 use Tapp\FilamentLms\Console\Commands\BackfillCourseCompletedAt;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\ImageStep;
+use Tapp\FilamentLms\Livewire\LibraryFileStep;
+use Tapp\FilamentLms\Livewire\LibraryLinkStep;
 use Tapp\FilamentLms\Livewire\LinkStep;
 use Tapp\FilamentLms\Livewire\TestStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;
@@ -82,19 +85,34 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('view-graded-entry', ViewGradedEntry::class);
         Livewire::component('image-step', ImageStep::class);
 
+        // Register library step components whenever the optional package is present.
+        // Config `integrations.filament_library.enabled` only gates admin UI (material picker);
+        // morph resolution and learner-facing steps must work for existing DB rows even when disabled.
+        if (class_exists(LibraryItem::class)) {
+            Livewire::component('library-file-step', LibraryFileStep::class);
+            Livewire::component('library-link-step', LibraryLinkStep::class);
+        }
+
         FilamentAsset::register([
             Css::make('filament-lms', __DIR__.'/../dist/filament-lms.css'),
             Js::make('filament-lms', __DIR__.'/../dist/filament-lms.js'),
         ], package: 'tapp/filament-lms');
 
-        Relation::morphMap([
+        $morphMap = [
             'video' => 'Tapp\FilamentLms\Models\Video',
             'document' => 'Tapp\FilamentLms\Models\Document',
             'link' => 'Tapp\FilamentLms\Models\Link',
             'form' => 'Tapp\FilamentFormBuilder\Models\FilamentForm',
             'test' => 'Tapp\FilamentLms\Models\Test',
             'image' => 'Tapp\FilamentLms\Models\Image',
-        ]);
+        ];
+
+        if (class_exists(LibraryItem::class)) {
+            $morphMap['library_file'] = LibraryItem::class;
+            $morphMap['library_link'] = LibraryItem::class;
+        }
+
+        Relation::morphMap($morphMap);
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
     }

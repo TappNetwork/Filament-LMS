@@ -22,7 +22,7 @@ test('registeredResourceClasses respects CourseResource override from config', f
 
     expect($classes)->not->toContain(CourseResource::class);
     expect($classes)->toContain(LessonResource::class);
-    expect(array_count_values($classes)[LessonResource::class] ?? 0)->toBe(2);
+    expect(array_count_values($classes)[LessonResource::class] ?? 0)->toBe(1);
 });
 
 test('registeredResourceClasses omits CreditCategoryResource when credits disabled', function () {

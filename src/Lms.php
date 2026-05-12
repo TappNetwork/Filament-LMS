@@ -59,6 +59,8 @@ class Lms implements Plugin
     /**
      * Filament resource classes registered by this plugin, after merging `filament-lms.resources` overrides.
      *
+     * Class strings are unique so Filament does not register the same resource twice (duplicate nav, routes).
+     *
      * @return list<class-string<resource>>
      */
     public static function registeredResourceClasses(): array
@@ -102,6 +104,6 @@ class Lms implements Plugin
             $classes[] = $class;
         }
 
-        return $classes;
+        return array_values(array_unique($classes));
     }
 }

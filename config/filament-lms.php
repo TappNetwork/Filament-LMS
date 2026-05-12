@@ -133,4 +133,25 @@ return [
             'material_select_limit' => 200,
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Filament resource class overrides
+    |--------------------------------------------------------------------------
+    |
+    | Optional map of short keys to custom Filament Resource classes (similar to
+    | filament-maillog). Only keys listed below are recognized; each value must
+    | be a class extending Filament\Resources\Resource.
+    |
+    | Example (in your app's config/filament-lms.php):
+    |
+    | 'resources' => [
+    |     'CourseResource' => \App\Filament\Resources\Lms\CourseResource::class,
+    | ],
+    |
+    | Keys: CourseResource, LessonResource, StepResource, VideoResource, DocumentResource,
+    | LinkResource, TestResource, ImageResource, CreditCategoryResource (when credits_enabled).
+    |
+    */
+    'resources' => [],
 ];

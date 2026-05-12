@@ -139,7 +139,7 @@ return [
     | Filament resource class overrides
     |--------------------------------------------------------------------------
     |
-    | Optional map of short keys to custom Filament Resource classes 
+    | Optional map of short keys to custom Filament Resource classes
     | Only keys listed below are recognized; each value must
     | be a class extending Filament\Resources\Resource.
     |

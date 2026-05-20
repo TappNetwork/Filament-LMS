@@ -353,27 +353,32 @@ final class ArticulateSlideContentExtractor
                     $inString = true;
                 }
                 $i++;
+
                 continue;
             }
             if ($ch === '\\' && $i + 1 < $len) {
                 $result .= $ch.$json[$i + 1];
                 $i += 2;
+
                 continue;
             }
             if ($ch === '"') {
                 $result .= $ch;
                 $inString = false;
                 $i++;
+
                 continue;
             }
             if ($ch === "\n") {
                 $result .= '\\n';
                 $i++;
+
                 continue;
             }
             if ($ch === "\r") {
                 $result .= '\\r';
                 $i++;
+
                 continue;
             }
             $result .= $ch;
@@ -463,7 +468,7 @@ final class ArticulateSlideContentExtractor
             'question 1 of 4:', 'question 2 of 4:', 'question 3 of 4:', 'question 4 of 4:',
             'question 1 of 3:', 'question 2 of 3:', 'question 3 of 3:',
             'submit', 'try again', 'incorrect', 'continue', 'correct',
-            "that is incorrect. please try again.", "you did not select the correct response.",
+            'that is incorrect. please try again.', 'you did not select the correct response.',
             "that's right! you selected the correct response.",
         ];
         $parts = [];
@@ -521,6 +526,7 @@ final class ArticulateSlideContentExtractor
                     $question = $t;
                     $foundQuestion = true;
                 }
+
                 continue;
             }
             if ($isBullet) {

@@ -7,6 +7,8 @@ namespace Tapp\FilamentLms\Services\CommonCartridge;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Tapp\FilamentFormBuilder\Models\FilamentForm;
+use Tapp\FilamentFormBuilder\Models\FilamentFormField;
 use Tapp\FilamentLms\Helpers\TenantHelper;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Document;
@@ -213,9 +215,9 @@ final class CommonCartridgeImportService
             ]);
         }
 
-        if ($isAssessment && class_exists(\Tapp\FilamentFormBuilder\Models\FilamentForm::class)) {
+        if ($isAssessment && class_exists(FilamentForm::class)) {
             $formData = ['name' => $formName];
-            $formClass = \Tapp\FilamentFormBuilder\Models\FilamentForm::class;
+            $formClass = FilamentForm::class;
             if (config('filament-form-builder.tenancy.enabled', false)) {
                 $formTenantColumn = $formClass::getTenantColumnName();
                 $courseTenantValue = $course->getAttribute(TenantHelper::getTenantColumnName());
@@ -225,7 +227,7 @@ final class CommonCartridgeImportService
             }
             $form = $formClass::query()->create($formData);
 
-            $fieldClass = \Tapp\FilamentFormBuilder\Models\FilamentFormField::class;
+            $fieldClass = FilamentFormField::class;
             if (class_exists($fieldClass) && $firstQuestionAndOptions !== null && $firstQuestionAndOptions['options'] !== []) {
                 $options = [];
                 foreach ($firstQuestionAndOptions['options'] as $label) {

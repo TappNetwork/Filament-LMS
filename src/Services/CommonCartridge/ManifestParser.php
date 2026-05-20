@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Services\CommonCartridge;
 
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use SimpleXMLElement;
 
@@ -46,7 +47,7 @@ final class ManifestParser
             $lessons = $articulateLessons;
             $frameResources = $frameParser->parseResourceData($extractedPath);
             $totalSteps = array_sum(array_map(fn ($l) => count($l->steps), $lessons));
-            \Illuminate\Support\Facades\Log::channel('single')->info('CC import: using Articulate frame.xml', [
+            Log::channel('single')->info('CC import: using Articulate frame.xml', [
                 'context' => 'cc-import',
                 'lessons_count' => count($lessons),
                 'steps_count' => $totalSteps,
@@ -54,7 +55,7 @@ final class ManifestParser
                 'sample_steps' => array_slice(array_merge(...array_map(fn ($l) => array_map(fn ($s) => ['title' => $s->title, 'slideId' => $s->slideId], $l->steps), $lessons)), 0, 5),
             ]);
         } else {
-            \Illuminate\Support\Facades\Log::channel('single')->info('CC import: Articulate frame.xml not used (missing or empty)', [
+            Log::channel('single')->info('CC import: Articulate frame.xml not used (missing or empty)', [
                 'context' => 'cc-import',
                 'frame_path' => mb_rtrim($extractedPath, '/').'/story_content/frame.xml',
                 'frame_exists' => is_file(mb_rtrim($extractedPath, '/').'/story_content/frame.xml'),

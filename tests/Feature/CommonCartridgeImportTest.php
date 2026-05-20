@@ -6,9 +6,10 @@ use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Services\CommonCartridge\CommonCartridgeImportService;
 use Tapp\FilamentLms\Services\CommonCartridge\ManifestParser;
+use Tapp\FilamentLms\Tests\TestUser;
 
 beforeEach(function () {
-    config(['filament-lms.user_model' => \Tapp\FilamentLms\Tests\TestUser::class]);
+    config(['filament-lms.user_model' => TestUser::class]);
 });
 
 test('manifest parser extracts course title and single lesson with one step from fixture', function () {

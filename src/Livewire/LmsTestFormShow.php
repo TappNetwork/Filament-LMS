@@ -8,6 +8,7 @@ use Filament\Forms\Components\Radio;
 use Illuminate\Support\HtmlString;
 use Tapp\FilamentFormBuilder\Enums\FilamentFieldTypeEnum;
 use Tapp\FilamentFormBuilder\Livewire\FilamentForm\Show;
+use Tapp\FilamentFormBuilder\Models\FilamentFormField;
 
 /**
  * Learner-facing test form: single-choice {@see FilamentFieldTypeEnum::SELECT} fields render as
@@ -20,7 +21,7 @@ class LmsTestFormShow extends Show
     {
         $schema = [];
 
-        /** @var \Tapp\FilamentFormBuilder\Models\FilamentFormField $fieldData */
+        /** @var FilamentFormField $fieldData */
         foreach ($this->filamentForm->filamentFormFields as $fieldData) {
             $componentClass = $fieldData->type === FilamentFieldTypeEnum::SELECT
                 ? Radio::class

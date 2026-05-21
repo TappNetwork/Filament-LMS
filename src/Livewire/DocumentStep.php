@@ -35,15 +35,20 @@ class DocumentStep extends Component
         return response()->download($mediaItem->getPath(), $mediaItem->file_name);
     }
 
-    public function getPdfUrl()
+    public function getPdfUrl(): ?string
     {
-        // Use the custom preview image if available, otherwise fallback to the original PDF URL
+        if ($this->document->hasScormPackage()) {
+            return route('filament-lms.scorm-package.show', [
+                'document' => $this->document->id,
+                'entry' => $this->document->getScormLaunchPath(),
+            ]);
+        }
+
         $previewUrl = $this->document->getPreviewImageUrl();
         if ($previewUrl) {
             return $previewUrl;
         }
 
-        // Use getMediaUrl for the default collection to support signed URLs
         return $this->document->getMediaUrl('default') ?: null;
     }
 

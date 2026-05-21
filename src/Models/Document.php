@@ -55,6 +55,16 @@ class Document extends Model implements HasMedia
     /**
      * Get the preview image URL, using the 'preview' collection if available, otherwise fallback to the generated preview.
      */
+    public function hasScormPackage(): bool
+    {
+        return $this->package_path !== null && $this->package_path !== '';
+    }
+
+    public function getScormLaunchPath(): string
+    {
+        return $this->package_launch_path ?: 'index_lms.html';
+    }
+
     public function getPreviewImageUrl(): ?string
     {
         // Try preview collection first

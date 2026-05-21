@@ -55,9 +55,10 @@ final class ImportCommonCartridgeJob implements ShouldQueue
             $result = $importService->import($extractPath, $this->tenantId);
 
             $user = $this->getUser();
+            $gaps = implode(' ', CommonCartridgeImportService::manualImportGaps());
             $user?->notify(new CommonCartridgeImportCompletedNotification(
                 success: true,
-                message: "Course \"{$result['course']->name}\" imported: {$result['lessons_created']} lesson(s), {$result['steps_created']} step(s).",
+                message: "Course \"{$result['course']->name}\" imported: {$result['lessons_created']} lesson(s), {$result['steps_created']} step(s). Manual follow-up may be needed: {$gaps}",
                 courseName: $result['course']->name,
             ));
 

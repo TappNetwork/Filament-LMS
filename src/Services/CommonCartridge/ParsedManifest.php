@@ -24,5 +24,6 @@ final class ParsedManifest
         public array $resources,
         public array $lessons,
         public array $frameResources = [],
+        public ?string $preferredLaunchHref = null,
     ) {}
 }

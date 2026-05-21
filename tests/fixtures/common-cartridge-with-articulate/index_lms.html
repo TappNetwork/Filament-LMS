@@ -1,0 +1,469 @@
+﻿<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <!-- Created using Storyline 360 x64 - http://www.articulate.com  -->
+  <!-- version: 3.98.34222.0 -->
+  <title>Child Outcomes Summary</title>
+  <meta http-equiv="x-ua-compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,shrink-to-fit=no,minimal-ui"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <style>
+    html, body { height: 100%; padding: 0; margin: 0 }
+    #app { height: 100%; width: 100%; }
+  </style>
+
+  <script>
+    window.DS = {};
+    window.globals = {
+      DATA_PATH_BASE: '',
+      HAS_FRAME: true,
+      HAS_SLIDE: true,
+
+      lmsPresent: true,
+      tinCanPresent: false,
+      cmi5Present: false,
+      aoSupport: false,
+      scale: 'noscale',
+      captureRc: false,
+      browserSize: 'optimal',
+      bgColor: '#FFFFFF',
+      features: 'DropInAcc,DropInBase,DropInCore,DropInInteractions,DropInVideo,JsApiBasics,MathExpressions,MorphTransition,MultipleQuizTracking,SetFocusTrigger',
+      themeName: 'unified',
+      preloaderColor: '#8C8C8C',
+      suppressAnalytics: false,
+      productChannel: 'stable',
+      publishSource: 'storyline',
+      aid: 'auth0|8fe81340-d287-0133-46cc-22000b6c822a',
+      cid: '82220a40-e4fe-4d08-9afb-b93f30ed1492',
+      playerVersion: '3.98.34222.0',
+      publishTimestamp: '2025-04-01T13:56:05.5975344Z',
+      maxIosVideoElements: 10,
+      connectionSettings: { message: 'You%20are%20offline.%20Trying%20to%20reconnect...', useDarkTheme: true, mode: 'disabled' },
+      hasFeature: function(feature) {
+        return this.features.split(',').includes(feature);
+      },
+      
+      parseParams: function(qs) {
+        if (window.globals.parsedParams != null) {
+          return window.globals.parsedParams;
+        }
+        qs = (qs || window.location.search.substr(1)).split('+').join(' ');
+        var params = {},
+            tokens,
+            re = /[?&]?([^=]+)=([^&]*)/g;
+
+        while (tokens = re.exec(qs)) {
+          params[decodeURIComponent(tokens[1]).trim()] =
+            decodeURIComponent(tokens[2]).trim();
+        }
+        window.globals.parsedParams = params;
+        return params;
+      }
+
+    };
+  </script>
+  <script>
+    var isIe11 = ('ActiveXObject' in window || window.MSBlobBuilder != null)
+      && window.msCrypto != null && !window.ActiveXObject;
+    if (isIe11) {
+      window.globals.unsupportedBrowser = true;
+      document.write(atob('PHN0eWxlPg0KICBAZm9udC1mYWNlIHsNCiAgICBmb250LWZhbWlseTogIk9wZW4gU2FucyBGdWxsIjsNCiAgICBmb250LXN0eWxlOiBub3JtYWw7DQogICAgZm9udC13ZWlnaHQ6IDQwMDsNCiAgICBzcmM6IHVybCgiLi9odG1sNS9saWIvc3R5bGVzaGVldHMvbW9iaWxlLWZvbnRzL29wZW4tc2Fucy1yZWd1bGFyLndvZmYiKSBmb3JtYXQoIndvZmYiKTsNCiAgfQ0KDQogICogew0KICAgIG1hcmdpbjogMDsNCiAgICBwYWRkaW5nOiAwOw0KICB9DQoNCiAgYm9keSwNCiAgaHRtbCB7DQogICAgYmFja2dyb3VuZDogYmxhY2s7DQogICAgY29sb3I6IHdoaXRlOw0KICAgIGZvbnQtZmFtaWx5OiAiT3BlbiBTYW5zIEZ1bGwiLCBzYW5zLXNlcmlmOw0KICAgIGZvbnQtc2l6ZTogMTZweDsNCiAgICBoZWlnaHQ6IDEwMCU7DQogICAgdGV4dC1hbGlnbjogY2VudGVyOw0KICAgIG92ZXJmbG93OiBoaWRkZW47DQogIH0NCg0KICAuc2xpZGUtbG9hZGVyIHsNCiAgICBkaXNwbGF5OiBub25lOw0KICB9DQoNCiAgLm1vYmlsZS1zdGFydC1jb3Vyc2UtdGl0bGUgew0KICAgIGZvbnQtc2l6ZTogMjlweDsNCiAgICBwYWRkaW5nLWJvdHRvbTogMzMuNzVweDsNCiAgICBwYWRkaW5nLXRvcDogMzMuNzVweDsNCiAgICB0ZXh0LXNoYWRvdzogNHB4IDRweCAyNXB4IHJnYigwLCAwLCAwLCAuMyk7DQogICAgY29sb3I6ICNlOGU4ZTg7DQogICAgei1pbmRleDogOTk5Ow0KICB9DQoNCiAgcCB7DQogICAgZm9udC1zaXplOiAxLjFlbTsNCiAgfQ0KDQogIHNwYW4gew0KICAgIGhlaWdodDogMTAwJTsNCiAgICB2ZXJ0aWNhbC1hbGlnbjogbWlkZGxlOw0KICAgIGRpc3BsYXk6IGlubGluZS1ibG9jazsNCiAgfQ0KDQogIC5jb250ZW50IHsNCiAgICBiYWNrZ3JvdW5kOiAjMDAwOw0KICAgIHRleHQtYWxpZ246IGxlZnQ7DQogICAgZm9udC1zaXplOiAxNXB4Ow0KICAgIGNvbG9yOiAjYWFhOw0KICAgIHdpZHRoOiA4MCU7DQogICAgbWF4LXdpZHRoOiA1MzVweDsNCiAgICB2ZXJ0aWNhbC1hbGlnbjogbWlkZGxlOw0KICAgIGRpc3BsYXk6IGlubGluZS1ibG9jazsNCiAgfQ0KDQogIC5idG4tY29udGFpbiB7DQogICAgcG9zaXRpb246IHJlbGF0aXZlOw0KICAgIG1hcmdpbi10b3A6IDNlbTsNCiAgICB0ZXh0LWFsaWduOiBjZW50ZXI7DQogIH0NCg0KICAuaWUxMS13YXJuIHAgYSB7DQogICAgY29sb3I6ICM1ZGIwZmYgIWltcG9ydGFudDsNCiAgICB0ZXh0LWRlY29yYXRpb246IHVuZGVybGluZSAhaW1wb3J0YW50Ow0KICB9DQoNCiAgYS5sZWFybiB7DQogICAgcG9zaXRpb246IHJlbGF0aXZlOw0KICAgIGZsb2F0OiBsZWZ0Ow0KICAgIG1hcmdpbi1yaWdodDogMmVtOw0KICAgIGRpc3BsYXk6IGlubGluZS1ibG9jazsNCiAgICBib3JkZXI6IDFweCBzb2xpZCB3aGl0ZTsNCiAgICBjb2xvcjogYmxhY2sgIWltcG9ydGFudDsNCiAgICB0ZXh0LWRlY29yYXRpb246IG5vbmU7DQogICAgcGFkZGluZzogLjVlbTsNCiAgICBwYWRkaW5nOiAxOHB4Ow0KICAgIHBhZGRpbmctbGVmdDogNTBweDsNCiAgICBwYWRkaW5nLXJpZ2h0OiAzMHB4Ow0KICAgIGJhY2tncm91bmQ6ICNmZmY7DQogICAgYm9yZGVyLXJhZGl1czogNDBweDsNCiAgICBjdXJzb3I6IHBvaW50ZXI7DQogIH0NCg0KICBhLmxlYXJuOmFmdGVyIHsNCiAgICBjb250ZW50OiAiIjsNCiAgICBwb3NpdGlvbjogYWJzb2x1dGU7DQogICAgcG9pbnRlci1ldmVudHM6IG5vbmU7DQogICAgbGVmdDogMjBweDsNCiAgICB0b3A6IDUwJTsNCiAgICB0cmFuc2Zvcm06IHRyYW5zbGF0ZVkoLTUwJSk7DQogICAgd2lkdGg6IDA7DQogICAgaGVpZ2h0OiAwOw0KICAgIGJvcmRlci1zdHlsZTogc29saWQ7DQogICAgYm9yZGVyLXdpZHRoOiA5cHggMCA5cHggMTVweDsNCiAgICBib3JkZXItY29sb3I6IHRyYW5zcGFyZW50IHRyYW5zcGFyZW50IHRyYW5zcGFyZW50ICM2ZTZlNmU7DQogICAgY2xlYXI6IGJvdGg7DQogIH0NCg0KICAuaWUxMS13YXJuIHsNCiAgICBwb3NpdGlvbjogZml4ZWQ7DQogICAgd2lkdGg6IDEwMCU7DQogICAgaGVpZ2h0OiAxMDAlOw0KICAgIGJhY2tncm91bmQ6IGJsYWNrOw0KICB9DQo8L3N0eWxlPg0KDQo8ZGl2IGNsYXNzPSJpZTExLXdhcm4iPg0KICA8c3Bhbj48L3NwYW4+DQogIDxkaXYgY2xhc3M9ImNvbnRlbnQiPg0KICAgIDxkaXYgY2xhc3M9Im1vYmlsZS1zdGFydC1jb3Vyc2UtdGl0bGUiPkVuZCBvZiBTdXBwb3J0IGZvciBJbnRlcm5ldCBFeHBsb3JlciAxMTwvZGl2Pg0KICAgIDxwPkZvbGxvd2luZyBNaWNyb3NvZnQncyBsZWFkLCB3ZSBlbmRlZCBzdXBwb3J0IGZvciBJbnRlcm5ldCBFeHBsb3JlciAxMSAoSUUxMSkuDQogICAgICBBcyBvZiBKdWx5IDIwMjIsIHlvdSBjYW4gbm8gbG9uZ2VyIHZpZXcgUmlzZSAzNjAsIFN0b3J5bGluZSAzNjAsIG9yIFN0dWRpbyAzNjANCiAgICAgIGNvdXJzZXMgaW4gSUUxMS4gVXNlIHRoZSBsYXRlc3QgdmVyc2lvbiBvZiBhIHN1cHBvcnRlZCBicm93c2VyIC0NCiAgICAgIDxhIGhyZWY9Imh0dHBzOi8vd3d3Lmdvb2dsZS5jb20vY2hyb21lL2Rvd25sb2Fkcy8iIHRhcmdldD0iX2JsYW5rIj5Hb29nbGUgQ2hyb21lPC9hPiwNCiAgICAgIDxhIGhyZWY9Imh0dHBzOi8vd3d3Lm1pY3Jvc29mdC5jb20vZW4tdXMvZWRnZSIgdGFyZ2V0PSJfYmxhbmsiPk1pY3Jvc29mdCBFZGdlPC9hPiwNCiAgICAgIG9yDQogICAgICA8YSBocmVmPSJodHRwczovL3d3dy5tb3ppbGxhLm9yZy9lbi1VUy9maXJlZm94L25ldy8iIHRhcmdldD0iX2JsYW5rIj5Nb3ppbGxhIEZpcmVmb3g8L2E+Lg0KICAgIDwvcD4NCiAgICA8ZGl2IGNsYXNzPSJidG4tY29udGFpbiI+DQogICAgICA8YSBjbGFzcz0ibGVhcm4iIGhyZWY9Imh0dHBzOi8vYXJ0aWN1bGF0ZS5jb20vc3VwcG9ydC9hcnRpY2xlL0VuZC1vZi1TdXBwb3J0LWZvci1JbnRlcm5ldC1FeHBsb3Jlci0xMSINCiAgICAgICAgdGFyZ2V0PSJfYmxhbmsiPkxlYXJuIE1vcmU8L2E+DQogICAgPC9kaXY+DQogIDwvZGl2Pg0KPC9kaXY+DQo='));
+    }
+  </script>
+
+  <script>
+    if (window.globals.hasFeature('NewAiCourseTranslation')) {
+      
+      
+    }
+  </script>
+
+  <script src="lms/scormdriver.js" charset="utf-8"></script>
+  <script>window.THREE = { };</script>
+  
+</head>
+<body style="background: #FFFFFF" class="cs-HTML theme-unified">
+  <!-- 360 -->
+  <script>!function(){var e,i=/iPhone/i,o=/iPod/i,n=/iPad/i,t=/\biOS-universal(?:.+)Mac\b/i,r=/\bAndroid(?:.+)Mobile\b/i,a=/Android/i,d=/(?:SD4930UR|\bSilk(?:.+)Mobile\b)/i,p=/Silk/i,l=/Windows Phone/i,u=/\bWindows(?:.+)ARM\b/i,b=/BlackBerry/i,s=/BB10/i,c=/Opera Mini/i,f=/\b(CriOS|Chrome)(?:.+)Mobile/i,h=/Mobile(?:.+)Firefox\b/i,v=function(e){return void 0!==e&&"MacIntel"===e.platform&&"number"==typeof e.maxTouchPoints&&e.maxTouchPoints>1&&"undefined"==typeof MSStream};e=function(e){var m={userAgent:"",platform:"",maxTouchPoints:0};e||"undefined"==typeof navigator?"string"==typeof e?m.userAgent=e:e&&e.userAgent&&(m={userAgent:e.userAgent,platform:e.platform,maxTouchPoints:e.maxTouchPoints||0}):m={userAgent:navigator.userAgent,platform:navigator.platform,maxTouchPoints:navigator.maxTouchPoints||0};var g=m.userAgent,y=g.split("[FBAN");void 0!==y[1]&&(g=y[0]),void 0!==(y=g.split("Twitter"))[1]&&(g=y[0]);var A=function(e){return function(i){return i.test(e)}}(g),w={apple:{phone:A(i)&&!A(l),ipod:A(o),tablet:!A(i)&&(A(n)||v(m))&&!A(l),universal:A(t),device:(A(i)||A(o)||A(n)||A(t)||v(m))&&!A(l)},amazon:{phone:A(d),tablet:!A(d)&&A(p),device:A(d)||A(p)},android:{phone:!A(l)&&A(d)||!A(l)&&A(r),tablet:!A(l)&&!A(d)&&!A(r)&&(A(p)||A(a)),device:!A(l)&&(A(d)||A(p)||A(r)||A(a))||A(/\bokhttp\b/i)},windows:{phone:A(l),tablet:A(u),device:A(l)||A(u)},other:{blackberry:A(b),blackberry10:A(s),opera:A(c),firefox:A(h),chrome:A(f),device:A(b)||A(s)||A(c)||A(h)||A(f)},any:!1,phone:!1,tablet:!1};return w.any=w.apple.device||w.android.device||w.windows.device||w.other.device,w.phone=w.apple.phone||w.android.phone||w.windows.phone,w.tablet=w.apple.tablet||w.android.tablet||w.windows.tablet,w}(),"object"==typeof exports&&"undefined"!=typeof module?module.exports=e:"function"==typeof define&&define.amd?define((function(){return e})):this.isMobile=e}();
+    window.isMobile.apple.tablet = window.isMobile.apple.tablet ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    window.isMobile.apple.device = window.isMobile.apple.device || window.isMobile.apple.tablet;
+    window.isMobile.tablet = window.isMobile.tablet || window.isMobile.apple.tablet;
+    window.isMobile.any = window.isMobile.any || window.isMobile.apple.tablet;
+  </script>
+
+  <div id="focus-sink" tabindex="-1"></div>
+
+  <div id="preso"></div>
+  <script>
+    (function() {
+
+      var classTypes = [ 'desktop', 'mobile', 'phone', 'tablet' ];
+
+      var addDeviceClasses = function(prefix, testObj) {
+        var curr, i;
+        for (i = 0; i < classTypes.length; i++) {
+          curr = classTypes[i];
+          if (testObj[curr]) {
+            document.body.classList.add(prefix + curr);
+          }
+        }
+      };
+
+      var params = window.globals.parseParams(),
+          isDevicePreview = params.devicepreview === '1',
+          isPhoneOverride = params.deviceType === 'phone' || (isDevicePreview && params.phone == '1'),
+          isTabletOverride = (params.deviceType === 'tablet' || isDevicePreview) && !isPhoneOverride,
+          isMobileOverride = isPhoneOverride || isTabletOverride;
+
+      var deviceView = {
+        desktop: !window.isMobile.any && !isMobileOverride,
+        mobile: window.isMobile.any || isMobileOverride,
+        phone: isPhoneOverride || (window.isMobile.phone && !isTabletOverride),
+        tablet: isTabletOverride || window.isMobile.tablet
+      };
+
+      window.globals.deviceView = deviceView;
+      window.isMobile.desktop = !window.isMobile.any;
+      window.isMobile.mobile = window.isMobile.any;
+
+      addDeviceClasses('view-', deviceView);
+
+    })();
+  </script>
+  
+  <script src='story_content/triggers.js' type=text/javascript></script>
+<script src='story_content/user.js' type=text/javascript></script>
+  <div class="slide-loader"></div>
+
+  <script>
+    var doc = document, loader = doc.body.querySelector('.slide-loader'); [ 1, 2, 3 ].forEach(function(n) { var d = doc.createElement('div'); d.style.backgroundColor = window.globals.preloaderColor; d.classList.add('mobile-loader-dot'); d.classList.add('dot' + n); loader.appendChild(d); });
+  </script>
+
+  <div class="mobile-load-title-overlay" style="display: none">
+    <div class="mobile-load-title">Child Outcomes Summary</div>
+  </div>
+
+  <div class="mobile-chrome-warning"></div>
+
+  
+<style>
+  .warn-connection-dialog {
+    display: none;
+    background: transparent;
+    pointer-events: all;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+  }
+
+  .warn-connection-content {
+    pointer-events: all;
+    border-radius: 4px;
+    background: white;
+    border: 1px solid #E7E7E7;
+    color: #333333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+    transition: all 150ms ease-out;
+    position: absolute;
+    white-space: nowrap;
+  }
+
+  .view-phone.is-landscape .warn-connection-content {
+    left: 23px;
+    bottom: 23px;
+  }
+
+  .view-tablet.is-landscape .warn-connection-content {
+    left: 50%;
+    top: 20px;
+    transform: translateX(-50%);
+  }
+
+  .view-mobile.is-portrait .warn-connection-content {
+    transform: translate(-50%, calc(-100% - 15px));
+  }
+
+  .warn-connection-content p {
+    display: inline-block;
+    margin: 0 8px 0 0;
+    line-height: 33px;
+    font-size: 11px;
+  }
+
+  .warn-connection-content svg {
+    position: relative;
+    vertical-align: middle;
+    margin: 0 2px 2px 8px;
+  }
+
+  .view-desktop .warn-connection-content {
+    left: 1.5em;
+    bottom: 1.5em;
+  }
+
+  .view-desktop .warn-connection-content p {
+    font-size: 1.1em;
+  }
+
+  .is-offline .warn-connection-dialog {
+    display: block;
+  }
+
+  .is-offline .cs-panel * {
+    pointer-events: none !important;
+  }
+
+  .is-offline .cs-panel {
+    pointer-events: all !important;
+  }
+
+  .is-offline #nav-controls * {
+    pointer-events: none !important;
+  }
+
+  .is-offline #nav-controls {
+    pointer-events: all !important;
+  }
+</style>
+
+<div class="warn-connection-dialog" role="alertdialog" aria-modal="true" tabindex="0" aria-labelledby="warn-connection-message">
+  <div class="warn-connection-content">
+    <svg width="17" height="15" viewBox="0 0 17 15" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#8F0000" stroke="white" d="M16.07,12.98 L15.88,12.23 L9.51,1.21 C8.97,0.26,7.6,0.26,7.06,1.21 L0.69,12.23 C0.15,13.16,0.81,14.36,1.91,14.36 H14.65 C15.47,14.36,16.05,13.7,16.07,12.98 Z"/>
+      <path fill="white" stroke="white" d="M8.58,5.5 C8.35,5.28,8.5,5.35,8.21,5.32 C8.09,5.35,7.97,5.49,7.96,5.67 C7.97,5.79,7.98,5.92,7.98,6.04 L7.98,6.04 C7.99,6.17,8,6.31,8.01,6.43 L8.01,6.44 C8.03,6.92,8.06,7.41,8.09,7.9 L8.09,7.9 C8.12,8.39,8.14,8.88,8.17,9.37 C8.17,9.39,8.18,9.42,8.2,9.44 C8.23,9.46,8.25,9.47,8.28,9.47 C8.31,9.47,8.34,9.46,8.35,9.44 C8.37,9.43,8.38,9.4,8.39,9.35 L8.39,9.34 C8.39,9.24,8.4,9.15,8.4,9.05 L8.4,9.05 C8.41,8.96,8.41,8.86,8.42,8.75 C8.43,8.44,8.45,8.12,8.47,7.81 L8.47,7.81 C8.49,7.49,8.51,7.18,8.53,6.87 C8.55,6.46,8.56,6.05,8.59,5.64 L8.6,5.62 C8.6,5.57,8.59,5.53,8.58,5.5 L8.21,5.32 Z"/>
+      <circle fill="white" stroke="white" cx="8.3" cy="11.35" r="0.3"/>
+    </svg>
+    <p id="warn-connection-message">You are offline. Trying to reconnect...</p>
+  </div>
+</div>
+
+<script>
+  (function() {
+    window.DS.connection = {
+      warningShown: false,
+      assets: {},
+      loadingAssetGroup: false,
+      retryDelay: 500
+    };
+
+    var connectionSettings = window.globals.connectionSettings || {};
+
+    var useConnectionMessages = window.AbortController != null &&
+      window.location.protocol != 'file:' &&
+      connectionSettings.mode === 'normal';
+
+    window.DS.connection.useConnectionMessages = useConnectionMessages;
+
+    var assetCount = 0;
+    var checkLoadedId;
+
+
+    if (useConnectionMessages && connectionSettings != null) {
+      var contentEl = document.querySelector('.warn-connection-content');
+      var messageEl = contentEl.querySelector('p');
+
+      if (connectionSettings.useDarkTheme) {
+        contentEl.style.borderColor = '#BABBBA';
+        contentEl.style.backgroundColor = '#282828';
+        contentEl.style.color = '#FFFFFF';
+      }
+
+      if (connectionSettings.message != null) {
+        messageEl.textContent = window.decodeURIComponent(connectionSettings.message);
+      }
+    }
+
+    function checkAssetsReady() {
+      for (var i in DS.connection.assets) {
+        if (!DS.connection.assets[i].success) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function stopAssetGroup() {
+      if (!useConnectionMessages) { return; }
+
+      assetCount = 0;
+
+      DS.connection.oldAssetGroup = DS.connection.assets;
+      DS.connection.assets = {};
+      DS.connection.loadingAssetGroup = false;
+      clearInterval(checkLoadedId);
+    }
+
+    function startAssetGroup() {
+      if (!useConnectionMessages) { return; }
+      var ticks = 0;
+      clearInterval(checkLoadedId);
+      checkLoadedId = setInterval(function() {
+        var loaded = 0;
+        if (assetCount === 0 && loaded === 0) {
+          clearInterval(checkLoadedId);
+          return;
+        }
+
+        for (var i in DS.connection.assets) {
+          if (DS.connection.assets[i].success) {
+            loaded++;
+          }
+        }
+
+        if (assetCount === loaded && checkAssetsReady()) {
+          for (var i in DS.connection.assets) {
+            if (DS.connection.assets[i].action) {
+              DS.connection.assets[i].action();
+            }
+          }
+          hideWarning();
+          stopAssetGroup();
+        }
+      }, 100)
+    }
+
+    function requiredAsset(url, action, retry, type) {
+      if (!useConnectionMessages) { return; }
+      if (DS.connection.assets[url]) { return; }
+
+      DS.connection.assets[url] = {
+        success: false, action: action, retry: retry, type: type
+      };
+      assetCount = Object.keys(DS.connection.assets).length;
+      if (!DS.connection.loadingAssetGroup) {
+        startAssetGroup();
+      }
+      DS.connection.loadingAssetGroup = true;
+    }
+
+    function assetLoaded(url) {
+      if (!useConnectionMessages) { return; }
+      if (DS.connection.assets[url]) {
+        DS.connection.assets[url].success = true;
+      }
+    }
+
+    function assetFailed(url) {
+      if (!useConnectionMessages) { return; }
+      if (!DS.connection.assets[url]) {
+        if (/\.js$/.test(url) && url.indexOf('transcripts') === -1) {
+          setTimeout(function() {
+            if (DS.connection.lastSlideLoaded != null) {
+              DS.connection.lastSlideLoaded();
+            }
+          }, DS.connection.retryDelay);
+        }
+        return;
+      }
+      if (!DS.connection.warningShown) { showWarning(); }
+      if (DS.connection.assets[url].retry) {
+        setTimeout(function() {
+          if (!DS.connection.assets[url].success) {
+            DS.connection.assets[url].retry()
+          }
+        }, DS.connection.retryDelay);
+      }
+    }
+
+    function hideWarning() {
+      document.body.classList.remove('is-offline');
+      DS.connection.warningShown = false;
+      enableKeys();
+    }
+    DS.connection.hideWarning = hideWarning
+
+    function showWarning(btn) {
+      document.body.classList.add('is-offline')
+      DS.connection.warningShown = true;
+      updateWarningPosition();
+      disableKeys();
+    }
+
+    function updateWarningPosition() {
+      if (!DS.connection.warningShown) {
+        return;
+      }
+
+      var isPortrait = document.body.classList.contains('is-portrait');
+      var isMobile = document.body.classList.contains('view-mobile');
+      var warningEl = document.querySelector('.warn-connection-content');
+
+      if (isPortrait && isMobile) {
+        var slide = document.querySelector('.primary-slide');
+        var slideRect = slide != null
+          ? slide.getBoundingClientRect()
+          : { top: window.innerHeight, left: 0, width: window.innerWidth };
+
+        warningEl.style.top = `${slideRect.top}px`
+        warningEl.style.left = `${slideRect.left + slideRect.width / 2}px`
+      } else {
+        warningEl.style.top = null;
+        warningEl.style.left = null;
+      }
+
+      window.requestAnimationFrame(updateWarningPosition);
+    }
+
+    function onDisableKeyDown(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+
+    function onDisableKeyUp(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+
+    var accStyle = document.createElement('style');
+    var warnDialogEl = document.querySelector('.warn-connection-dialog');
+
+    function disableKeys() {
+      if (DS.views && DS.views.nsStack && DS.views.nsStack.length === 1) {
+        DS.views.nsStack[0].tabReachable = false
+        DS.views.nsStack[0].updateTabIndex(true, true);
+      }
+
+      accStyle.innerHTML = '.acc-shadow-dom { display: none; }';
+      document.body.appendChild(accStyle);
+
+      warnDialogEl.parentNode.append(warnDialogEl);
+      warnDialogEl.focus();
+    }
+
+    function enableKeys() {
+      accStyle.remove();
+      if (DS.views && DS.views.nsStack && DS.views.nsStack.length === 1 && DS.views.nsStack[0].name === '_frame') {
+        DS.views.nsStack[0].tabReachable = true;
+        DS.views.nsStack[0].updateTabIndex();
+      }
+    }
+
+    // these will all be noops if the feature flag isn't set in
+    // the data and `window.globals.features`
+    DS.connection.requiredAsset = requiredAsset;
+    DS.connection.assetLoaded = assetLoaded;
+    DS.connection.assetFailed = assetFailed;
+    DS.connection.stopAssetGroup = stopAssetGroup;
+    DS.connection.startAssetGroup = startAssetGroup;
+  })();
+</script>
+
+
+  <script>
+    
+    if (window.autoSpider && window.vInterfaceObject) {
+      document.querySelector('.mobile-load-title-overlay').style.display = 'none';
+    }
+  </script>
+
+  
+
+  <link rel="stylesheet" href="html5/data/css/output.min.css" data-noprefix/>
+</body>
+<script src="html5/lib/scripts/bootstrapper.min.js"></script>
+</html>

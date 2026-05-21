@@ -18,9 +18,30 @@ use Tapp\FilamentLms\Models\Test;
 
 final class CommonCartridgeImportService
 {
+    /** @var list<Document> */
+    private array $packageDocuments = [];
+
+    private ?string $packageLaunchHref = null;
+
     public function __construct(
         private readonly ManifestParser $parser,
+        private readonly ScormPackageStorage $packageStorage,
     ) {}
+
+    /**
+     * Items that may still require manual configuration after import.
+     *
+     * @return list<string>
+     */
+    public static function manualImportGaps(): array
+    {
+        return [
+            'Assessments import only the first question; add additional fields in Form Builder if needed.',
+            'Articulate Rise courses import as a single step (no per-block lesson structure).',
+            'SCORM completion and scores are not synced; learners complete steps in the LMS.',
+            'Assign learners to the course via course users when using private courses or restricted visibility.',
+        ];
+    }
 
     /**
      * Import a course from an extracted Common Cartridge / SCORM package.
@@ -37,13 +58,18 @@ final class CommonCartridgeImportService
 
         $manifest = $this->parser->parse($extractedPath);
         $extractedPath = mb_rtrim($extractedPath, '/');
+        $this->packageDocuments = [];
+        $this->packageLaunchHref = $manifest->preferredLaunchHref;
 
-        return DB::transaction(function () use ($manifest, $extractedPath, $tenantId) {
+        $result = DB::transaction(function () use ($manifest, $extractedPath, $tenantId) {
             $course = $this->createCourse($manifest, $tenantId);
             $lessonsCreated = 0;
             $stepsCreated = 0;
             $isFirstStepOfCourse = true;
-            $primaryResourceId = $this->getPrimaryWebContentResourceId($manifest->resources);
+            $primaryResourceId = $this->getPrimaryWebContentResourceId(
+                $manifest->resources,
+                $manifest->preferredLaunchHref,
+            );
 
             foreach ($manifest->lessons as $lessonStructure) {
                 $lesson = $this->createLesson($course, $lessonStructure);
@@ -56,6 +82,7 @@ final class CommonCartridgeImportService
                         $stepStructure,
                         $manifest->resources,
                         $extractedPath,
+                        $manifest->preferredLaunchHref,
                         $isFirstStepOfCourse ? $primaryResourceId : null,
                     );
                     $isFirstStepOfCourse = false;
@@ -71,6 +98,30 @@ final class CommonCartridgeImportService
                 'steps_created' => $stepsCreated,
             ];
         });
+
+        $this->attachRetainedPackage($extractedPath);
+
+        return $result;
+    }
+
+    private function attachRetainedPackage(string $extractedPath): void
+    {
+        if ($this->packageDocuments === []) {
+            return;
+        }
+
+        $package = $this->packageStorage->retainPackage($extractedPath);
+        if ($package === null) {
+            return;
+        }
+
+        foreach ($this->packageDocuments as $document) {
+            $document->update([
+                'package_disk' => $package['disk'],
+                'package_path' => $package['path'],
+                'package_launch_path' => $this->packageLaunchHref,
+            ]);
+        }
     }
 
     private function createCourse(ParsedManifest $manifest, int|string|null $tenantId): Course
@@ -120,6 +171,7 @@ final class CommonCartridgeImportService
         StepStructure $structure,
         array $resources,
         string $extractedPath,
+        ?string $manifestPreferredLaunchHref,
         ?string $primaryResourceIdForFirstStep = null,
     ): void {
         $slug = $this->uniqueSlugForStep($lesson, Str::slug($structure->title));
@@ -162,24 +214,24 @@ final class CommonCartridgeImportService
         $resourceId = $structure->resourceIdentifier ?? $primaryResourceIdForFirstStep;
         if (! $isAssessment && $resourceId !== null && isset($resources[$resourceId])) {
             $resource = $resources[$resourceId];
-            $primaryPath = $extractedPath.'/'.$resource->href;
+            $launchHref = $this->resolveLaunchHref($resource, $extractedPath, $manifestPreferredLaunchHref);
 
-            // Single entry-point HTML (e.g. index_lms.html in Articulate/SCORM) is stored as a document.
-            // When shown in an iframe, relative paths inside that HTML (e.g. story_content/, html5/) resolve
-            // against the media URL, so assets may 404 and the content can appear blank. Full SCO playback
-            // would require serving the extracted package from a path that preserves the directory structure.
-            if (in_array(mb_strtolower(mb_trim($resource->type)), ['webcontent', 'associatedcontent'], true)
-                && $resource->href !== ''
-                && is_file($primaryPath)) {
+            if ($launchHref !== null && is_file($extractedPath.'/'.$launchHref)) {
+                $primaryPath = $extractedPath.'/'.$launchHref;
                 $docData = [
-                    'name' => $structure->title !== '' ? $structure->title : basename($resource->href),
+                    'name' => $structure->title !== '' ? $structure->title : basename($launchHref),
                 ];
                 if (config('filament-lms.tenancy.enabled') && $course->getAttribute(TenantHelper::getTenantColumnName())) {
                     $docData[TenantHelper::getTenantColumnName()] = $course->getAttribute(TenantHelper::getTenantColumnName());
                 }
                 $document = Document::query()->create($docData);
                 $document->addMedia($primaryPath)
+                    ->preservingOriginal()
                     ->toMediaCollection('default');
+                $this->packageDocuments[] = $document;
+                if ($this->packageLaunchHref === null) {
+                    $this->packageLaunchHref = $launchHref;
+                }
                 $materialId = $document->id;
                 $materialType = 'document';
             } else {
@@ -300,13 +352,43 @@ final class CommonCartridgeImportService
      *
      * @param  array<string, ResourceData>  $resources
      */
-    private function getPrimaryWebContentResourceId(array $resources): ?string
+    /**
+     * @param  array<string, ResourceData>  $resources
+     */
+    private function getPrimaryWebContentResourceId(array $resources, ?string $preferredLaunchHref): ?string
     {
+        if ($preferredLaunchHref !== null) {
+            foreach ($resources as $identifier => $resource) {
+                if (in_array($preferredLaunchHref, $resource->fileHrefs, true) || $resource->href === $preferredLaunchHref) {
+                    return $identifier;
+                }
+            }
+        }
+
         foreach ($resources as $identifier => $resource) {
             if (in_array(mb_strtolower(mb_trim($resource->type)), ['webcontent', 'associatedcontent'], true)
                 && $resource->href !== '') {
                 return $identifier;
             }
+        }
+
+        return null;
+    }
+
+    private function resolveLaunchHref(ResourceData $resource, string $extractedPath, ?string $manifestPreferred): ?string
+    {
+        if ($manifestPreferred !== null && is_file($extractedPath.'/'.$manifestPreferred)) {
+            return $manifestPreferred;
+        }
+
+        foreach (['scormcontent/index.html', 'index_lms.html', 'index.html', 'story.html'] as $candidate) {
+            if (in_array($candidate, $resource->fileHrefs, true) && is_file($extractedPath.'/'.$candidate)) {
+                return $candidate;
+            }
+        }
+
+        if ($resource->href !== '' && is_file($extractedPath.'/'.$resource->href)) {
+            return $resource->href;
         }
 
         return null;

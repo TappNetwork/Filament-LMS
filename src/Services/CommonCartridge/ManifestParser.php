@@ -21,8 +21,14 @@ final class ManifestParser
 
     public function parse(string $extractedPath): ParsedManifest
     {
-        $manifestPath = mb_rtrim($extractedPath, '/').'/imsmanifest.xml';
+        $extractedPath = mb_rtrim($extractedPath, '/');
+        $manifestPath = $extractedPath.'/imsmanifest.xml';
         if (! is_file($manifestPath)) {
+            $html5Parser = new Html5PackageParser;
+            if ($html5Parser->supports($extractedPath)) {
+                return $html5Parser->parse($extractedPath);
+            }
+
             throw new InvalidArgumentException("imsmanifest.xml not found at: {$manifestPath}");
         }
 
@@ -66,34 +72,56 @@ final class ManifestParser
             throw new InvalidArgumentException('Manifest has no organization or items.');
         }
 
+        $preferredLaunchHref = $this->resolvePreferredLaunchHref($resources, $extractedPath, $xml);
+
         return new ParsedManifest(
             courseTitle: $title,
             courseDescription: $description,
             resources: $resources,
             lessons: $lessons,
             frameResources: $frameResources,
+            preferredLaunchHref: $preferredLaunchHref,
         );
+    }
+
+    /**
+     * Prefer Articulate Rise learner entry (scormcontent/index.html) over SCORM driver shell.
+     */
+    private function resolvePreferredLaunchHref(array $resources, string $extractedPath, SimpleXMLElement $xml): ?string
+    {
+        $riseLaunch = 'scormcontent/index.html';
+        if (is_file($extractedPath.'/'.$riseLaunch)) {
+            return $riseLaunch;
+        }
+
+        $org = $this->getDefaultOrganization($xml);
+        if ($org !== null) {
+            $orgId = $this->itemAttribute($org, 'identifier');
+            if (str_contains(mb_strtolower($orgId), 'articulate_rise')) {
+                return $riseLaunch;
+            }
+        }
+
+        foreach ($resources as $resource) {
+            if (in_array($riseLaunch, $resource->fileHrefs, true) || $resource->href === $riseLaunch) {
+                return $riseLaunch;
+            }
+        }
+
+        return null;
     }
 
     private function extractCourseTitle(SimpleXMLElement $xml): string
     {
         $metadata = $xml->metadata ?? null;
         if ($metadata === null) {
-            return 'Imported Course';
+            return $this->courseTitleFromOrg($xml);
         }
 
         $imsmdChildren = $metadata->children(self::NS_IMSMD);
         $lom = isset($imsmdChildren[0]) ? $imsmdChildren[0] : null;
         if ($lom === null) {
-            $org = $this->getDefaultOrganization($xml);
-            if ($org !== null) {
-                $titleEl = $org->title ?? null;
-                if ($titleEl !== null && (string) $titleEl !== '') {
-                    return mb_trim((string) $titleEl);
-                }
-            }
-
-            return 'Imported Course';
+            return $this->courseTitleFromOrg($xml);
         }
 
         $general = $lom->general ?? null;
@@ -153,24 +181,25 @@ final class ManifestParser
      */
     private function extractResources(SimpleXMLElement $xml): array
     {
-        $resourcesEl = $xml->resources ?? null;
-        if ($resourcesEl === null) {
-            return [];
-        }
-
+        $xml->registerXPathNamespace('imscp', self::NS_IMSCP);
         $out = [];
-        foreach ($resourcesEl->resource as $res) {
-            $identifier = (string) ($res['identifier'] ?? '');
-            $type = (string) ($res['type'] ?? 'webcontent');
-            $href = (string) ($res['href'] ?? '');
+
+        foreach ($xml->xpath('//imscp:resource') as $res) {
+            $identifier = (string) ($res['identifier'] ?? $res->attributes()['identifier'] ?? '');
+            $type = (string) ($res['type'] ?? $res->attributes()['type'] ?? 'webcontent');
+            $href = (string) ($res['href'] ?? $res->attributes()['href'] ?? '');
             $adlcp = $res->attributes(self::NS_ADLCP);
             $scormType = $adlcp !== null && isset($adlcp['scormtype']) ? (string) $adlcp['scormtype'] : null;
 
             $fileHrefs = [];
-            foreach ($res->file as $file) {
-                $h = (string) ($file['href'] ?? '');
-                if ($h !== '') {
-                    $fileHrefs[] = $h;
+            $escapedIdentifier = str_replace("'", "\\'", $identifier);
+            $fileNodes = $xml->xpath(sprintf('//imscp:resource[@identifier=\'%s\']//imscp:file', $escapedIdentifier));
+            if (is_array($fileNodes)) {
+                foreach ($fileNodes as $file) {
+                    $fileHref = (string) ($file->attributes()['href'] ?? '');
+                    if ($fileHref !== '' && ! in_array($fileHref, $fileHrefs, true)) {
+                        $fileHrefs[] = $fileHref;
+                    }
                 }
             }
 
@@ -199,8 +228,8 @@ final class ManifestParser
             return [];
         }
 
-        $items = $org->item ?? [];
-        $itemCount = is_countable($items) ? count($items) : 0;
+        $items = $this->organizationItems($org);
+        $itemCount = count($items);
 
         if ($itemCount === 0) {
             return [];
@@ -210,10 +239,10 @@ final class ManifestParser
         $orderLesson = 0;
 
         foreach ($items as $item) {
-            $itemIdentifierRef = (string) ($item['identifierref'] ?? '');
+            $itemIdentifierRef = $this->itemAttribute($item, 'identifierref');
             $itemTitle = $this->getItemTitle($item);
-            $childItems = $item->item ?? [];
-            $childCount = is_countable($childItems) ? count($childItems) : 0;
+            $childItems = $this->organizationItems($item);
+            $childCount = count($childItems);
 
             if ($itemCount === 1 && $childCount === 0 && $itemIdentifierRef !== '') {
                 $stepTitle = $itemTitle !== '' ? $itemTitle : 'Content';
@@ -234,7 +263,7 @@ final class ManifestParser
             $orderStep = 0;
             if ($childCount > 0) {
                 foreach ($childItems as $child) {
-                    $ref = (string) ($child['identifierref'] ?? '');
+                    $ref = $this->itemAttribute($child, 'identifierref');
                     $steps[] = new StepStructure(
                         title: $this->getItemTitle($child),
                         resourceIdentifier: $ref !== '' ? $ref : null,
@@ -261,7 +290,7 @@ final class ManifestParser
 
     private function getDefaultOrganization(SimpleXMLElement $xml): ?SimpleXMLElement
     {
-        $orgs = $xml->organizations ?? null;
+        $orgs = $this->organizationsElement($xml);
         if ($orgs === null) {
             return null;
         }
@@ -277,26 +306,90 @@ final class ManifestParser
         return $first !== null ? $first : null;
     }
 
-    private function getItemTitle(SimpleXMLElement $item): string
+    private function organizationsElement(SimpleXMLElement $xml): ?SimpleXMLElement
     {
-        $title = $item->title ?? null;
-        if ($title !== null && (string) $title !== '') {
-            return mb_trim((string) $title);
+        $imscp = $xml->children(self::NS_IMSCP);
+        if (isset($imscp->organizations)) {
+            return $imscp->organizations;
         }
 
-        return '';
+        return $xml->organizations ?? null;
+    }
+
+    private function resourcesElement(SimpleXMLElement $xml): ?SimpleXMLElement
+    {
+        $imscp = $xml->children(self::NS_IMSCP);
+        if (isset($imscp->resources)) {
+            return $imscp->resources;
+        }
+
+        return $xml->resources ?? null;
+    }
+
+    private function getItemTitle(SimpleXMLElement $item): string
+    {
+        return $this->elementText($item, 'title');
     }
 
     private function courseTitleFromOrg(SimpleXMLElement $xml): string
     {
         $org = $this->getDefaultOrganization($xml);
         if ($org !== null) {
-            $t = $org->title ?? null;
-            if ($t !== null && (string) $t !== '') {
-                return mb_trim((string) $t);
+            $title = $this->elementText($org, 'title');
+            if ($title !== '') {
+                return $title;
             }
         }
 
         return 'Imported Course';
+    }
+
+    /**
+     * @return list<SimpleXMLElement>
+     */
+    private function organizationItems(SimpleXMLElement $element): array
+    {
+        $items = [];
+        foreach ($element->children(self::NS_IMSCP) as $child) {
+            if ($child->getName() === 'item') {
+                $items[] = $child;
+            }
+        }
+        if ($items !== []) {
+            return $items;
+        }
+
+        foreach ($element->item as $item) {
+            $items[] = $item;
+        }
+
+        return $items;
+    }
+
+    private function itemAttribute(SimpleXMLElement $item, string $name): string
+    {
+        foreach ($item->attributes() as $attributeName => $value) {
+            if ((string) $attributeName === $name) {
+                return (string) $value;
+            }
+        }
+
+        return '';
+    }
+
+    private function elementText(SimpleXMLElement $element, string $name): string
+    {
+        $value = $element->{$name} ?? null;
+        if ($value !== null && (string) $value !== '') {
+            return mb_trim((string) $value);
+        }
+
+        $imscp = $element->children(self::NS_IMSCP);
+        $namespaced = $imscp->{$name} ?? null;
+        if ($namespaced !== null && (string) $namespaced !== '') {
+            return mb_trim((string) $namespaced);
+        }
+
+        return '';
     }
 }

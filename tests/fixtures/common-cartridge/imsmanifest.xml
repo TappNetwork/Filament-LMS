@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<manifest identifier="test_course" xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2">
+  <organizations default="org1">
+    <organization identifier="org1">
+      <title>Child Outcomes Summary</title>
+      <item identifier="item1" identifierref="__6c3M623PUXY_course_id_RES">
+        <title>Child Outcomes Summary</title>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="__6c3M623PUXY_course_id_RES" type="webcontent" adlcp:scormtype="sco" href="index_lms.html">
+      <file href="index_lms.html"/>
+    </resource>
+  </resources>
+</manifest>

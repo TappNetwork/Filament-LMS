@@ -169,9 +169,11 @@ abstract class TestCase extends Orchestra
         $app['db']->connection()->getSchemaBuilder()->create('lms_documents', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('file_path');
-            $table->text('description')->nullable();
+            $table->string('package_disk')->nullable();
+            $table->string('package_path')->nullable();
+            $table->string('package_launch_path')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Create lms_links table
@@ -186,7 +188,7 @@ abstract class TestCase extends Orchestra
         // Create lms_tests table
         $app['db']->connection()->getSchemaBuilder()->create('lms_tests', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->text('name');
             $table->text('description')->nullable();
             $table->unsignedBigInteger('filament_form_id')->nullable();
             $table->unsignedBigInteger('filament_form_user_id')->nullable();

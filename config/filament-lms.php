@@ -154,4 +154,21 @@ return [
     |
     */
     'resources' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Common Cartridge / SCORM import
+    |--------------------------------------------------------------------------
+    */
+    'common_cartridge_import' => [
+        'delete_after_success' => true,
+        'storage_disk' => 'local',
+        'storage_directory' => 'filament-lms/cartridge-imports',
+        'default_import_path' => null,
+        'retain_extracted_packages' => true,
+        'packages_directory' => 'lms-scorm-packages',
+    ],
+
+    // Optional path to Node binary for Articulate slide JSON extraction
+    'node_binary' => null,
 ];

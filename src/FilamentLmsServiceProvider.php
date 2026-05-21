@@ -12,6 +12,7 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Tapp\FilamentLibrary\Models\LibraryItem;
 use Tapp\FilamentLms\Console\Commands\BackfillCourseCompletedAt;
+use Tapp\FilamentLms\Console\Commands\ImportCartridgesCommand;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\ImageStep;
@@ -54,10 +55,12 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'make_material_nullable_in_lms_steps_table',
                 'backfill_lms_course_user_completed_at_from_step_dates',
                 'change_name_to_text_on_lms_tests_table',
+                'add_scorm_package_columns_to_lms_documents_table',
                 'create_lms_credit_categories_table',
                 'create_lms_course_credit_category_table',
             ])
             ->hasCommand(BackfillCourseCompletedAt::class)
+            ->hasCommand(ImportCartridgesCommand::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishMigrations()

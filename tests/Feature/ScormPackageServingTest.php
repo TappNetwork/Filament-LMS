@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Str;
 use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Document;
@@ -58,7 +59,7 @@ test('serves scorm package stored under legacy storage path when local disk uses
         'password' => bcrypt('password'),
     ]);
 
-    $packageId = (string) \Illuminate\Support\Str::uuid();
+    $packageId = (string) Str::uuid();
     $relativePath = 'lms-scorm-packages/'.$packageId;
     $legacyRoot = storage_path('app/'.$relativePath);
     if (! is_dir($legacyRoot)) {
@@ -108,7 +109,7 @@ test('serves nested package assets via path-based urls', function () {
         'password' => bcrypt('password'),
     ]);
 
-    $packageId = (string) \Illuminate\Support\Str::uuid();
+    $packageId = (string) Str::uuid();
     $relativePath = 'lms-scorm-packages/'.$packageId;
     $packageRoot = storage_path('app/'.$relativePath);
     if (! is_dir($packageRoot)) {
@@ -171,7 +172,7 @@ test('serves html5 package index with injected bridge for embedded player course
         'password' => bcrypt('password'),
     ]);
 
-    $packageId = (string) \Illuminate\Support\Str::uuid();
+    $packageId = (string) Str::uuid();
     $relativePath = 'lms-scorm-packages/'.$packageId;
     $packageRoot = storage_path('app/'.$relativePath);
     if (! is_dir($packageRoot)) {

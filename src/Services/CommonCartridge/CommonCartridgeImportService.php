@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormField;
+use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Helpers\TenantHelper;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Document;
@@ -38,7 +39,7 @@ final class CommonCartridgeImportService
         return [
             'Assessments import only the first question; add additional fields in Form Builder if needed.',
             'Articulate Rise courses import as a single step (no per-block lesson structure).',
-            'SCORM completion and scores are not synced; learners complete steps in the LMS.',
+            'Enable embedded player mode on the course for SCORM/HTML5 completion sync after import.',
             'Assign learners to the course via course users when using private courses or restricted visibility.',
         ];
     }
@@ -100,8 +101,26 @@ final class CommonCartridgeImportService
         });
 
         $this->attachRetainedPackage($extractedPath);
+        $this->finalizeEmbeddedPlayerCourse($result['course'], $extractedPath);
 
         return $result;
+    }
+
+    private function finalizeEmbeddedPlayerCourse(Course $course, string $extractedPath): void
+    {
+        if ($this->packageDocuments === []) {
+            return;
+        }
+
+        $extractedPath = mb_rtrim($extractedPath, '/');
+        $completionMode = is_file($extractedPath.'/imsmanifest.xml')
+            ? CompletionMode::Scorm12
+            : CompletionMode::Html5;
+
+        $course->update([
+            'embedded_player' => true,
+            'completion_mode' => $completionMode,
+        ]);
     }
 
     private function attachRetainedPackage(string $extractedPath): void
@@ -128,12 +147,13 @@ final class CommonCartridgeImportService
     {
         $slug = $this->uniqueCourseSlug(Str::slug($manifest->courseTitle), $tenantId);
         $externalId = $this->uniqueCourseColumn(Str::slug($manifest->courseTitle, '_'), 'external_id', $tenantId);
+        $name = $this->uniqueCourseColumn($manifest->courseTitle, 'name', $tenantId);
 
         $awards = config('filament-lms.awards', ['default' => 'Default']);
         $defaultAward = array_key_first($awards);
 
         $data = [
-            'name' => $manifest->courseTitle,
+            'name' => $name,
             'slug' => $slug,
             'external_id' => $externalId,
             'description' => $manifest->courseDescription,
@@ -321,6 +341,7 @@ final class CommonCartridgeImportService
             'material_id' => $materialId,
             'material_type' => $materialType,
             'text' => $text,
+            'player_slide_id' => $structure->slideId,
             'retry_step_id' => null,
             'require_perfect_score' => false,
         ]);

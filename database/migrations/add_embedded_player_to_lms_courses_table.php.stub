@@ -1,0 +1,23 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('lms_courses', function (Blueprint $table): void {
+            $table->boolean('embedded_player')->default(false)->after('is_private');
+            $table->string('completion_mode', 32)->default('native')->after('embedded_player');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('lms_courses', function (Blueprint $table): void {
+            $table->dropColumn(['embedded_player', 'completion_mode']);
+        });
+    }
+};

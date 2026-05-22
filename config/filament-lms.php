@@ -160,6 +160,14 @@ return [
     | Common Cartridge / SCORM import
     |--------------------------------------------------------------------------
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Embedded player completion guards
+    |--------------------------------------------------------------------------
+    */
+    'embedded_player_min_session_seconds' => 90,
+    'embedded_player_min_session_seconds_html5' => 300,
+
     'common_cartridge_import' => [
         'delete_after_success' => true,
         'storage_disk' => 'local',

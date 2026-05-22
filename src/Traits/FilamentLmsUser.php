@@ -80,6 +80,13 @@ trait FilamentLmsUser
      */
     public function canAccessStep(Step $step): bool
     {
+        $course = $step->lesson->course;
+        if ($course->isEmbeddedPlayer()) {
+            $launchStep = $course->launchStep();
+
+            return $launchStep !== null && $launchStep->is($step);
+        }
+
         // Default implementation: check if previous steps are completed
         // Use the protected method directly to avoid circular dependency with available attribute
         return $step->checkPreviousStepsCompleted();

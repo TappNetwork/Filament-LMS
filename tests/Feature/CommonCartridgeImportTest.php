@@ -43,6 +43,16 @@ test('manifest parser extracts course title and single lesson with one step from
     expect($resource->href)->toBe('index_lms.html');
 });
 
+test('import service uniquifies duplicate course names', function () {
+    $fixturePath = realpath(__DIR__.'/../fixtures/common-cartridge');
+    $service = new CommonCartridgeImportService(new ManifestParser, new ScormPackageStorage);
+
+    $service->import($fixturePath);
+    $second = $service->import($fixturePath);
+
+    expect($second['course']->name)->toBe('Child Outcomes Summary-1');
+});
+
 test('import service creates course lesson step and document from fixture', function () {
     $fixturePath = realpath(__DIR__.'/../fixtures/common-cartridge');
     expect($fixturePath)->not->toBeFalse();

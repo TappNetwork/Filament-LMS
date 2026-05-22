@@ -174,6 +174,12 @@ class LmsPanelProvider extends PanelProvider
 
             $course = Course::where('slug', $courseSlug)->firstOrFail();
 
+            if ($course->isEmbeddedPlayer()) {
+                $builder->groups([]);
+
+                return $builder;
+            }
+
             $navigationGroups = $course->lessons->map(function ($lesson) {
                 /** @var Lesson $lesson */
                 return NavigationGroup::make($lesson->name)

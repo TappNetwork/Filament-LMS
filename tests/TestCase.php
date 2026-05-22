@@ -105,6 +105,8 @@ abstract class TestCase extends Orchestra
             $table->text('description')->nullable();
             $table->unsignedTinyInteger('required_test_percentage')->nullable();
             $table->boolean('is_private')->default(false);
+            $table->boolean('embedded_player')->default(false);
+            $table->string('completion_mode', 32)->default('native');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -131,6 +133,7 @@ abstract class TestCase extends Orchestra
             $table->unsignedBigInteger('material_id')->nullable();
             $table->string('material_type')->nullable();
             $table->text('text')->nullable();
+            $table->string('player_slide_id')->nullable();
             $table->foreignId('retry_step_id')->nullable()->constrained('lms_steps')->onDelete('set null');
             $table->boolean('require_perfect_score')->default(false);
             $table->timestamps();

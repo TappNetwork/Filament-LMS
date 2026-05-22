@@ -39,6 +39,35 @@
     min-height: 60vh;
 }
 
+/* SCORM / HTML5 interactive packages: use full content width */
+.step-material-container--interactive {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    height: clamp(28rem, 80vh, 64rem);
+    min-height: 28rem;
+}
+
+.step-material-container--interactive iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* Embedded player: hide Filament sidebar and use full width */
+body.lms-embedded-player .fi-sidebar {
+    display: none !important;
+}
+
+body.lms-embedded-player .fi-main-ctn {
+    margin-inline-start: 0 !important;
+}
+
+body.lms-embedded-player .fi-main {
+    max-width: 100%;
+}
+
 /* Knowledge checks: card-style radio options (single-choice Select fields on LMS tests). */
 .lms-test-form-wrapper .lms-knowledge-check-radio-field .fi-fo-radio {
     counter-reset: lms-mcq-option;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Services\CommonCartridge;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -24,7 +25,7 @@ final class ScormPackageStorage
         $packageId = Str::uuid()->toString();
         $relativePath = mb_rtrim($packagesDirectory, '/').'/'.$packageId;
 
-        $destination = storage_path('app/'.$relativePath);
+        $destination = Storage::disk($disk)->path($relativePath);
         if (! is_dir(dirname($destination))) {
             mkdir(dirname($destination), 0755, true);
         }

@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
+use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\CreditCategory;
 use Tapp\FilamentLms\RelationManagers\CourseUsersRelationManager;
@@ -123,6 +124,18 @@ class CourseResource extends Resource
                         return null;
                     })
                     ->helperText('Form must be saved before previewing.'),
+                Checkbox::make('embedded_player')
+                    ->label('Embedded player mode')
+                    ->helperText('Hides LMS step sidebar and uses the SCORM/HTML5 package as the primary navigation.'),
+                Select::make('completion_mode')
+                    ->label('Completion mode')
+                    ->options([
+                        CompletionMode::Native->value => 'Native (per-step in LMS)',
+                        CompletionMode::Scorm12->value => 'SCORM 1.2 API sync',
+                        CompletionMode::Html5->value => 'HTML5 (started on enter, complete on exit or player signal)',
+                    ])
+                    ->default(CompletionMode::Native->value)
+                    ->required(),
                 Checkbox::make('is_private')
                     ->label('Private Course')
                     ->helperText('Private courses are only visible to assigned users and LMS admins'),

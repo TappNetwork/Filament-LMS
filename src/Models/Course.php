@@ -22,6 +22,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
+use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
@@ -39,6 +40,8 @@ use Tapp\FilamentLms\Traits\HasMediaUrl;
  * @property string|null $description
  * @property int|null $required_test_percentage
  * @property bool $is_private
+ * @property bool $embedded_player
+ * @property CompletionMode|string $completion_mode
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
@@ -58,6 +61,8 @@ final class Course extends Model implements HasMedia
     protected $casts = [
         'award_content' => 'array',
         'is_private' => 'boolean',
+        'embedded_player' => 'boolean',
+        'completion_mode' => CompletionMode::class,
     ];
 
     public function registerMediaCollections(): void
@@ -107,8 +112,50 @@ final class Course extends Model implements HasMedia
         return $this->hasMany(Lesson::class)->ordered();
     }
 
+    public function isEmbeddedPlayer(): bool
+    {
+        return (bool) $this->embedded_player;
+    }
+
+    public function completionMode(): CompletionMode
+    {
+        $mode = $this->completion_mode;
+
+        return $mode instanceof CompletionMode
+            ? $mode
+            : CompletionMode::tryFrom((string) $mode) ?? CompletionMode::Native;
+    }
+
+    public function launchStep(): ?Step
+    {
+        $this->loadMissing(['lessons.steps']);
+
+        foreach ($this->lessons->sortBy('order') as $lesson) {
+            foreach ($lesson->steps->sortBy('order') as $step) {
+                if ($step->material_type !== 'document') {
+                    continue;
+                }
+
+                $material = $step->material;
+                if ($material instanceof Document && $material->hasScormPackage()) {
+                    return $step;
+                }
+            }
+        }
+
+        return $this->steps()->first();
+    }
+
     public function linkToCurrentStep(): string
     {
+        if ($this->isEmbeddedPlayer()) {
+            $launchStep = $this->launchStep();
+
+            return $launchStep !== null
+                ? StepPage::getUrlForStep($launchStep)
+                : Dashboard::getUrl();
+        }
+
         // Get all steps in order
         $allSteps = $this->steps()->ordered()->get();
 

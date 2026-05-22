@@ -10,19 +10,31 @@
                         class="step-material-container rounded-lg border border-gray-300 cursor-pointer"
                         wire:click="download"
                     />
+                @elseif ($document->hasScormPackage())
+                    <div class="step-material-container step-material-container--interactive w-full">
+                        <iframe
+                            src="{{ $this->getPdfUrl() }}"
+                            class="h-full w-full rounded-lg border border-gray-300"
+                            title="Course content"
+                        ></iframe>
+                    </div>
                 @else
-                    <iframe 
-                        src="{{ $this->getPdfUrl() }}" 
+                    <iframe
+                        src="{{ $this->getPdfUrl() }}"
                         class="step-material-container rounded-lg border border-gray-300"
                         title="PDF Preview"
                     ></iframe>
                 @endif
             </div>
 
-            <x-filament::button wire:click="download">
-                Download
-            </x-filament::button>
+            @unless ($step->lesson->course->isEmbeddedPlayer())
+                <x-filament::button wire:click="download">
+                    Download
+                </x-filament::button>
+            @endunless
     </x-filament::section>
 
-    <x-filament-lms::next-button />
+    @unless ($step->lesson->course->isEmbeddedPlayer())
+        <x-filament-lms::next-button />
+    @endunless
 </div>

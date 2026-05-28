@@ -56,11 +56,11 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'make_material_nullable_in_lms_steps_table',
                 'backfill_lms_course_user_completed_at_from_step_dates',
                 'change_name_to_text_on_lms_tests_table',
+                'create_lms_credit_categories_table',
+                'create_lms_course_credit_category_table',
                 'add_scorm_package_columns_to_lms_documents_table',
                 'add_embedded_player_to_lms_courses_table',
                 'add_player_slide_id_to_lms_steps_table',
-                'create_lms_credit_categories_table',
-                'create_lms_course_credit_category_table',
             ])
             ->hasCommand(BackfillCourseCompletedAt::class)
             ->hasCommand(BackfillEmbeddedPlayerCourses::class)

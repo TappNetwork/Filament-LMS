@@ -83,3 +83,20 @@ test('getRenderedText strips script tags from HTML', function () {
     expect($step->getRenderedText())->not->toContain('<script>');
     expect($step->getRenderedText())->toContain('Safe');
 });
+
+test('getRenderedText strips malformed script tags from HTML', function () {
+    $step = Step::query()->create([
+        'lesson_id' => $this->lesson->id,
+        'order' => 0,
+        'name' => 'Step',
+        'slug' => 'step',
+        'text' => '<p>Safe</p><script>alert(1)</script extra><a href="javascript:alert(1)" onclick="alert(1)">link</a>',
+    ]);
+
+    $rendered = $step->getRenderedText();
+
+    expect($rendered)->not->toContain('<script>');
+    expect($rendered)->not->toContain('javascript:');
+    expect($rendered)->not->toContain('onclick');
+    expect($rendered)->toContain('Safe');
+});

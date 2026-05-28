@@ -43,6 +43,13 @@ class DocumentStep extends Component
         $this->downloaded = true;
 
         $mediaItem = $this->document->getFirstMedia();
+        if ($mediaItem === null) {
+            if ($this->document->hasScormPackage()) {
+                return redirect()->to($this->getPdfUrl());
+            }
+
+            abort(404);
+        }
 
         return response()->download($mediaItem->getPath(), $mediaItem->file_name);
     }

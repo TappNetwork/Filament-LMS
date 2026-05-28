@@ -52,58 +52,63 @@ final class CommonCartridgeImportService
      */
     public function import(string $extractedPath, int|string|null $tenantId = null): array
     {
-        Log::channel('single')->info('CC import: start', [
-            'context' => 'cc-import',
-            'extracted_path' => mb_rtrim($extractedPath, '/'),
-        ]);
-
-        $manifest = $this->parser->parse($extractedPath);
-        $extractedPath = mb_rtrim($extractedPath, '/');
         $this->packageDocuments = [];
-        $this->packageLaunchHref = $manifest->preferredLaunchHref;
+        $this->packageLaunchHref = null;
 
-        $result = DB::transaction(function () use ($manifest, $extractedPath, $tenantId) {
-            $course = $this->createCourse($manifest, $tenantId);
-            $lessonsCreated = 0;
-            $stepsCreated = 0;
-            $isFirstStepOfCourse = true;
-            $primaryResourceId = $this->getPrimaryWebContentResourceId(
-                $manifest->resources,
-                $manifest->preferredLaunchHref,
-            );
+        try {
+            Log::channel('single')->info('CC import: start', [
+                'context' => 'cc-import',
+                'extracted_path' => mb_rtrim($extractedPath, '/'),
+            ]);
 
-            foreach ($manifest->lessons as $lessonStructure) {
-                $lesson = $this->createLesson($course, $lessonStructure);
-                $lessonsCreated++;
+            $manifest = $this->parser->parse($extractedPath);
+            $extractedPath = mb_rtrim($extractedPath, '/');
+            $this->packageLaunchHref = $manifest->preferredLaunchHref;
 
-                foreach ($lessonStructure->steps as $stepStructure) {
-                    $this->createStep(
-                        $course,
-                        $lesson,
-                        $stepStructure,
-                        $manifest->resources,
-                        $extractedPath,
-                        $manifest->preferredLaunchHref,
-                        $isFirstStepOfCourse ? $primaryResourceId : null,
-                    );
-                    $isFirstStepOfCourse = false;
-                    $stepsCreated++;
+            return DB::transaction(function () use ($manifest, $extractedPath, $tenantId) {
+                $course = $this->createCourse($manifest, $tenantId);
+                $lessonsCreated = 0;
+                $stepsCreated = 0;
+                $isFirstStepOfCourse = true;
+                $primaryResourceId = $this->getPrimaryWebContentResourceId(
+                    $manifest->resources,
+                    $manifest->preferredLaunchHref,
+                );
+
+                foreach ($manifest->lessons as $lessonStructure) {
+                    $lesson = $this->createLesson($course, $lessonStructure);
+                    $lessonsCreated++;
+
+                    foreach ($lessonStructure->steps as $stepStructure) {
+                        $this->createStep(
+                            $course,
+                            $lesson,
+                            $stepStructure,
+                            $manifest->resources,
+                            $extractedPath,
+                            $manifest->preferredLaunchHref,
+                            $isFirstStepOfCourse ? $primaryResourceId : null,
+                        );
+                        $isFirstStepOfCourse = false;
+                        $stepsCreated++;
+                    }
+
+                    $stepsCreated += $this->createResourcesStepIfNeeded($course, $lesson, $lessonStructure, $manifest->frameResources);
                 }
 
-                $stepsCreated += $this->createResourcesStepIfNeeded($course, $lesson, $lessonStructure, $manifest->frameResources);
-            }
+                $this->attachRetainedPackage($extractedPath);
+                $this->finalizeEmbeddedPlayerCourse($course, $extractedPath);
 
-            $this->attachRetainedPackage($extractedPath);
-            $this->finalizeEmbeddedPlayerCourse($course, $extractedPath);
-
-            return [
-                'course' => $course,
-                'lessons_created' => $lessonsCreated,
-                'steps_created' => $stepsCreated,
-            ];
-        });
-
-        return $result;
+                return [
+                    'course' => $course,
+                    'lessons_created' => $lessonsCreated,
+                    'steps_created' => $stepsCreated,
+                ];
+            });
+        } finally {
+            $this->packageDocuments = [];
+            $this->packageLaunchHref = null;
+        }
     }
 
     private function finalizeEmbeddedPlayerCourse(Course $course, string $extractedPath): void

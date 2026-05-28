@@ -39,7 +39,6 @@ final class CommonCartridgeImportService
         return [
             'Assessments import only the first question; add additional fields in Form Builder if needed.',
             'Articulate Rise courses import as a single step (no per-block lesson structure).',
-            'Enable embedded player mode on the course for SCORM/HTML5 completion sync after import.',
             'Assign learners to the course via course users when using private courses or restricted visibility.',
         ];
     }

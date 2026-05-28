@@ -45,6 +45,10 @@
         };
     }
 
+    window.IsLmsPresent = function () {
+        return true;
+    };
+
     window.API = {
         LMSInitialize: apiMethod('LMSInitialize', function () {
             initialized = true;

@@ -99,12 +99,12 @@ test('manifest parser uses Articulate frame.xml when present for lessons and ste
     expect($manifest->lessons[0]->steps[0]->title)->toBe('Home');
 });
 
-test('manifest parser prefers Rise scormcontent launch path', function () {
+test('manifest parser prefers Rise scormdriver launch path', function () {
     $fixturePath = __DIR__.'/../fixtures/articulate-rise';
     $parser = new ManifestParser;
     $manifest = $parser->parse($fixturePath);
 
-    expect($manifest->preferredLaunchHref)->toBe('scormcontent/index.html');
+    expect($manifest->preferredLaunchHref)->toBe('scormdriver/indexAPI.html');
     expect($manifest->courseTitle)->toBe('A Quick Guide to the Completion of the MDA');
     expect($manifest->lessons[0]->steps[0]->resourceIdentifier)->toBe('r1');
     expect($manifest->resources['r1']->type)->toBe('webcontent');
@@ -120,7 +120,7 @@ test('import service creates Rise course with scorm package on document', functi
 
     $preManifest = (new ManifestParser)->parse($fixturePath);
     expect($preManifest->lessons[0]->steps[0]->resourceIdentifier)->toBe('r1');
-    expect($preManifest->preferredLaunchHref)->toBe('scormcontent/index.html');
+    expect($preManifest->preferredLaunchHref)->toBe('scormdriver/indexAPI.html');
     expect(is_file($fixturePath.'/'.$preManifest->preferredLaunchHref))->toBeTrue();
 
     $service = new CommonCartridgeImportService(new ManifestParser, new ScormPackageStorage);
@@ -135,7 +135,9 @@ test('import service creates Rise course with scorm package on document', functi
 
     expect($document)->toBeInstanceOf(Document::class);
     expect($document->package_path)->not->toBeNull();
-    expect($document->package_launch_path)->toBe('scormcontent/index.html');
+    expect($document->package_launch_path)->toBe('scormdriver/indexAPI.html');
+    expect($course->embedded_player)->toBeTrue();
+    expect($course->completion_mode)->toBe(\Tapp\FilamentLms\Enums\CompletionMode::Scorm12);
 });
 
 test('html5 package parser imports Storyline HTML5 without imsmanifest', function () {

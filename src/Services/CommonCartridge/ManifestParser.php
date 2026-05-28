@@ -85,26 +85,38 @@ final class ManifestParser
     }
 
     /**
-     * Prefer Articulate Rise learner entry (scormcontent/index.html) over SCORM driver shell.
+     * Prefer the SCORM driver shell (manifest href) so Rise content loads inside a supported LMS context.
      */
     private function resolvePreferredLaunchHref(array $resources, string $extractedPath, SimpleXMLElement $xml): ?string
     {
-        $riseLaunch = 'scormcontent/index.html';
-        if (is_file($extractedPath.'/'.$riseLaunch)) {
-            return $riseLaunch;
+        $driverLaunch = 'scormdriver/indexAPI.html';
+        $riseContentLaunch = 'scormcontent/index.html';
+
+        if (is_file($extractedPath.'/'.$driverLaunch)) {
+            return $driverLaunch;
+        }
+
+        foreach ($resources as $resource) {
+            if ($resource->href === $driverLaunch || in_array($driverLaunch, $resource->fileHrefs, true)) {
+                return $driverLaunch;
+            }
+        }
+
+        if (is_file($extractedPath.'/'.$riseContentLaunch)) {
+            return $riseContentLaunch;
         }
 
         $org = $this->getDefaultOrganization($xml);
         if ($org !== null) {
             $orgId = $this->itemAttribute($org, 'identifier');
             if (str_contains(mb_strtolower($orgId), 'articulate_rise')) {
-                return $riseLaunch;
+                return $driverLaunch;
             }
         }
 
         foreach ($resources as $resource) {
-            if (in_array($riseLaunch, $resource->fileHrefs, true) || $resource->href === $riseLaunch) {
-                return $riseLaunch;
+            if (in_array($riseContentLaunch, $resource->fileHrefs, true) || $resource->href === $riseContentLaunch) {
+                return $riseContentLaunch;
             }
         }
 

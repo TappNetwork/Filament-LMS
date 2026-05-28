@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Services\CommonCartridge\CommonCartridgeImportService;
@@ -137,7 +138,7 @@ test('import service creates Rise course with scorm package on document', functi
     expect($document->package_path)->not->toBeNull();
     expect($document->package_launch_path)->toBe('scormdriver/indexAPI.html');
     expect($course->embedded_player)->toBeTrue();
-    expect($course->completion_mode)->toBe(\Tapp\FilamentLms\Enums\CompletionMode::Scorm12);
+    expect($course->completion_mode)->toBe(CompletionMode::Scorm12);
 });
 
 test('html5 package parser imports Storyline HTML5 without imsmanifest', function () {

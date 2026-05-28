@@ -45,11 +45,6 @@ class LmsPanelProvider extends PanelProvider
             );
         }
 
-        FilamentView::registerRenderHook(
-            PanelsRenderHook::TOPBAR_LOGO_AFTER,
-            fn (): ?View => $this->renderCourseTopbarNavigation(),
-        );
-
         if (config('filament-lms.vite_theme')) {
             $panel->viteTheme(config('filament-lms.vite_theme'));
         }
@@ -69,6 +64,11 @@ class LmsPanelProvider extends PanelProvider
             if ($this->currentCourseSlug() !== null) {
                 $panel = Filament::getPanel('lms');
                 $panel->topNavigation(false);
+
+                FilamentView::registerRenderHook(
+                    PanelsRenderHook::TOPBAR_LOGO_AFTER,
+                    fn (): View => $this->renderCourseTopbarNavigation(),
+                );
             }
         });
 
@@ -222,16 +222,8 @@ class LmsPanelProvider extends PanelProvider
         return is_string($courseSlug) && $courseSlug !== '' ? $courseSlug : null;
     }
 
-    private function renderCourseTopbarNavigation(): ?View
+    private function renderCourseTopbarNavigation(): View
     {
-        if (Filament::getCurrentOrDefaultPanel()->getId() !== 'lms') {
-            return null;
-        }
-
-        if ($this->currentCourseSlug() === null) {
-            return null;
-        }
-
         $hookedNavigationItems = LmsNavigation::getNavigation('lms');
 
         $topNavigation = [

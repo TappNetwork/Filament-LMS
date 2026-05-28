@@ -26,9 +26,9 @@ Route::middleware('web')->group(function () {
     Route::get('lms/scorm-package/{document}/{entry?}', [ScormPackageController::class, 'show'])
         ->where('entry', '.*')
         ->name('filament-lms.scorm-package.show')
-        ->middleware(['web', 'auth']);
+        ->middleware('auth');
 
     Route::post('lms/scorm-commit/{course}', [ScormCommitController::class, 'store'])
         ->name('filament-lms.scorm-commit.store')
-        ->middleware(['web', 'auth']);
+        ->middleware('auth');
 });

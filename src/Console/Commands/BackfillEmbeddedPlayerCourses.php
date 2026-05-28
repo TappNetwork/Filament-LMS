@@ -18,22 +18,22 @@ final class BackfillEmbeddedPlayerCourses extends Command
 
     public function handle(): int
     {
-        $courseIds = Document::query()
+        $documentIds = Document::query()
             ->whereNotNull('package_path')
             ->where('package_path', '!=', '')
             ->pluck('id');
 
-        if ($courseIds->isEmpty()) {
+        if ($documentIds->isEmpty()) {
             $this->warn('No documents with retained packages found.');
 
             return self::SUCCESS;
         }
 
         $query = Course::query()
-            ->whereHas('steps', function ($stepQuery) use ($courseIds): void {
+            ->whereHas('steps', function ($stepQuery) use ($documentIds): void {
                 $stepQuery
                     ->where('material_type', 'document')
-                    ->whereIn('material_id', $courseIds);
+                    ->whereIn('material_id', $documentIds);
             });
 
         if ($courseId = $this->option('course-id')) {

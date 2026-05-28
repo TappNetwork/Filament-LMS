@@ -35,13 +35,14 @@ final class ImportCommonCartridgeJob implements ShouldQueue
     public function handle(CommonCartridgeImportService $importService): void
     {
         $extractPath = null;
+        $tempRootPath = null;
 
         try {
             if (! is_file($this->storedPath)) {
                 throw new RuntimeException('Stored import file not found: '.$this->storedPath);
             }
 
-            $extractPath = $this->extractZip($this->storedPath);
+            $extractPath = $this->extractZip($this->storedPath, $tempRootPath);
 
             $root = mb_rtrim($extractPath, '/');
             Log::channel('single')->info('CC import: package root', [
@@ -49,7 +50,6 @@ final class ImportCommonCartridgeJob implements ShouldQueue
                 'package_root' => $root,
                 'imsmanifest_exists' => is_file($root.'/imsmanifest.xml'),
                 'frame_xml_exists' => is_file($root.'/story_content/frame.xml'),
-                'sample_slide_js_exists' => is_file($root.'/html5/data/js/6FA6ZHMtWms.js'),
             ]);
 
             $result = $importService->import($extractPath, $this->tenantId);
@@ -80,15 +80,17 @@ final class ImportCommonCartridgeJob implements ShouldQueue
 
             throw $e;
         } finally {
-            if ($extractPath !== null && is_dir($extractPath)) {
-                $this->deleteDirectory($extractPath);
+            if ($tempRootPath !== null && is_dir($tempRootPath)) {
+                $this->deleteDirectory($tempRootPath);
             }
         }
     }
 
-    private function extractZip(string $zipPath): string
+    private function extractZip(string $zipPath, ?string &$tempRootPath = null): string
     {
         $extractPath = storage_path('app/temp/cc-import-'.Str::uuid()->toString());
+        $tempRootPath = $extractPath;
+
         if (! is_dir(dirname($extractPath))) {
             mkdir(dirname($extractPath), 0755, true);
         }
@@ -104,31 +106,38 @@ final class ImportCommonCartridgeJob implements ShouldQueue
     }
 
     /**
-     * When the zip has a single root directory (e.g. "COS_SCORM12") that contains imsmanifest.xml,
-     * use that subdirectory as the package root so the parser finds frame.xml and html5/data/js.
+     * When the zip has a single root directory (e.g. "COS_SCORM12") that contains package markers,
+     * use that subdirectory as the package root so the parser finds imsmanifest.xml or frame.xml.
      */
     private function normalizePackageRoot(string $extractPath): string
     {
-        $manifestPath = mb_rtrim($extractPath, '/').'/imsmanifest.xml';
-        if (is_file($manifestPath)) {
-            return mb_rtrim($extractPath, '/');
+        $root = mb_rtrim($extractPath, '/');
+        if ($this->hasPackageRootMarkers($root)) {
+            return $root;
         }
+
         $entries = @scandir($extractPath);
         if ($entries === false) {
-            return mb_rtrim($extractPath, '/');
+            return $root;
         }
         $dirs = array_filter($entries, function ($name) use ($extractPath) {
             return $name !== '.' && $name !== '..' && is_dir(mb_rtrim($extractPath, '/').'/'.$name);
         });
         if (count($dirs) === 1) {
-            $subDir = mb_rtrim($extractPath, '/').'/'.reset($dirs);
-            $nestedManifest = $subDir.'/imsmanifest.xml';
-            if (is_file($nestedManifest)) {
+            $subDir = $root.'/'.reset($dirs);
+            if ($this->hasPackageRootMarkers($subDir)) {
                 return $subDir;
             }
         }
 
-        return mb_rtrim($extractPath, '/');
+        return $root;
+    }
+
+    private function hasPackageRootMarkers(string $path): bool
+    {
+        $root = mb_rtrim($path, '/');
+
+        return is_file($root.'/imsmanifest.xml') || is_file($root.'/story_content/frame.xml');
     }
 
     private function deleteDirectory(string $path): void

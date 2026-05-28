@@ -102,6 +102,54 @@ test('getSlideData returns decoded array and getSlideTitle returns title', funct
     @rmdir($tmp);
 });
 
+test('getSlideData ignores content after double quoted slide payload', function () {
+    $tmp = sys_get_temp_dir().'/articulate-test-'.uniqid();
+    mkdir($tmp, 0755, true);
+    mkdir($tmp.'/html5/data/js', 0755, true);
+
+    $slideId = 'DoubleQuotedSlide';
+    $json = ['title' => 'Double quoted', 'slideLayers' => []];
+    $rawJson = json_encode($json);
+    $escaped = str_replace(['\\', '"'], ['\\\\', '\\"'], $rawJson);
+    $jsContent = 'window.globalProvideData("slide", "'.$escaped.'"); console.log("later quoted content");';
+    file_put_contents($tmp.'/html5/data/js/'.$slideId.'.js', $jsContent);
+
+    $data = $this->extractor->getSlideData($tmp, $slideId);
+
+    expect($data)->toBeArray();
+    expect($this->extractor->getSlideTitle($data ?? []))->toBe('Double quoted');
+
+    unlink($tmp.'/html5/data/js/'.$slideId.'.js');
+    @rmdir($tmp.'/html5/data/js');
+    @rmdir($tmp.'/html5/data');
+    @rmdir($tmp.'/html5');
+    @rmdir($tmp);
+});
+
+test('getSlideData ignores content after single quoted slide payload', function () {
+    $tmp = sys_get_temp_dir().'/articulate-test-'.uniqid();
+    mkdir($tmp, 0755, true);
+    mkdir($tmp.'/html5/data/js', 0755, true);
+
+    $slideId = 'SingleQuotedSlide';
+    $json = ['title' => 'Single quoted', 'slideLayers' => []];
+    $rawJson = json_encode($json);
+    $escaped = str_replace(['\\', "'"], ['\\\\', "\\'"], $rawJson);
+    $jsContent = "window.globalProvideData('slide', '".$escaped."'); console.log('later quoted content');";
+    file_put_contents($tmp.'/html5/data/js/'.$slideId.'.js', $jsContent);
+
+    $data = $this->extractor->getSlideData($tmp, $slideId);
+
+    expect($data)->toBeArray();
+    expect($this->extractor->getSlideTitle($data ?? []))->toBe('Single quoted');
+
+    unlink($tmp.'/html5/data/js/'.$slideId.'.js');
+    @rmdir($tmp.'/html5/data/js');
+    @rmdir($tmp.'/html5/data');
+    @rmdir($tmp.'/html5');
+    @rmdir($tmp);
+});
+
 test('extractFromSlideData builds html from slide data', function () {
     $data = [
         'slideLayers' => [

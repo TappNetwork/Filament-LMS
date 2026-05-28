@@ -254,7 +254,7 @@ final class ArticulateSlideContentExtractor
         }
         $start += strlen($needle);
         $len = strlen($content);
-        $end = $start;
+        $end = null;
         for ($i = $start; $i < $len; $i++) {
             if ($content[$i] === '"') {
                 $backslashes = 0;
@@ -265,12 +265,23 @@ final class ArticulateSlideContentExtractor
                 }
                 if ($backslashes % 2 === 0) {
                     $end = $i;
+                    break;
                 }
             }
         }
+        if ($end === null) {
+            return null;
+        }
         $jsonStr = substr($content, $start, $end - $start);
+        if ($jsonStr === '') {
+            return null;
+        }
+        $placeholder = "\x00";
+        $jsonStr = str_replace('\\\\\"', $placeholder, $jsonStr);
+        $jsonStr = str_replace('\\"', '"', $jsonStr);
+        $jsonStr = str_replace($placeholder, '\\\\\"', $jsonStr);
 
-        return $jsonStr !== '' ? $jsonStr : null;
+        return $jsonStr;
     }
 
     /**
@@ -285,7 +296,7 @@ final class ArticulateSlideContentExtractor
         }
         $start += strlen($needle);
         $len = strlen($content);
-        $end = $start;
+        $end = null;
         for ($i = $start; $i < $len; $i++) {
             if ($content[$i] === "'") {
                 $backslashes = 0;
@@ -296,8 +307,12 @@ final class ArticulateSlideContentExtractor
                 }
                 if ($backslashes % 2 === 0) {
                     $end = $i;
+                    break;
                 }
             }
+        }
+        if ($end === null) {
+            return null;
         }
         $jsonStr = substr($content, $start, $end - $start);
         if ($jsonStr === '') {

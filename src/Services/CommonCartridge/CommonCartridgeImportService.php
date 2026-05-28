@@ -93,15 +93,15 @@ final class CommonCartridgeImportService
                 $stepsCreated += $this->createResourcesStepIfNeeded($course, $lesson, $lessonStructure, $manifest->frameResources);
             }
 
+            $this->attachRetainedPackage($extractedPath);
+            $this->finalizeEmbeddedPlayerCourse($course, $extractedPath);
+
             return [
                 'course' => $course,
                 'lessons_created' => $lessonsCreated,
                 'steps_created' => $stepsCreated,
             ];
         });
-
-        $this->attachRetainedPackage($extractedPath);
-        $this->finalizeEmbeddedPlayerCourse($result['course'], $extractedPath);
 
         return $result;
     }

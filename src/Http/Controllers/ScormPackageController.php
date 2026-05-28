@@ -114,7 +114,7 @@ final class ScormPackageController extends Controller
             'png' => 'image/png',
             'jpg', 'jpeg' => 'image/jpeg',
             'gif' => 'image/gif',
-            'svg' => 'image/svg+xml',
+            'svg' => 'application/octet-stream',
             'woff' => 'font/woff',
             'woff2' => 'font/woff2',
             'ttf' => 'font/ttf',

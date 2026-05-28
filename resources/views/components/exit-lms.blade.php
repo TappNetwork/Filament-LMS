@@ -41,13 +41,17 @@
         document.getElementById('lms-exit-with-complete')?.addEventListener('click', function (event) {
             event.preventDefault();
             if (typeof window.lmsConfirmHtml5CourseComplete !== 'function' || ! window.lmsConfirmHtml5CourseComplete()) {
+                window.location.href = '/';
+
                 return;
             }
             window.lmsPostHtml5CourseComplete(this.dataset.commitUrl, this.dataset.csrfToken)
                 .then(() => {
                     window.location.href = '/';
                 })
-                .catch(() => {});
+                .catch(() => {
+                    window.location.href = '/';
+                });
         });
     </script>
 @else

@@ -159,6 +159,55 @@ test('serves nested package assets via path-based urls', function () {
         ->assertHeader('content-type', 'application/javascript');
 });
 
+test('serves svg package assets as octet stream to avoid same-origin script execution', function () {
+    config([
+        'filament-lms.user_model' => TestUser::class,
+    ]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'svg-assets@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $packageId = (string) Str::uuid();
+    $relativePath = 'lms-scorm-packages/'.$packageId;
+    $packageRoot = storage_path('app/'.$relativePath);
+    if (! is_dir($packageRoot)) {
+        mkdir($packageRoot, 0755, true);
+    }
+    file_put_contents($packageRoot.'/icon.svg', '<svg><script>alert(1)</script></svg>');
+
+    $course = Course::factory()->create([
+        'name' => 'SVG Assets Course',
+        'slug' => 'svg-assets-course',
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $document = Document::query()->create([
+        'name' => 'Home',
+        'package_disk' => 'local',
+        'package_path' => $relativePath,
+        'package_launch_path' => 'index.html',
+    ]);
+    Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'material_type' => 'document',
+        'material_id' => $document->id,
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('filament-lms.scorm-package.show', [
+        'document' => $document->id,
+        'entry' => 'icon.svg',
+    ]))
+        ->assertSuccessful()
+        ->assertHeader('content-type', 'application/octet-stream');
+});
+
 test('serves html5 package index with injected bridge for embedded player courses', function () {
     config([
         'filament-lms.user_model' => TestUser::class,

@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Carbon;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
 /**
  * @property string|null $completed_at
+ * @property Carbon|null $created_at
  * @property int|null $seconds
  */
 class StepUser extends Pivot

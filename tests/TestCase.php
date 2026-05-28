@@ -172,6 +172,7 @@ abstract class TestCase extends Orchestra
         $app['db']->connection()->getSchemaBuilder()->create('lms_documents', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('file_path')->nullable();
             $table->string('package_disk')->nullable();
             $table->string('package_path')->nullable();
             $table->string('package_launch_path')->nullable();

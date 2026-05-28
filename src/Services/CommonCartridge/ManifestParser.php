@@ -316,16 +316,6 @@ final class ManifestParser
         return $xml->organizations ?? null;
     }
 
-    private function resourcesElement(SimpleXMLElement $xml): ?SimpleXMLElement
-    {
-        $imscp = $xml->children(self::NS_IMSCP);
-        if (isset($imscp->resources)) {
-            return $imscp->resources;
-        }
-
-        return $xml->resources ?? null;
-    }
-
     private function getItemTitle(SimpleXMLElement $item): string
     {
         return $this->elementText($item, 'title');

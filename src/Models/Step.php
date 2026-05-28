@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
@@ -27,8 +28,10 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
  * @property string $name
  * @property string $slug
  * @property string $type
+ * @property string|null $text
  * @property int|null $material_id
  * @property string|null $material_type
+ * @property string|null $player_slide_id
  * @property Carbon|null $completed_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -76,6 +79,25 @@ class Step extends Model implements Sortable
     public function retryStep(): BelongsTo
     {
         return $this->belongsTo(Step::class, 'retry_step_id');
+    }
+
+    public function getRenderedText(): string
+    {
+        $text = mb_trim((string) $this->text);
+        if ($text === '') {
+            return '';
+        }
+
+        $html = str_starts_with(ltrim($text), '<')
+            ? $text
+            : Str::markdown($text);
+
+        return $this->sanitizeRenderedText($html);
+    }
+
+    private function sanitizeRenderedText(string $html): string
+    {
+        return preg_replace('#<script\b[^>]*>.*?</script>#is', '', $html) ?? '';
     }
 
     public function complete($user = null)

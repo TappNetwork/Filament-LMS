@@ -2,7 +2,8 @@
 
 namespace Tapp\FilamentLms\Exports;
 
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -11,16 +12,16 @@ use Tapp\FilamentLms\Services\CourseProgressQueryService;
 
 class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
 {
-    protected Builder $query;
+    protected EloquentBuilder|QueryBuilder $query;
 
-    public function __construct(Builder $query)
+    public function __construct(EloquentBuilder|QueryBuilder $query)
     {
         $this->query = $query;
     }
 
-    public function query()
+    public function query(): EloquentBuilder|QueryBuilder
     {
-        return CourseProgressQueryService::buildQuery();
+        return $this->query;
     }
 
     public function headings(): array

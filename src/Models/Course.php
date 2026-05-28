@@ -143,7 +143,9 @@ final class Course extends Model implements HasMedia
             }
         }
 
-        return $this->steps()->first();
+        $step = $this->steps()->first();
+
+        return $step instanceof Step ? $step : null;
     }
 
     public function linkToCurrentStep(): string

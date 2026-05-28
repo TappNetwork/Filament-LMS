@@ -272,10 +272,10 @@ final class CommonCartridgeImportService
         }
         // Always persist slide-extracted text when present (text field is the source for step content).
 
-        $firstQuestionAndOptions = $isAssessment && $slideData !== null
+        $firstQuestionAndOptions = $isAssessment
             ? $extractor->getAssessmentFirstQuestionAndOptions($slideData)
             : null;
-        $formName = $firstQuestionAndOptions !== null && $firstQuestionAndOptions['question'] !== ''
+        $formName = $firstQuestionAndOptions !== null
             ? $firstQuestionAndOptions['question']
             : ($structure->title !== '' ? $structure->title : 'Assessment');
 

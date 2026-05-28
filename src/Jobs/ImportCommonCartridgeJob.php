@@ -35,7 +35,7 @@ final class ImportCommonCartridgeJob implements ShouldQueue
     public function handle(CommonCartridgeImportService $importService): void
     {
         $extractPath = null;
-        $tempRootPath = null;
+        $tempRootPath = '';
 
         try {
             if (! is_file($this->storedPath)) {
@@ -80,13 +80,13 @@ final class ImportCommonCartridgeJob implements ShouldQueue
 
             throw $e;
         } finally {
-            if ($tempRootPath !== null && is_dir($tempRootPath)) {
+            if ($tempRootPath !== '' && is_dir($tempRootPath)) {
                 $this->deleteDirectory($tempRootPath);
             }
         }
     }
 
-    private function extractZip(string $zipPath, ?string &$tempRootPath = null): string
+    private function extractZip(string $zipPath, string &$tempRootPath): string
     {
         $extractPath = storage_path('app/temp/cc-import-'.Str::uuid()->toString());
         $tempRootPath = $extractPath;

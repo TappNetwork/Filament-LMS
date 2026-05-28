@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Livewire;
 
 use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
 use Illuminate\Support\HtmlString;
 use Tapp\FilamentFormBuilder\Enums\FilamentFieldTypeEnum;
 use Tapp\FilamentFormBuilder\Livewire\FilamentForm\Show;
@@ -31,7 +33,7 @@ class LmsTestFormShow extends Show
 
             $filamentField = $this->parseField($filamentField, $fieldData->toArray());
 
-            if ($fieldData->type === FilamentFieldTypeEnum::SELECT_MULTIPLE) {
+            if ($fieldData->type === FilamentFieldTypeEnum::SELECT_MULTIPLE && $filamentField instanceof Select) {
                 $filamentField = $filamentField
                     ->multiple()
                     ->live()
@@ -80,11 +82,11 @@ class LmsTestFormShow extends Show
                     ->live();
             }
 
-            if ($fieldData->type === FilamentFieldTypeEnum::RICH_EDITOR) {
+            if ($fieldData->type === FilamentFieldTypeEnum::RICH_EDITOR && $filamentField instanceof RichEditor) {
                 $filamentField = $filamentField->disableToolbarButtons(['attachFiles']);
             }
 
-            if ($fieldData->type === FilamentFieldTypeEnum::SELECT) {
+            if ($fieldData->type === FilamentFieldTypeEnum::SELECT && $filamentField instanceof Radio) {
                 $filamentField = $filamentField
                     ->inline(false)
                     ->extraFieldWrapperAttributes([

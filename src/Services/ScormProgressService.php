@@ -265,11 +265,13 @@ final class ScormProgressService
             return $exact;
         }
 
-        return $course->steps()
+        $matchingStep = $course->steps()
             ->whereNotNull('player_slide_id')
             ->get()
             ->first(fn (Step $step): bool => $step->player_slide_id !== null
                 && (str_contains($location, $step->player_slide_id)
                     || str_contains($step->player_slide_id, $location)));
+
+        return $matchingStep instanceof Step ? $matchingStep : null;
     }
 }

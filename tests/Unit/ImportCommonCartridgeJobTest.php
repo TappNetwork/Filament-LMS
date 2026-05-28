@@ -19,10 +19,10 @@ test('extractZip returns nested html5 package root and exposes temp root for cle
     $method = new ReflectionMethod($job, 'extractZip');
     $method->setAccessible(true);
 
-    $tempRootPath = null;
+    $tempRootPath = '';
     $packageRoot = $method->invokeArgs($job, [$zipPath, &$tempRootPath]);
 
-    expect($tempRootPath)->not->toBeNull();
+    expect($tempRootPath)->not->toBe('');
     expect($packageRoot)->toBe($tempRootPath.'/wrapped');
     expect(is_dir($tempRootPath))->toBeTrue();
     expect(is_file($packageRoot.'/story_content/frame.xml'))->toBeTrue();

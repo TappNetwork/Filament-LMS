@@ -12,6 +12,11 @@ use Tapp\FilamentLms\Database\Factories\DocumentFactory;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
 
+/**
+ * @property string|null $package_disk
+ * @property string|null $package_path
+ * @property string|null $package_launch_path
+ */
 class Document extends Model implements HasMedia
 {
     use BelongsToTenant;

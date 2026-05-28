@@ -341,9 +341,7 @@ final class ArticulateSlideContentExtractor
     private function sanitizeJsonForDecode(string $json): string
     {
         $sanitized = mb_convert_encoding($json, 'UTF-8', 'UTF-8');
-        if ($sanitized !== false) {
-            $json = $sanitized;
-        }
+        $json = $sanitized;
         $json = preg_replace('/,\s*([}\]])/', '$1', $json) ?? $json;
         $json = $this->escapeLiteralNewlinesInsideJsonStrings($json);
 
@@ -550,7 +548,7 @@ final class ArticulateSlideContentExtractor
                 break;
             }
         }
-        if ($question === null || $question === '') {
+        if ($question === null) {
             return null;
         }
 

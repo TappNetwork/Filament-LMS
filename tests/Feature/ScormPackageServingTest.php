@@ -159,7 +159,7 @@ test('serves nested package assets via path-based urls', function () {
         ->assertHeader('content-type', 'application/javascript');
 });
 
-test('serves svg package assets as octet stream to avoid same-origin script execution', function () {
+test('serves svg package assets with script-blocking security headers', function () {
     config([
         'filament-lms.user_model' => TestUser::class,
     ]);
@@ -205,7 +205,9 @@ test('serves svg package assets as octet stream to avoid same-origin script exec
         'entry' => 'icon.svg',
     ]))
         ->assertSuccessful()
-        ->assertHeader('content-type', 'application/octet-stream');
+        ->assertHeader('content-type', 'image/svg+xml')
+        ->assertHeader('content-security-policy', "script-src 'none'; sandbox")
+        ->assertHeader('x-content-type-options', 'nosniff');
 });
 
 test('serves html5 package index with injected bridge for embedded player courses', function () {

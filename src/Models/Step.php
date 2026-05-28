@@ -88,6 +88,16 @@ class Step extends Model implements Sortable
         'a' => ['href', 'rel', 'target', 'title'],
     ];
 
+    private const DANGEROUS_RENDERED_TEXT_TAGS = [
+        'embed',
+        'iframe',
+        'math',
+        'object',
+        'script',
+        'style',
+        'svg',
+    ];
+
     protected static function newFactory()
     {
         return StepFactory::new();
@@ -156,6 +166,13 @@ class Step extends Model implements Sortable
 
             $tagName = mb_strtolower($child->tagName);
             if (! in_array($tagName, self::ALLOWED_RENDERED_TEXT_TAGS, true)) {
+                if (! in_array($tagName, self::DANGEROUS_RENDERED_TEXT_TAGS, true)) {
+                    $this->sanitizeRenderedTextNode($child);
+                    while ($child->firstChild !== null) {
+                        $node->insertBefore($child->firstChild, $child);
+                    }
+                }
+
                 $child->parentNode?->removeChild($child);
 
                 continue;

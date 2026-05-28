@@ -43,6 +43,7 @@ final class ScormPackageController extends Controller
         abort_unless(is_file($realFile), 404);
 
         $mimeType = $this->mimeType($realFile);
+        $headers = $this->headersForMimeType($mimeType);
 
         if ($course->isEmbeddedPlayer()
             && $course->completionMode() === CompletionMode::Html5
@@ -51,13 +52,11 @@ final class ScormPackageController extends Controller
             if (is_string($content)) {
                 $content = $this->injectHtml5BridgeIntoHtml($content);
 
-                return response($content, 200, ['Content-Type' => $mimeType]);
+                return response($content, 200, $headers);
             }
         }
 
-        return response()->file($realFile, [
-            'Content-Type' => $mimeType,
-        ]);
+        return response()->file($realFile, $headers);
     }
 
     private function injectHtml5BridgeIntoHtml(string $content): string
@@ -114,7 +113,7 @@ final class ScormPackageController extends Controller
             'png' => 'image/png',
             'jpg', 'jpeg' => 'image/jpeg',
             'gif' => 'image/gif',
-            'svg' => 'application/octet-stream',
+            'svg' => 'image/svg+xml',
             'woff' => 'font/woff',
             'woff2' => 'font/woff2',
             'ttf' => 'font/ttf',
@@ -122,5 +121,22 @@ final class ScormPackageController extends Controller
             'mp4' => 'video/mp4',
             default => 'application/octet-stream',
         };
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function headersForMimeType(string $mimeType): array
+    {
+        $headers = [
+            'Content-Type' => $mimeType,
+        ];
+
+        if ($mimeType === 'image/svg+xml') {
+            $headers['Content-Security-Policy'] = "script-src 'none'; sandbox";
+            $headers['X-Content-Type-Options'] = 'nosniff';
+        }
+
+        return $headers;
     }
 }

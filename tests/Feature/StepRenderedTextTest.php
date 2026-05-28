@@ -100,3 +100,20 @@ test('getRenderedText strips malformed script tags from HTML', function () {
     expect($rendered)->not->toContain('onclick');
     expect($rendered)->toContain('Safe');
 });
+
+test('getRenderedText preserves text inside harmless unsupported wrappers', function () {
+    $step = Step::query()->create([
+        'lesson_id' => $this->lesson->id,
+        'order' => 0,
+        'name' => 'Step',
+        'slug' => 'step',
+        'text' => '<div><span>Wrapped text</span><script>alert(1)</script></div>',
+    ]);
+
+    $rendered = $step->getRenderedText();
+
+    expect($rendered)->toContain('Wrapped text');
+    expect($rendered)->not->toContain('<div>');
+    expect($rendered)->not->toContain('<span>');
+    expect($rendered)->not->toContain('<script>');
+});

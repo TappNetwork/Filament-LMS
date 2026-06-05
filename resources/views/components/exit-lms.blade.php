@@ -33,7 +33,7 @@
         data-commit-url="{{ $commitUrl }}"
         data-csrf-token="{{ csrf_token() }}"
     >
-        Exit LMS
+        {{ config('filament-lms.exit_lms_label', 'Exit LMS') }}
     </x-filament::link>
     <script>
         document.body.dataset.lmsCanComplete = @json($canComplete ? '1' : '0');
@@ -56,6 +56,6 @@
     </script>
 @else
     <x-filament::link color="gray" href="/">
-        Exit LMS
+        {{ config('filament-lms.exit_lms_label', 'Exit LMS') }}
     </x-filament::link>
 @endif

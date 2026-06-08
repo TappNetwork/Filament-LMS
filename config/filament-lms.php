@@ -44,6 +44,12 @@ return [
         'email',
     ],
 
+    // Course search columns for relation managers
+    'course_search_columns' => [
+        'name',
+        'external_id',
+    ],
+
     // User name columns for the course progress report. Use ['first_name', 'last_name'] when the
     // users table has first_name and last_name, or ['name'] when it has a single name column.
     'report_user_name_columns' => ['first_name', 'last_name'],

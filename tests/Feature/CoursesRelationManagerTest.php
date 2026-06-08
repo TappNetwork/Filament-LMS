@@ -74,6 +74,40 @@ test('attach query excludes courses already assigned to the user', function (): 
         ->and($attachableCourseIds)->not->toContain($assignedCourse->id);
 });
 
+test('courses relationship pivot created_at reflects assignment not course creation', function (): void {
+    $user = TestUser::create([
+        'name' => 'Test User',
+        'email' => 'assigned-at@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $courseCreatedAt = now()->subDays(30);
+    $assignedAt = now()->subDays(2);
+
+    $course = Course::factory()->create();
+    $course->forceFill([
+        'created_at' => $courseCreatedAt,
+        'updated_at' => $courseCreatedAt,
+    ])->save();
+
+    $user->courses()->attach($course->id);
+
+    DB::table('lms_course_user')
+        ->where('user_id', $user->id)
+        ->where('course_id', $course->id)
+        ->update([
+            'created_at' => $assignedAt,
+            'updated_at' => $assignedAt,
+        ]);
+
+    $attachedCourse = $user->courses()->first();
+
+    expect($attachedCourse->created_at->format('Y-m-d H:i:s'))
+        ->toBe($courseCreatedAt->format('Y-m-d H:i:s'))
+        ->and($attachedCourse->pivot->created_at->format('Y-m-d H:i:s'))
+        ->toBe($assignedAt->format('Y-m-d H:i:s'));
+});
+
 test('course search columns can be configured', function (): void {
     config()->set('filament-lms.course_search_columns', ['name']);
 

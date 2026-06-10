@@ -6,7 +6,7 @@ namespace Tapp\FilamentLms\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Tapp\FilamentLms\Jobs\ImportCommonCartridgeJob;
+use Tapp\FilamentLms\Services\CommonCartridge\CartridgeImportStarter;
 use Tapp\FilamentLms\Services\CommonCartridge\CommonCartridgeImportService;
 
 final class ImportCartridgesCommand extends Command
@@ -20,7 +20,7 @@ final class ImportCartridgesCommand extends Command
 
     protected $description = 'Import SCORM / Common Cartridge ZIP packages into LMS courses';
 
-    public function handle(): int
+    public function handle(CartridgeImportStarter $importStarter): int
     {
         $userId = $this->resolveUserId();
         if ($userId === null) {
@@ -45,11 +45,12 @@ final class ImportCartridgesCommand extends Command
 
         foreach ($files as $absolutePath) {
             $this->line('Processing: '.basename($absolutePath));
-            if ($this->option('sync')) {
-                ImportCommonCartridgeJob::dispatchSync($absolutePath, $userId, $tenantId);
-            } else {
-                ImportCommonCartridgeJob::dispatch($absolutePath, $userId, $tenantId);
-            }
+            $importStarter->dispatch(
+                $absolutePath,
+                $userId,
+                is_numeric($tenantId) || (is_string($tenantId) && $tenantId !== '') ? $tenantId : null,
+                (bool) $this->option('sync'),
+            );
         }
 
         if ($this->option('sync')) {

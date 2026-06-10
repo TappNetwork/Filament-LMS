@@ -122,5 +122,31 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Relation::morphMap($morphMap);
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+
+        $this->configureLivewireTemporaryUploadLimits();
+    }
+
+    protected function configureLivewireTemporaryUploadLimits(): void
+    {
+        $maxKb = (int) config('filament-lms.common_cartridge_import.max_upload_size_kb', 512000);
+        $maxMinutes = (int) config('filament-lms.common_cartridge_import.max_upload_time_minutes', 10);
+
+        /** @var array<int, string>|null $rules */
+        $rules = config('livewire.temporary_file_upload.rules');
+
+        if ($rules === null) {
+            $rules = ['required', 'file', 'max:12288'];
+        }
+
+        $rules = array_values(array_filter(
+            $rules,
+            fn (string $rule): bool => ! str_starts_with($rule, 'max:'),
+        ));
+        $rules[] = 'max:'.$maxKb;
+
+        config([
+            'livewire.temporary_file_upload.rules' => $rules,
+            'livewire.temporary_file_upload.max_upload_time' => $maxMinutes,
+        ]);
     }
 }

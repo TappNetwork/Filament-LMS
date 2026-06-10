@@ -4,16 +4,16 @@ namespace Tapp\FilamentLms\Resources\CourseResource\Pages;
 
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Tapp\FilamentLms\Jobs\ImportCommonCartridgeJob;
 use Tapp\FilamentLms\Jobs\ImportCourseFromCsv;
 use Tapp\FilamentLms\Resources\CourseResource;
+use Tapp\FilamentLms\Services\CommonCartridge\CartridgeImportStarter;
 
 class ListCourses extends ListRecords
 {
@@ -21,6 +21,8 @@ class ListCourses extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        $maxUploadSizeKb = (int) config('filament-lms.common_cartridge_import.max_upload_size_kb', 512000);
+
         return [
             Action::make('import_course')
                 ->label('Import Course')
@@ -44,11 +46,11 @@ class ListCourses extends ListRecords
                         ->maxLength(255)
                         ->helperText('Name of the new course.'),
                 ])
-                ->action(function (array $data): void {
-                    $file = $data['file'];
+                ->action(function (array $data, CartridgeImportStarter $importStarter): void {
+                    $file = $importStarter->resolveUploadedFile($data['file'] ?? null);
                     $courseName = trim($data['course_name']);
 
-                    if (! $file instanceof UploadedFile) {
+                    if ($file === null) {
                         Notification::make()
                             ->title('Import failed')
                             ->body('Could not read the uploaded file.')
@@ -93,14 +95,16 @@ class ListCourses extends ListRecords
                         ->acceptedFileTypes([
                             'application/zip',
                             'application/x-zip-compressed',
+                            'application/octet-stream',
                         ])
-                        ->maxSize(512000)
-                        ->helperText('Upload a SCORM 1.2 or Articulate Storyline / Rise ZIP export.'),
+                        ->rules(['mimes:zip'])
+                        ->maxSize($maxUploadSizeKb)
+                        ->helperText('Upload a SCORM 1.2 or Articulate Storyline / Rise ZIP export. Large packages may take a minute to upload.'),
                 ])
-                ->action(function (array $data): void {
-                    $file = $data['file'];
+                ->action(function (array $data, CartridgeImportStarter $importStarter): void {
+                    $file = $importStarter->resolveUploadedFile($data['file'] ?? null);
 
-                    if (! $file instanceof UploadedFile) {
+                    if ($file === null) {
                         Notification::make()
                             ->title('Import failed')
                             ->body('Could not read the uploaded file.')
@@ -110,12 +114,11 @@ class ListCourses extends ListRecords
                         return;
                     }
 
-                    $disk = (string) config('filament-lms.common_cartridge_import.storage_disk', 'local');
                     $directory = (string) config('filament-lms.common_cartridge_import.storage_directory', 'filament-lms/cartridge-imports');
                     $storedPath = $file->storeAs(
                         $directory,
                         Str::uuid().'.zip',
-                        $disk
+                        'local'
                     );
 
                     if ($storedPath === false) {
@@ -128,7 +131,7 @@ class ListCourses extends ListRecords
                         return;
                     }
 
-                    $absolutePath = Storage::disk($disk)->path($storedPath);
+                    $absolutePath = Storage::disk('local')->path($storedPath);
                     $userId = auth()->id();
 
                     if ($userId === null) {
@@ -141,7 +144,11 @@ class ListCourses extends ListRecords
                         return;
                     }
 
-                    ImportCommonCartridgeJob::dispatch($absolutePath, $userId);
+                    $tenantId = config('filament-lms.tenancy.enabled')
+                        ? Filament::getTenant()?->getKey()
+                        : null;
+
+                    $importStarter->dispatch($absolutePath, $userId, $tenantId);
 
                     Notification::make()
                         ->title('Import queued')

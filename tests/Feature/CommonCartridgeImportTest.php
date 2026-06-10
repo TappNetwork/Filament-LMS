@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Str;
 use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Document;
@@ -109,6 +110,27 @@ test('manifest parser prefers Rise scormdriver launch path', function () {
     expect($manifest->courseTitle)->toBe('A Quick Guide to the Completion of the MDA');
     expect($manifest->lessons[0]->steps[0]->resourceIdentifier)->toBe('r1');
     expect($manifest->resources['r1']->type)->toBe('webcontent');
+});
+
+test('manifest parser falls back to scormcontent when Rise scormdriver is missing', function () {
+    $tempPath = sys_get_temp_dir().'/rise-without-driver-'.Str::uuid();
+    mkdir($tempPath.'/scormcontent', 0755, true);
+    file_put_contents($tempPath.'/scormcontent/index.html', '<html><body>Rise</body></html>');
+    copy(
+        __DIR__.'/../fixtures/articulate-rise/imsmanifest.xml',
+        $tempPath.'/imsmanifest.xml',
+    );
+
+    try {
+        $manifest = (new ManifestParser)->parse($tempPath);
+
+        expect($manifest->preferredLaunchHref)->toBe('scormcontent/index.html');
+    } finally {
+        @unlink($tempPath.'/scormcontent/index.html');
+        @unlink($tempPath.'/imsmanifest.xml');
+        @rmdir($tempPath.'/scormcontent');
+        @rmdir($tempPath);
+    }
 });
 
 test('import service creates Rise course with scorm package on document', function () {

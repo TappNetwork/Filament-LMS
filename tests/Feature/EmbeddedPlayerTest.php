@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Enums\CompletionMode;
+use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Lesson;
@@ -169,6 +171,51 @@ test('html5 record started creates launch step progress row', function () {
         ->where('user_id', $user->id)
         ->where('step_id', $launchStep->id)
         ->exists())->toBeTrue();
+});
+
+test('record started dispatches course started for non-first launch step', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    Event::fake([CourseStarted::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'course-started@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'name' => 'Intro',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $document = Document::query()->create([
+        'name' => 'Player',
+        'package_disk' => 'local',
+        'package_path' => 'lms-scorm-packages/'.Str::uuid(),
+        'package_launch_path' => 'index.html',
+    ]);
+    Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 1,
+        'material_type' => 'document',
+        'material_id' => $document->id,
+    ]);
+
+    app(ScormProgressService::class)->recordStarted($course, $user);
+
+    Event::assertDispatched(CourseStarted::class, function (CourseStarted $event) use ($course, $user): bool {
+        return $event->course->is($course) && $event->user->is($user);
+    });
 });
 
 test('html5 manual complete is rejected without meaningful progress', function () {

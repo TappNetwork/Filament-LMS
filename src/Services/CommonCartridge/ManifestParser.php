@@ -72,7 +72,7 @@ final class ManifestParser
             throw new InvalidArgumentException('Manifest has no organization or items.');
         }
 
-        $preferredLaunchHref = $this->resolvePreferredLaunchHref($resources, $extractedPath, $xml);
+        $preferredLaunchHref = $this->resolvePreferredLaunchHref($resources, $extractedPath);
 
         return new ParsedManifest(
             courseTitle: $title,
@@ -87,7 +87,7 @@ final class ManifestParser
     /**
      * Prefer the SCORM driver shell (manifest href) so Rise content loads inside a supported LMS context.
      */
-    private function resolvePreferredLaunchHref(array $resources, string $extractedPath, SimpleXMLElement $xml): ?string
+    private function resolvePreferredLaunchHref(array $resources, string $extractedPath): ?string
     {
         $driverLaunch = 'scormdriver/indexAPI.html';
         $riseContentLaunch = 'scormcontent/index.html';
@@ -97,7 +97,10 @@ final class ManifestParser
         }
 
         foreach ($resources as $resource) {
-            if ($resource->href === $driverLaunch || in_array($driverLaunch, $resource->fileHrefs, true)) {
+            if (
+                ($resource->href === $driverLaunch || in_array($driverLaunch, $resource->fileHrefs, true))
+                && is_file($extractedPath.'/'.$driverLaunch)
+            ) {
                 return $driverLaunch;
             }
         }
@@ -106,16 +109,11 @@ final class ManifestParser
             return $riseContentLaunch;
         }
 
-        $org = $this->getDefaultOrganization($xml);
-        if ($org !== null) {
-            $orgId = $this->itemAttribute($org, 'identifier');
-            if (str_contains(mb_strtolower($orgId), 'articulate_rise')) {
-                return $driverLaunch;
-            }
-        }
-
         foreach ($resources as $resource) {
-            if (in_array($riseContentLaunch, $resource->fileHrefs, true) || $resource->href === $riseContentLaunch) {
+            if (
+                (in_array($riseContentLaunch, $resource->fileHrefs, true) || $resource->href === $riseContentLaunch)
+                && is_file($extractedPath.'/'.$riseContentLaunch)
+            ) {
                 return $riseContentLaunch;
             }
         }

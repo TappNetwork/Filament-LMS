@@ -20,6 +20,7 @@ use Tapp\FilamentLms\Livewire\ImageStep;
 use Tapp\FilamentLms\Livewire\LibraryFileStep;
 use Tapp\FilamentLms\Livewire\LibraryLinkStep;
 use Tapp\FilamentLms\Livewire\LinkStep;
+use Tapp\FilamentLms\Livewire\LmsTestFormShow;
 use Tapp\FilamentLms\Livewire\TestStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
@@ -89,6 +90,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('vimeo-video', VimeoVideo::class);
         Livewire::component('video-player', VideoPlayer::class);
         Livewire::component('create-test-entry', CreateTestEntry::class);
+        Livewire::component('lms-test-form-show', LmsTestFormShow::class);
         Livewire::component('view-graded-entry', ViewGradedEntry::class);
         Livewire::component('image-step', ImageStep::class);
 

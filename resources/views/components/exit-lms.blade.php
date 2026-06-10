@@ -40,16 +40,16 @@
 
         document.getElementById('lms-exit-with-complete')?.addEventListener('click', function (event) {
             event.preventDefault();
-            if (typeof window.lmsConfirmHtml5CourseComplete !== 'function' || ! window.lmsConfirmHtml5CourseComplete()) {
+            if (typeof window.lmsConfirmHtml5CourseComplete !== 'function') {
                 window.location.href = '/';
 
                 return;
             }
+            if (! window.lmsConfirmHtml5CourseComplete()) {
+                return;
+            }
             window.lmsPostHtml5CourseComplete(this.dataset.commitUrl, this.dataset.csrfToken)
                 .then(() => {
-                    window.location.href = '/';
-                })
-                .catch(() => {
                     window.location.href = '/';
                 });
         });

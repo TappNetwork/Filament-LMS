@@ -106,7 +106,7 @@ final class ScormProgressService
             'step_id' => $launchStep->id,
         ]);
 
-        if ($launchStep->first_step && $userStep->wasRecentlyCreated) {
+        if ($userStep->wasRecentlyCreated) {
             CourseStarted::dispatch($user, $course);
         }
     }

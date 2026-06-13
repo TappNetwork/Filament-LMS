@@ -18,9 +18,9 @@ class CourseProgressExport implements FromQuery, WithHeadings, WithMapping
         $this->query = $query;
     }
 
-    public function query()
+    public function query(): Builder
     {
-        return CourseProgressQueryService::buildQuery();
+        return $this->query;
     }
 
     public function headings(): array

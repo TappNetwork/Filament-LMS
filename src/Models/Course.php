@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -293,7 +294,20 @@ final class Course extends Model implements HasMedia
             }
         }
 
-        $this->users()->syncWithoutDetaching([$userId => ['completed_at' => now()]]);
+        $completedAt = now();
+        $enrollmentExists = $pivot instanceof Pivot;
+
+        if ($enrollmentExists) {
+            $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
+
+            return;
+        }
+
+        try {
+            $this->users()->attach($userId, ['completed_at' => $completedAt]);
+        } catch (UniqueConstraintViolationException) {
+            $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
+        }
     }
 
     public function getCompletedAtAttribute(): ?string

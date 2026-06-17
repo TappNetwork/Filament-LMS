@@ -40,6 +40,13 @@ final class ScormProgressService
 
         $status = mb_strtolower((string) ($payload['lesson_status'] ?? ''));
         if (in_array($status, ['completed', 'passed'], true)) {
+            if (
+                $course->completedByUserAt($user->getAuthIdentifier()) !== null
+                || $this->courseCompletedByUser($course, $user)
+            ) {
+                return;
+            }
+
             $this->completeAllEligibleSteps($course, $user);
         }
     }

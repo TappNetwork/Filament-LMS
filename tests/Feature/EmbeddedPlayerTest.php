@@ -98,6 +98,85 @@ test('scorm commit marks step by player slide id and bulk completes on passed st
         ->exists())->toBeTrue();
 });
 
+test('scorm commit sets completed_at on existing enrollment without duplicate key error', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm-enrolled@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $course->users()->attach($user->id);
+
+    expect($course->completedByUserAt($user->id))->toBeNull();
+
+    $this->actingAs($user);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'lesson_status' => 'completed',
+    ])->assertSuccessful();
+
+    expect($course->completedByUserAt($user->id))->not->toBeNull();
+});
+
+test('double scorm completion commit is idempotent', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm-double-complete@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $course->users()->attach($user->id);
+
+    $this->actingAs($user);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'lesson_status' => 'completed',
+    ])->assertSuccessful();
+
+    $firstCompletedAt = $course->fresh()->completedByUserAt($user->id);
+    expect($firstCompletedAt)->not->toBeNull();
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'lesson_status' => 'completed',
+    ])->assertSuccessful();
+
+    expect($course->fresh()->completedByUserAt($user->id))->toBe($firstCompletedAt);
+});
+
 test('scorm commit does not bulk complete test steps', function () {
     config(['filament-lms.user_model' => TestUser::class]);
 

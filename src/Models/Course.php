@@ -274,7 +274,8 @@ final class Course extends Model implements HasMedia
      */
     public function maybeSetCompletedAtForUser(int|string $userId): void
     {
-        $pivot = $this->users()->where('user_id', $userId)->first()?->getRelationValue('pivot');
+        $enrolledUser = $this->users()->where('user_id', $userId)->first();
+        $pivot = $enrolledUser?->getRelationValue('pivot');
         $existing = $pivot instanceof Pivot ? $pivot->getAttribute('completed_at') : null;
         if ($existing !== null) {
             return;
@@ -295,9 +296,8 @@ final class Course extends Model implements HasMedia
         }
 
         $completedAt = now();
-        $enrollmentExists = $pivot instanceof Pivot;
 
-        if ($enrollmentExists) {
+        if ($enrolledUser !== null) {
             $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
 
             return;

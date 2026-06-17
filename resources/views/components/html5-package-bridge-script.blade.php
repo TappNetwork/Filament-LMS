@@ -2,6 +2,7 @@
 (function () {
     const origin = window.location.origin;
     let lastSlideIndex = null;
+    let hasSeenSlideChange = false;
 
     function notifyProgress() {
         window.parent.postMessage({ type: 'lms-html5-progress', status: 'progress' }, origin);
@@ -11,7 +12,7 @@
         window.parent.postMessage({ type: 'lms-html5-progress', status: 'completed' }, origin);
     }
 
-    function tryHookPlayer() {
+    function tryHookPlayer(isBeforeUnload) {
         try {
             if (typeof window.GetPlayer === 'function') {
                 const player = window.GetPlayer();
@@ -21,11 +22,14 @@
 
                     if (lastSlideIndex !== null && index !== lastSlideIndex) {
                         notifyProgress();
+                        hasSeenSlideChange = true;
                     }
 
                     lastSlideIndex = index;
 
-                    if (count > 0 && index >= count - 1) {
+                    if (count > 1 && index >= count - 1 && hasSeenSlideChange) {
+                        notifyCompleted();
+                    } else if (count === 1 && isBeforeUnload) {
                         notifyCompleted();
                     }
                 }
@@ -36,9 +40,11 @@
     }
 
     window.addEventListener('beforeunload', function () {
-        tryHookPlayer();
+        tryHookPlayer(true);
     });
 
-    setInterval(tryHookPlayer, 10000);
+    setInterval(function () {
+        tryHookPlayer(false);
+    }, 10000);
 })();
 </script>

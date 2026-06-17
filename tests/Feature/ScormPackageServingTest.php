@@ -259,5 +259,7 @@ test('serves html5 package index with injected bridge for embedded player course
     ]));
 
     $response->assertSuccessful();
-    expect($response->getContent())->toContain('lms-html5-progress');
+    expect($response->getContent())->toContain('lms-html5-progress')
+        ->and($response->getContent())->toContain('hasSeenSlideChange')
+        ->and($response->getContent())->toContain('count === 1 && isBeforeUnload');
 });

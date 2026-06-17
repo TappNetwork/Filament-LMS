@@ -144,9 +144,15 @@ final class Course extends Model implements HasMedia
             }
         }
 
-        $step = $this->steps()->first();
+        foreach ($this->lessons->sortBy('order') as $lesson) {
+            $step = $lesson->steps->sortBy('order')->first();
 
-        return $step instanceof Step ? $step : null;
+            if ($step instanceof Step) {
+                return $step;
+            }
+        }
+
+        return null;
     }
 
     public function linkToCurrentStep(): string

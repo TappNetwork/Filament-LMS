@@ -42,6 +42,37 @@ test('embedded course launch step is the document step with scorm package', func
     expect($course->launchStep()?->is($launchStep))->toBeTrue();
 });
 
+test('embedded course launch step fallback respects lesson and step order', function () {
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Html5,
+    ]);
+
+    $firstLesson = Lesson::factory()->create(['course_id' => $course->id, 'order' => 1]);
+    $secondLesson = Lesson::factory()->create(['course_id' => $course->id, 'order' => 2]);
+
+    Step::factory()->create([
+        'lesson_id' => $secondLesson->id,
+        'order' => 1,
+        'name' => 'First in lesson two',
+    ]);
+    $expectedLaunchStep = Step::factory()->create([
+        'lesson_id' => $firstLesson->id,
+        'order' => 1,
+        'name' => 'First in lesson one',
+    ]);
+    $laterStepInFirstLesson = Step::factory()->create([
+        'lesson_id' => $firstLesson->id,
+        'order' => 2,
+        'name' => 'Later in lesson one',
+    ]);
+
+    $launch = $course->fresh()->launchStep();
+
+    expect($launch?->id)->toBe($expectedLaunchStep->id)
+        ->and($launch?->is($laterStepInFirstLesson))->toBeFalse();
+});
+
 test('scorm commit marks step by player slide id and bulk completes on passed status', function () {
     config(['filament-lms.user_model' => TestUser::class]);
 

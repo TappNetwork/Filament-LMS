@@ -129,6 +129,41 @@ test('scorm commit marks step by player slide id and bulk completes on passed st
         ->exists())->toBeTrue();
 });
 
+test('scorm commit rejects html5 progress flags for scorm 1.2 courses', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm-html5-guard@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $this->actingAs($user);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'html5_progress' => true,
+    ])->assertStatus(422);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'html5_complete' => true,
+    ])->assertStatus(422);
+});
+
 test('scorm commit sets completed_at on existing enrollment without duplicate key error', function () {
     config(['filament-lms.user_model' => TestUser::class]);
 

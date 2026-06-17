@@ -68,27 +68,30 @@ final class CommonCartridgeImportService
                 $course = $this->createCourse($manifest, $tenantId);
                 $lessonsCreated = 0;
                 $stepsCreated = 0;
-                $isFirstStepOfCourse = true;
                 $primaryResourceId = $this->getPrimaryWebContentResourceId(
                     $manifest->resources,
                     $manifest->preferredLaunchHref,
                 );
+                $pendingPrimaryResourceId = $primaryResourceId;
 
                 foreach ($manifest->lessons as $lessonStructure) {
                     $lesson = $this->createLesson($course, $lessonStructure);
                     $lessonsCreated++;
 
                     foreach ($lessonStructure->steps as $stepStructure) {
-                        $this->createStep(
+                        $primaryResourceForStep = $pendingPrimaryResourceId;
+                        $packageAttached = $this->createStep(
                             $course,
                             $lesson,
                             $stepStructure,
                             $manifest->resources,
                             $extractedPath,
                             $manifest->preferredLaunchHref,
-                            $isFirstStepOfCourse ? $primaryResourceId : null,
+                            $primaryResourceForStep,
                         );
-                        $isFirstStepOfCourse = false;
+                        if ($packageAttached && $primaryResourceForStep !== null) {
+                            $pendingPrimaryResourceId = null;
+                        }
                         $stepsCreated++;
                     }
 
@@ -197,7 +200,7 @@ final class CommonCartridgeImportService
         string $extractedPath,
         ?string $manifestPreferredLaunchHref,
         ?string $primaryResourceIdForFirstStep = null,
-    ): void {
+    ): bool {
         $slug = $this->uniqueSlugForStep($lesson, Str::slug($structure->title));
         $materialId = null;
         $materialType = null;
@@ -236,6 +239,7 @@ final class CommonCartridgeImportService
         }
 
         $resourceId = $structure->resourceIdentifier ?? $primaryResourceIdForFirstStep;
+        $packageAttached = false;
         if (! $isAssessment && $resourceId !== null && isset($resources[$resourceId])) {
             $resource = $resources[$resourceId];
             $launchHref = $this->resolveLaunchHref($resource, $extractedPath, $manifestPreferredLaunchHref);
@@ -258,6 +262,7 @@ final class CommonCartridgeImportService
                 }
                 $materialId = $document->id;
                 $materialType = 'document';
+                $packageAttached = true;
             } else {
                 $text = "Imported resource: {$resource->type} (".basename($resource->href).'). Configure material in admin if needed.';
             }
@@ -349,6 +354,8 @@ final class CommonCartridgeImportService
             'retry_step_id' => null,
             'require_perfect_score' => false,
         ]);
+
+        return $packageAttached;
     }
 
     private function uniqueCourseSlug(string $base, int|string|null $tenantId): string

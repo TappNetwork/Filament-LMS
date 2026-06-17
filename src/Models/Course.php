@@ -303,7 +303,7 @@ final class Course extends Model implements HasMedia
 
         $completedAt = now();
 
-        if ($enrolledUser !== null) {
+        if ($this->users()->where('user_id', $userId)->exists()) {
             $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
 
             return;

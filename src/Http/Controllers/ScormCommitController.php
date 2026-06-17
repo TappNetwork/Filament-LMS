@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Services\ScormProgressService;
 
@@ -33,6 +34,11 @@ final class ScormCommitController extends Controller
         ]);
 
         $service = app(ScormProgressService::class);
+        $isHtml5Mode = $course->completionMode() === CompletionMode::Html5;
+
+        if (! empty($validated['html5_complete']) || ! empty($validated['html5_progress'])) {
+            abort_unless($isHtml5Mode, 422);
+        }
 
         if (! empty($validated['html5_complete'])) {
             $result = $service->attemptManualCourseCompletion($course, $user);

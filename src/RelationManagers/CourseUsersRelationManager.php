@@ -55,10 +55,12 @@ class CourseUsersRelationManager extends RelationManager
                     ->label('Email')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('pivot.created_at')
                     ->label('Assigned At')
                     ->dateTime()
-                    ->sortable()
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->orderBy('lms_course_user.created_at', $direction);
+                    })
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([

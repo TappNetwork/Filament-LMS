@@ -28,6 +28,7 @@ return [
     // Note: This only affects the dashboard. Course pages always use sidebar navigation.
     'top_navigation' => false,
     'show_exit_lms_link' => true,
+    'exit_lms_label' => 'Exit LMS',
 
     // If true, users only see courses they are assigned to via lms_course_user. If false, all courses are visible.
     'restrict_course_visibility' => false,
@@ -41,6 +42,12 @@ return [
         'first_name',
         'last_name',
         'email',
+    ],
+
+    // Course search columns for relation managers
+    'course_search_columns' => [
+        'name',
+        'external_id',
     ],
 
     // User name columns for the course progress report. Use ['first_name', 'last_name'] when the
@@ -154,4 +161,36 @@ return [
     |
     */
     'resources' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Common Cartridge / SCORM import
+    |--------------------------------------------------------------------------
+    */
+    /*
+    |--------------------------------------------------------------------------
+    | Embedded player completion guards
+    |--------------------------------------------------------------------------
+    */
+    'embedded_player_min_session_seconds' => 90,
+    'embedded_player_min_session_seconds_html5' => 300,
+
+    'common_cartridge_import' => [
+        'delete_after_success' => true,
+        // Staging disk for UI uploads and extracted packages. Must be a local filesystem disk
+        // because ZipArchive requires a filesystem path. Retained SCORM assets use this disk too.
+        'storage_disk' => 'local',
+        'storage_directory' => 'filament-lms/cartridge-imports',
+        'default_import_path' => null,
+        'retain_extracted_packages' => true,
+        'packages_directory' => 'lms-scorm-packages',
+        // Max ZIP upload size in kilobytes (512000 = ~500 MB). Also applied to Livewire temporary
+        // upload rules. Ensure php.ini upload_max_filesize and post_max_size meet or exceed this.
+        'max_upload_size_kb' => 512000,
+        // Livewire temporary upload timeout in minutes for large SCORM packages.
+        'max_upload_time_minutes' => 10,
+    ],
+
+    // Optional path to Node binary for Articulate slide JSON extraction
+    'node_binary' => null,
 ];

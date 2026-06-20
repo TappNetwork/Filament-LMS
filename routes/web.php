@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Tapp\FilamentLms\Http\Controllers\CertificateController;
+use Tapp\FilamentLms\Http\Controllers\ScormCommitController;
+use Tapp\FilamentLms\Http\Controllers\ScormPackageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,4 +22,13 @@ Route::middleware('web')->group(function () {
         ->middleware('auth');
     Route::get('lms/certificates/{course}/{user}', [CertificateController::class, 'show'])
         ->name('filament-lms::certificates.show');
+
+    Route::get('lms/scorm-package/{document}/{entry?}', [ScormPackageController::class, 'show'])
+        ->where('entry', '.*')
+        ->name('filament-lms.scorm-package.show')
+        ->middleware('auth');
+
+    Route::post('lms/scorm-commit/{course}', [ScormCommitController::class, 'store'])
+        ->name('filament-lms.scorm-commit.store')
+        ->middleware('auth');
 });

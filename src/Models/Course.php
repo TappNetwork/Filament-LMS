@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
+use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
@@ -39,6 +41,8 @@ use Tapp\FilamentLms\Traits\HasMediaUrl;
  * @property string|null $description
  * @property int|null $required_test_percentage
  * @property bool $is_private
+ * @property bool $embedded_player
+ * @property CompletionMode|string $completion_mode
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
@@ -58,6 +62,8 @@ final class Course extends Model implements HasMedia
     protected $casts = [
         'award_content' => 'array',
         'is_private' => 'boolean',
+        'embedded_player' => 'boolean',
+        'completion_mode' => CompletionMode::class,
     ];
 
     public function registerMediaCollections(): void
@@ -107,8 +113,58 @@ final class Course extends Model implements HasMedia
         return $this->hasMany(Lesson::class)->ordered();
     }
 
+    public function isEmbeddedPlayer(): bool
+    {
+        return (bool) $this->embedded_player;
+    }
+
+    public function completionMode(): CompletionMode
+    {
+        $mode = $this->completion_mode;
+
+        return $mode instanceof CompletionMode
+            ? $mode
+            : CompletionMode::tryFrom((string) $mode) ?? CompletionMode::Native;
+    }
+
+    public function launchStep(): ?Step
+    {
+        $this->loadMissing(['lessons.steps']);
+
+        foreach ($this->lessons->sortBy('order') as $lesson) {
+            foreach ($lesson->steps->sortBy('order') as $step) {
+                if ($step->material_type !== 'document') {
+                    continue;
+                }
+
+                $material = $step->material;
+                if ($material instanceof Document && $material->hasScormPackage()) {
+                    return $step;
+                }
+            }
+        }
+
+        foreach ($this->lessons->sortBy('order') as $lesson) {
+            $step = $lesson->steps->sortBy('order')->first();
+
+            if ($step instanceof Step) {
+                return $step;
+            }
+        }
+
+        return null;
+    }
+
     public function linkToCurrentStep(): string
     {
+        if ($this->isEmbeddedPlayer()) {
+            $launchStep = $this->launchStep();
+
+            return $launchStep !== null
+                ? StepPage::getUrlForStep($launchStep)
+                : Dashboard::getUrl();
+        }
+
         // Get all steps in order
         $allSteps = $this->steps()->ordered()->get();
 
@@ -224,7 +280,8 @@ final class Course extends Model implements HasMedia
      */
     public function maybeSetCompletedAtForUser(int|string $userId): void
     {
-        $pivot = $this->users()->where('user_id', $userId)->first()?->getRelationValue('pivot');
+        $enrolledUser = $this->users()->where('user_id', $userId)->first();
+        $pivot = $enrolledUser?->getRelationValue('pivot');
         $existing = $pivot instanceof Pivot ? $pivot->getAttribute('completed_at') : null;
         if ($existing !== null) {
             return;
@@ -244,7 +301,19 @@ final class Course extends Model implements HasMedia
             }
         }
 
-        $this->users()->syncWithoutDetaching([$userId => ['completed_at' => now()]]);
+        $completedAt = now();
+
+        if ($this->users()->where('user_id', $userId)->exists()) {
+            $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
+
+            return;
+        }
+
+        try {
+            $this->users()->attach($userId, ['completed_at' => $completedAt]);
+        } catch (UniqueConstraintViolationException) {
+            $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
+        }
     }
 
     public function getCompletedAtAttribute(): ?string

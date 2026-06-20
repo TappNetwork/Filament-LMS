@@ -45,6 +45,11 @@ class LmsPanelProvider extends PanelProvider
             );
         }
 
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::TOPBAR_LOGO_AFTER,
+            fn (): ?View => $this->renderCourseTopbarNavigation(),
+        );
+
         if (config('filament-lms.vite_theme')) {
             $panel->viteTheme(config('filament-lms.vite_theme'));
         }
@@ -61,11 +66,7 @@ class LmsPanelProvider extends PanelProvider
                 return;
             }
 
-            $courseSlug = Route::current()?->parameter('courseSlug')
-                ?? request()->route('courseSlug')
-                ?? request()->route()?->parameter('courseSlug');
-
-            if ($courseSlug) {
+            if ($this->currentCourseSlug() !== null) {
                 $panel = Filament::getPanel('lms');
                 $panel->topNavigation(false);
             }
@@ -147,32 +148,16 @@ class LmsPanelProvider extends PanelProvider
 
         $hookedNavigationItems = LmsNavigation::getNavigation('lms');
 
-        // Try multiple methods to get the courseSlug parameter
-        $courseSlug = Route::current()?->parameter('courseSlug')
-            ?? request()->route('courseSlug')
-            ?? request()->route()?->parameter('courseSlug');
+        $courseSlug = $this->currentCourseSlug();
 
-        if ($courseSlug) {
-            FilamentView::registerRenderHook(
-                PanelsRenderHook::TOPBAR_LOGO_AFTER,
-                function () use ($hookedNavigationItems): View {
-                    $topNavigation = [
-                        ...$hookedNavigationItems,
-                        NavigationItem::make('Courses')
-                            ->icon('heroicon-o-academic-cap')
-                            ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
-                            ->url(fn (): string => Dashboard::getUrl()),
-                    ];
-
-                    $groups = collect();
-
-                    $navigation = $this->buildTopbarNavigation($topNavigation, $groups);
-
-                    return view('filament-lms::components.topbar-navigation', ['navigation' => $navigation]);
-                },
-            );
-
+        if ($courseSlug !== null) {
             $course = Course::where('slug', $courseSlug)->firstOrFail();
+
+            if ($course->isEmbeddedPlayer()) {
+                $builder->groups([]);
+
+                return $builder;
+            }
 
             $navigationGroups = $course->lessons->map(function ($lesson) {
                 /** @var Lesson $lesson */
@@ -226,5 +211,39 @@ class LmsPanelProvider extends PanelProvider
         }
 
         return 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken';
+    }
+
+    private function currentCourseSlug(): ?string
+    {
+        $courseSlug = Route::current()?->parameter('courseSlug')
+            ?? request()->route('courseSlug')
+            ?? request()->route()?->parameter('courseSlug');
+
+        return is_string($courseSlug) && $courseSlug !== '' ? $courseSlug : null;
+    }
+
+    private function renderCourseTopbarNavigation(): ?View
+    {
+        if (Filament::getCurrentOrDefaultPanel()->getId() !== 'lms') {
+            return null;
+        }
+
+        if ($this->currentCourseSlug() === null) {
+            return null;
+        }
+
+        $hookedNavigationItems = LmsNavigation::getNavigation('lms');
+
+        $topNavigation = [
+            ...$hookedNavigationItems,
+            NavigationItem::make('Courses')
+                ->icon('heroicon-o-academic-cap')
+                ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
+                ->url(fn (): string => Dashboard::getUrl()),
+        ];
+
+        $navigation = $this->buildTopbarNavigation($topNavigation, collect());
+
+        return view('filament-lms::components.topbar-navigation', ['navigation' => $navigation]);
     }
 }

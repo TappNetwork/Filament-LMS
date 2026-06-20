@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<lom xmlns="http://www.imsglobal.org/xsd/imsmd_rootv1p2p1"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	 xmlns:pkgprop="http://www.scorm.com/xsd/ScormEnginePackageProperties"
+     xsi:schemaLocation="http://www.imsglobal.org/xsd/imsmd_rootv1p2p1 imsmd_rootv1p2p1.xsd 
+	 http://www.scorm.com/xsd/ScormEnginePackageProperties ScormEnginePackageProperties.xsd">
+
+    <general>
+        <title>
+            <langstring></langstring>
+        </title>
+        <catalogentry>
+            <catalog>Catalog</catalog>
+            <entry>
+                <langstring>1</langstring>
+            </entry>
+        </catalogentry>
+        <!-- If you know the locale, enter it here, if not, leave this as en-->
+        <language>en</language>
+        <!-- Manifest->Course.Description. If that doesn't exist, replace with Project Information-> Description. If that is empty, just leave "Description"-->
+        <description>
+            <langstring>Description</langstring>
+        </description>
+        <!-- SCORM 1.2 requires some keywords. You could just leave it as is, or substitute the title-->
+        <keyword>
+            <langstring>Training</langstring>
+        </keyword>
+    </general>
+    <lifecycle>
+        <version>
+            <langstring>1</langstring>
+        </version>
+        <status>
+            <source>
+                <langstring xml:lang="x-none">LOMv1.0</langstring>
+            </source>
+            <value>
+                <langstring xml:lang="x-none">Final</langstring>
+            </value>
+        </status>
+    </lifecycle>
+    <metametadata>
+        <metadatascheme>ADL SCORM 1.2</metadatascheme>
+    </metametadata>
+    <technical>
+        <format>text/html</format>
+        <format>application/x-javascript</format>
+        <format>application/x-shockwave-flash</format>
+        <format>text/css</format>
+        <location>indexAPI.html</location>
+        <!-- replace with your launch page-->
+        <pkgprop:ScormEnginePackageProperties xmlns="http://www.scorm.com/ScormEnginePackageProperties">
+            <appearance>
+                <displayStage>
+                    <!-- Replace with target width and height of movie. (From Project Information -> Resolution -->
+                    <desired>
+                        <width>750</width>
+                        <height>550</height>
+                        <fullscreen>no</fullscreen>
+                    </desired>
+                    <required>
+                        <width>0</width>
+                        <height>0</height>
+                        <fullscreen>no</fullscreen>
+                    </required>
+                </displayStage>
+            </appearance>
+            <behavior>
+                <alwaysFlowToFirstSco>yes</alwaysFlowToFirstSco>
+                <scoreOverridesStatus>no</scoreOverridesStatus>
+                <validateInteractionTypes>yes</validateInteractionTypes>
+            </behavior>
+
+        </pkgprop:ScormEnginePackageProperties>
+    </technical>
+    <rights>
+        <cost>
+            <source>
+                <langstring xml:lang="x-none">LOMv1.0</langstring>
+            </source>
+            <value>
+                <langstring xml:lang="x-none">yes</langstring>
+            </value>
+        </cost>
+        <copyrightandotherrestrictions>
+            <source>
+                <langstring xml:lang="x-none">LOMv1.0</langstring>
+            </source>
+            <value>
+                <langstring xml:lang="x-none">yes</langstring>
+            </value>
+        </copyrightandotherrestrictions>
+    </rights>
+    <classification>
+        <purpose>
+            <source>
+                <langstring xml:lang="x-none">LOMv1.0</langstring>
+            </source>
+            <value>
+                <langstring xml:lang="x-none">Educational Objective</langstring>
+            </value>
+        </purpose>
+        <!--same as description above-->
+        <description>
+            <langstring>Description</langstring>
+        </description>
+        <!--same as keywords above-->
+        <keyword>
+            <langstring>Training</langstring>
+        </keyword>
+    </classification>
+</lom>

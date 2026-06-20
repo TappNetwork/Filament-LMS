@@ -3,6 +3,7 @@
 namespace Tapp\FilamentLms\Pages;
 
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Auth;
@@ -10,9 +11,11 @@ use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
+use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step as StepModel;
+use Tapp\FilamentLms\Services\ScormProgressService;
 
 class Step extends Page
 {
@@ -36,6 +39,13 @@ class Step extends Page
         $this->course->loadProgress();
         $this->lesson = $this->course->lessons->where('slug', $lessonSlug)->firstOrFail();
         $this->step = $this->lesson->steps->where('slug', $stepSlug)->firstOrFail();
+
+        if ($this->course->isEmbeddedPlayer()) {
+            $launchStep = $this->course->launchStep();
+            if ($launchStep !== null && ! $launchStep->is($this->step)) {
+                return redirect()->to(static::getUrlForStep($launchStep));
+            }
+        }
         // @phpstan-ignore-next-line
         $this->heading = $this->step->name;
 
@@ -86,12 +96,35 @@ class Step extends Page
 
     protected function getHeaderActions(): array
     {
-        $actions = [
-            Action::make('viewAllCourses')
+        $actions = [];
+
+        if ($this->course->isEmbeddedPlayer()) {
+            $exitCourse = Action::make('exitCourse')
+                ->label('Exit Course')
+                ->color('gray')
+                ->action(fn () => $this->exitCourse());
+
+            if ($this->shouldRegisterHtml5Bridge()) {
+                $user = Auth::user();
+                $progressService = app(ScormProgressService::class);
+                $needsCompletionConfirm = $user !== null
+                    && ! $progressService->courseCompletedByUser($this->course, $user);
+
+                if ($needsCompletionConfirm) {
+                    $exitCourse
+                        ->requiresConfirmation()
+                        ->modalHeading('Exit course')
+                        ->modalDescription('Mark this course as complete before returning to your courses?');
+                }
+            }
+
+            $actions[] = $exitCourse;
+        } else {
+            $actions[] = Action::make('viewAllCourses')
                 ->label('View All Courses')
                 ->color('gray')
-                ->url(Dashboard::getUrl()),
-        ];
+                ->url(Dashboard::getUrl());
+        }
 
         // Add Edit button for users who can edit the step
         if (Auth::check()) {
@@ -132,8 +165,58 @@ class Step extends Page
         return Width::Full;
     }
 
-    public function viewAllCourses()
+    public function exitCourse(): void
     {
-        return redirect()->to(Dashboard::getUrl());
+        $user = Auth::user();
+        if (! $user instanceof FilamentLmsUserInterface) {
+            $this->redirect(Dashboard::getUrl());
+
+            return;
+        }
+
+        $progressService = app(ScormProgressService::class);
+
+        if (
+            $this->course->isEmbeddedPlayer()
+            && $this->course->completionMode() === CompletionMode::Html5
+            && ! $progressService->courseCompletedByUser($this->course, $user)
+        ) {
+            $result = $progressService->attemptManualCourseCompletion($this->course, $user);
+
+            if (! $result['ok']) {
+                Notification::make()
+                    ->title('Cannot mark course complete yet')
+                    ->body($result['message'])
+                    ->danger()
+                    ->send();
+
+                return;
+            }
+        }
+
+        $this->redirect(Dashboard::getUrl());
+    }
+
+    #[On('scorm-course-complete')]
+    public function scormCourseComplete(): void
+    {
+        $user = Auth::user();
+        if (! $user instanceof FilamentLmsUserInterface) {
+            return;
+        }
+
+        app(ScormProgressService::class)->completeAllEligibleSteps($this->course, $user);
+    }
+
+    public function shouldRegisterScormBridge(): bool
+    {
+        return $this->course->isEmbeddedPlayer()
+            && $this->course->completionMode() === CompletionMode::Scorm12;
+    }
+
+    public function shouldRegisterHtml5Bridge(): bool
+    {
+        return $this->course->isEmbeddedPlayer()
+            && $this->course->completionMode() === CompletionMode::Html5;
     }
 }

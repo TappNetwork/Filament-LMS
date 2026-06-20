@@ -3,12 +3,16 @@
 namespace Tapp\FilamentLms\Models;
 
 use Carbon\Carbon;
+use DOMDocument;
+use DOMElement;
+use DOMNode;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
@@ -27,8 +31,10 @@ use Tapp\FilamentLms\Pages\Step as StepPage;
  * @property string $name
  * @property string $slug
  * @property string $type
+ * @property string|null $text
  * @property int|null $material_id
  * @property string|null $material_type
+ * @property string|null $player_slide_id
  * @property Carbon|null $completed_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -58,6 +64,40 @@ class Step extends Model implements Sortable
         'require_perfect_score' => 'boolean',
     ];
 
+    private const ALLOWED_RENDERED_TEXT_TAGS = [
+        'a',
+        'blockquote',
+        'br',
+        'code',
+        'em',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'li',
+        'ol',
+        'p',
+        'pre',
+        'strong',
+        'ul',
+    ];
+
+    private const ALLOWED_RENDERED_TEXT_ATTRIBUTES = [
+        'a' => ['href', 'rel', 'target', 'title'],
+    ];
+
+    private const DANGEROUS_RENDERED_TEXT_TAGS = [
+        'embed',
+        'iframe',
+        'math',
+        'object',
+        'script',
+        'style',
+        'svg',
+    ];
+
     protected static function newFactory()
     {
         return StepFactory::new();
@@ -76,6 +116,95 @@ class Step extends Model implements Sortable
     public function retryStep(): BelongsTo
     {
         return $this->belongsTo(Step::class, 'retry_step_id');
+    }
+
+    public function getRenderedText(): string
+    {
+        $text = mb_trim((string) $this->text);
+        if ($text === '') {
+            return '';
+        }
+
+        $html = str_starts_with(ltrim($text), '<')
+            ? $text
+            : Str::markdown($text);
+
+        return $this->sanitizeRenderedText($html);
+    }
+
+    private function sanitizeRenderedText(string $html): string
+    {
+        $document = new DOMDocument('1.0', 'UTF-8');
+        $previous = libxml_use_internal_errors(true);
+        $document->loadHTML('<?xml encoding="UTF-8"><div id="lms-rendered-text-root">'.$html.'</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $root = $document->getElementById('lms-rendered-text-root');
+        if (! $root instanceof DOMElement) {
+            return '';
+        }
+
+        $this->sanitizeRenderedTextNode($root);
+
+        $rendered = '';
+        foreach ($root->childNodes as $childNode) {
+            $rendered .= $document->saveHTML($childNode) ?: '';
+        }
+
+        return $rendered;
+    }
+
+    private function sanitizeRenderedTextNode(DOMNode $node): void
+    {
+        for ($child = $node->firstChild; $child !== null; $child = $next) {
+            $next = $child->nextSibling;
+
+            if (! $child instanceof DOMElement) {
+                continue;
+            }
+
+            $tagName = mb_strtolower($child->tagName);
+            if (! in_array($tagName, self::ALLOWED_RENDERED_TEXT_TAGS, true)) {
+                if (! in_array($tagName, self::DANGEROUS_RENDERED_TEXT_TAGS, true)) {
+                    $this->sanitizeRenderedTextNode($child);
+                    while ($child->firstChild !== null) {
+                        $node->insertBefore($child->firstChild, $child);
+                    }
+                }
+
+                $child->parentNode?->removeChild($child);
+
+                continue;
+            }
+
+            $this->sanitizeRenderedTextAttributes($child, $tagName);
+            $this->sanitizeRenderedTextNode($child);
+        }
+    }
+
+    private function sanitizeRenderedTextAttributes(DOMElement $element, string $tagName): void
+    {
+        $allowedAttributes = self::ALLOWED_RENDERED_TEXT_ATTRIBUTES[$tagName] ?? [];
+
+        foreach (iterator_to_array($element->attributes) as $attribute) {
+            if (! in_array($attribute->name, $allowedAttributes, true)) {
+                $element->removeAttribute($attribute->name);
+            }
+        }
+
+        if ($tagName !== 'a') {
+            return;
+        }
+
+        $href = html_entity_decode($element->getAttribute('href'), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if ($href !== '' && preg_match('/^\s*(javascript|data|vbscript):/i', $href) === 1) {
+            $element->removeAttribute('href');
+        }
+
+        if ($element->getAttribute('target') === '_blank') {
+            $element->setAttribute('rel', 'noopener noreferrer');
+        }
     }
 
     public function complete($user = null)

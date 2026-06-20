@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('lms_documents', function (Blueprint $table): void {
+            $table->string('package_disk')->nullable()->after('name');
+            $table->string('package_path')->nullable()->after('package_disk');
+            $table->string('package_launch_path')->nullable()->after('package_path');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('lms_documents', function (Blueprint $table): void {
+            $table->dropColumn(['package_disk', 'package_path', 'package_launch_path']);
+        });
+    }
+};

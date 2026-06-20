@@ -12,12 +12,15 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Tapp\FilamentLibrary\Models\LibraryItem;
 use Tapp\FilamentLms\Console\Commands\BackfillCourseCompletedAt;
+use Tapp\FilamentLms\Console\Commands\BackfillEmbeddedPlayerCourses;
+use Tapp\FilamentLms\Console\Commands\ImportCartridgesCommand;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\ImageStep;
 use Tapp\FilamentLms\Livewire\LibraryFileStep;
 use Tapp\FilamentLms\Livewire\LibraryLinkStep;
 use Tapp\FilamentLms\Livewire\LinkStep;
+use Tapp\FilamentLms\Livewire\LmsTestFormShow;
 use Tapp\FilamentLms\Livewire\TestStep;
 use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
@@ -56,8 +59,13 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'change_name_to_text_on_lms_tests_table',
                 'create_lms_credit_categories_table',
                 'create_lms_course_credit_category_table',
+                'add_scorm_package_columns_to_lms_documents_table',
+                'add_embedded_player_to_lms_courses_table',
+                'add_player_slide_id_to_lms_steps_table',
             ])
             ->hasCommand(BackfillCourseCompletedAt::class)
+            ->hasCommand(BackfillEmbeddedPlayerCourses::class)
+            ->hasCommand(ImportCartridgesCommand::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishMigrations()
@@ -82,6 +90,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Livewire::component('vimeo-video', VimeoVideo::class);
         Livewire::component('video-player', VideoPlayer::class);
         Livewire::component('create-test-entry', CreateTestEntry::class);
+        Livewire::component('lms-test-form-show', LmsTestFormShow::class);
         Livewire::component('view-graded-entry', ViewGradedEntry::class);
         Livewire::component('image-step', ImageStep::class);
 
@@ -115,5 +124,31 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Relation::morphMap($morphMap);
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+
+        $this->configureLivewireTemporaryUploadLimits();
+    }
+
+    protected function configureLivewireTemporaryUploadLimits(): void
+    {
+        $maxKb = (int) config('filament-lms.common_cartridge_import.max_upload_size_kb', 512000);
+        $maxMinutes = (int) config('filament-lms.common_cartridge_import.max_upload_time_minutes', 10);
+
+        /** @var array<int, string>|null $rules */
+        $rules = config('livewire.temporary_file_upload.rules');
+
+        if ($rules === null) {
+            $rules = ['required', 'file', 'max:12288'];
+        }
+
+        $rules = array_values(array_filter(
+            $rules,
+            fn (string $rule): bool => ! str_starts_with($rule, 'max:'),
+        ));
+        $rules[] = 'max:'.$maxKb;
+
+        config([
+            'livewire.temporary_file_upload.rules' => $rules,
+            'livewire.temporary_file_upload.max_upload_time' => $maxMinutes,
+        ]);
     }
 }

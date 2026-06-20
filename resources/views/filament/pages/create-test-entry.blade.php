@@ -17,6 +17,6 @@
         @endif
     </x-filament::section>
 @else
-    @livewire('tapp.filament-form-builder.livewire.filament-form.show', ['form' => $test->form, 'blockRedirect' => true])
+    @livewire('lms-test-form-show', ['form' => $test->form, 'blockRedirect' => true])
 @endif 
 </div>

@@ -105,6 +105,8 @@ abstract class TestCase extends Orchestra
             $table->text('description')->nullable();
             $table->unsignedTinyInteger('required_test_percentage')->nullable();
             $table->boolean('is_private')->default(false);
+            $table->boolean('embedded_player')->default(false);
+            $table->string('completion_mode', 32)->default('native');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -131,6 +133,7 @@ abstract class TestCase extends Orchestra
             $table->unsignedBigInteger('material_id')->nullable();
             $table->string('material_type')->nullable();
             $table->text('text')->nullable();
+            $table->string('player_slide_id')->nullable();
             $table->foreignId('retry_step_id')->nullable()->constrained('lms_steps')->onDelete('set null');
             $table->boolean('require_perfect_score')->default(false);
             $table->timestamps();
@@ -169,9 +172,12 @@ abstract class TestCase extends Orchestra
         $app['db']->connection()->getSchemaBuilder()->create('lms_documents', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('file_path');
-            $table->text('description')->nullable();
+            $table->string('file_path')->nullable();
+            $table->string('package_disk')->nullable();
+            $table->string('package_path')->nullable();
+            $table->string('package_launch_path')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Create lms_links table
@@ -186,7 +192,7 @@ abstract class TestCase extends Orchestra
         // Create lms_tests table
         $app['db']->connection()->getSchemaBuilder()->create('lms_tests', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->text('name');
             $table->text('description')->nullable();
             $table->unsignedBigInteger('filament_form_id')->nullable();
             $table->unsignedBigInteger('filament_form_user_id')->nullable();

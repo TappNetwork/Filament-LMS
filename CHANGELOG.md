@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v4.5.0 - 2026-06-20
+
+### What's Changed
+
+* Bump shell-quote from 1.8.1 to 1.8.4 by @dependabot[bot] in https://github.com/TappNetwork/Filament-LMS/pull/107
+* Use Node 24-compatible GitHub Actions by @swilla in https://github.com/TappNetwork/Filament-LMS/pull/108
+* Bump esbuild from 0.25.0 to 0.28.1 by @dependabot[bot] in https://github.com/TappNetwork/Filament-LMS/pull/109
+* Import Common Cartridge and SCORM packages by @swilla in https://github.com/TappNetwork/Filament-LMS/pull/105
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v4.4.2...v4.5.0
+
 ## v4.4.2 - 2026-05-12
 
 ### What's Changed

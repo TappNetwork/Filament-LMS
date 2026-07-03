@@ -414,7 +414,7 @@ test('form steps scope submissions per step when the same form is reused', funct
 
     $this->actingAs($user);
 
-    Livewire\Livewire::test(\Tapp\FilamentLms\Livewire\FormStep::class, ['step' => $testStep])
+    Livewire\Livewire::test(FormStep::class, ['step' => $testStep])
         ->assertSet('entry', null);
 
     $testEntry = FilamentFormUser::create([
@@ -425,7 +425,7 @@ test('form steps scope submissions per step when the same form is reused', funct
         ],
     ]);
 
-    Livewire\Livewire::test(\Tapp\FilamentLms\Livewire\FormStep::class, ['step' => $testStep])
+    Livewire\Livewire::test(FormStep::class, ['step' => $testStep])
         ->call('entrySaved', $testEntry->id)
         ->assertSet('entry.id', $testEntry->id);
 

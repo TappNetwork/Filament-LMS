@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Tests\Feature;
 
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormField;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
+use Tapp\FilamentLms\Events\CourseCompleted as CourseCompletedEvent;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
@@ -50,28 +52,10 @@ test('canSelectEvaluationCourse validates evaluation targets on create', functio
 });
 
 test('primary course completion is deferred until evaluation is completed', function () {
-    if (! class_exists(FilamentForm::class)) {
-        $this->markTestSkipped('Filament Form Builder is not installed.');
-    }
-
     $user = TestUser::create([
         'name' => 'Test User',
         'email' => 'evaluation-test@example.com',
         'password' => bcrypt('password'),
-    ]);
-
-    $form = FilamentForm::create([
-        'name' => 'Evaluation Form',
-        'slug' => 'evaluation-form',
-    ]);
-
-    FilamentFormField::create([
-        'filament_form_id' => $form->id,
-        'field' => 'feedback',
-        'label' => 'Feedback',
-        'type' => 'TEXTAREA',
-        'required' => true,
-        'order' => 1,
     ]);
 
     $evaluationCourse = Course::factory()->create([
@@ -86,13 +70,11 @@ test('primary course completion is deferred until evaluation is completed', func
         'order' => 1,
     ]);
 
-    Step::factory()->create([
+    $evaluationStep = Step::factory()->create([
         'lesson_id' => $evaluationLesson->id,
         'order' => 1,
         'name' => 'Evaluation',
         'slug' => 'evaluation',
-        'material_type' => 'form',
-        'material_id' => $form->id,
     ]);
 
     $primaryCourse = Course::factory()->create([
@@ -117,24 +99,22 @@ test('primary course completion is deferred until evaluation is completed', func
         'slug' => 'lesson-step',
     ]);
 
-    StepUser::create([
-        'user_id' => $user->id,
-        'step_id' => $primaryStep->id,
-        'completed_at' => now(),
-    ]);
+    Event::fake([CourseCompletedEvent::class]);
 
-    $primaryCourse->maybeSetCompletedAtForUser($user->id);
+    $primaryStep->complete($user);
+
+    Event::assertNotDispatched(CourseCompletedEvent::class, function (CourseCompletedEvent $event) use ($primaryCourse): bool {
+        return $event->course->is($primaryCourse);
+    });
 
     expect($primaryCourse->fresh()->completedByUserAt($user->id))->toBeNull()
         ->and($evaluationCourse->users()->where('user_id', $user->id)->exists())->toBeTrue();
 
-    StepUser::create([
-        'user_id' => $user->id,
-        'step_id' => $evaluationCourse->steps()->first()->id,
-        'completed_at' => now(),
-    ]);
+    $evaluationStep->complete($user);
 
-    $evaluationCourse->maybeSetCompletedAtForUser($user->id);
+    Event::assertDispatched(CourseCompletedEvent::class, function (CourseCompletedEvent $event) use ($user, $primaryCourse): bool {
+        return $event->user->is($user) && $event->course->is($primaryCourse);
+    });
 
     expect($primaryCourse->fresh()->completedByUserAt($user->id))->not->toBeNull()
         ->and($evaluationCourse->fresh()->completedByUserAt($user->id))->not->toBeNull();

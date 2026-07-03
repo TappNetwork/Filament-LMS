@@ -25,6 +25,7 @@ use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Enums\CompletionMode;
+use Tapp\FilamentLms\Events\CourseCompleted as CourseCompletedEvent;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
@@ -363,6 +364,12 @@ final class Course extends Model implements HasMedia
             } catch (UniqueConstraintViolationException) {
                 $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
             }
+        }
+
+        $completedUser = $this->users()->where('user_id', $userId)->first();
+
+        if ($completedUser !== null) {
+            CourseCompletedEvent::dispatch($completedUser, $this);
         }
 
         if ($evaluationService->isEvaluationCourse($this)) {

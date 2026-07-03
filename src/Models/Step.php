@@ -19,7 +19,6 @@ use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\StepFactory;
-use Tapp\FilamentLms\Events\CourseCompleted;
 use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Events\StepCompleted;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
@@ -254,7 +253,6 @@ class Step extends Model implements Sortable
 
             return $nextStep;
         } else {
-            CourseCompleted::dispatch($user, $this->lesson->course);
             $this->lesson->course->maybeSetCompletedAtForUser($user->id);
         }
     }

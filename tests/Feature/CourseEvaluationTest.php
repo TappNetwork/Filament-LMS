@@ -17,6 +17,7 @@ use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\StepUser;
 use Tapp\FilamentLms\Pages\CourseCompleted;
+use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Tests\TestUser;
 
@@ -453,6 +454,57 @@ test('completing evaluation form step marks evaluation course complete and final
 
     expect($primaryCourse->fresh()->completedByUserAt($user->id))->not->toBeNull()
         ->and($evaluationCourse->fresh()->completedByUserAt($user->id))->not->toBeNull();
+});
+
+test('evaluation redirect does not emit duplicate course completed events after form completion', function () {
+    $user = TestUser::create([
+        'name' => 'Duplicate Event User',
+        'email' => 'duplicate-event-evaluation@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create(['is_private' => true]);
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    $evaluationStep = Step::factory()->create(['lesson_id' => $evaluationLesson->id]);
+
+    $primaryCourse = Course::factory()->create([
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+
+    $primaryCourse->users()->attach($user->id);
+
+    $primaryLesson = Lesson::factory()->create(['course_id' => $primaryCourse->id]);
+    $primaryStep = Step::factory()->create(['lesson_id' => $primaryLesson->id]);
+
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $primaryStep->id,
+        'completed_at' => now(),
+    ]);
+
+    $primaryCourse->maybeSetCompletedAtForUser($user->id);
+
+    $this->actingAs($user);
+
+    Event::fake([CourseCompletedEvent::class]);
+
+    $evaluationStep->complete($user);
+
+    Event::assertDispatchedTimes(CourseCompletedEvent::class, 2);
+
+    $page = app(StepPage::class);
+    $page->course = $evaluationCourse->fresh();
+    $page->course->loadProgress();
+    $page->lesson = $page->course->lessons->first();
+    $page->step = $page->lesson->steps->first();
+
+    $response = $page->complete(false);
+
+    expect($response)
+        ->toBeInstanceOf(RedirectResponse::class);
+
+    Event::assertDispatchedTimes(CourseCompletedEvent::class, 2);
 });
 
 test('form steps scope submissions per step when the same form is reused', function () {

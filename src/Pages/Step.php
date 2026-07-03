@@ -144,10 +144,10 @@ class Step extends Page
     }
 
     #[On('complete-step')]
-    public function complete()
+    public function complete(bool $completeStep = true)
     {
-        // Use the Model's complete() method which handles all events and progress tracking
-        $nextStep = $this->step->complete();
+        // Form steps may already complete the model before dispatching this event.
+        $nextStep = $completeStep ? $this->step->complete() : $this->step->next_step;
 
         $user = Auth::user();
         if (

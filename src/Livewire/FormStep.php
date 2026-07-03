@@ -53,7 +53,7 @@ class FormStep extends Component
             ->update(['filament_form_user_id' => $entry->id]);
 
         if ($this->step->lesson->course->isEvaluationCourse()) {
-            $this->dispatch('complete-step');
+            $this->dispatch('complete-step', completeStep: false);
         }
     }
 }

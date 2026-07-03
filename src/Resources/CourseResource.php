@@ -176,14 +176,9 @@ class CourseResource extends Resource
                                 return;
                             }
 
-                            $evaluationCourse = Course::query()->find($value);
                             $service = app(CourseEvaluationService::class);
 
-                            $canLink = $record === null
-                                ? $service->canSelectEvaluationCourse($evaluationCourse)
-                                : $service->canLinkEvaluationCourse($record, $evaluationCourse);
-
-                            if (! $canLink) {
+                            if (! $service->canUseEvaluationCourseId($record, $value)) {
                                 $fail('Choose an evaluation-only course that is not already linked as a training course.');
                             }
                         },

@@ -224,6 +224,23 @@ final class CourseEvaluationService
         return $this->isValidEvaluationTarget($evaluationCourse);
     }
 
+    public function canUseEvaluationCourseId(?Course $primaryCourse, mixed $evaluationCourseId): bool
+    {
+        if ($evaluationCourseId === null) {
+            return true;
+        }
+
+        $evaluationCourse = Course::query()->find($evaluationCourseId);
+
+        if ($evaluationCourse === null) {
+            return false;
+        }
+
+        return $primaryCourse === null
+            ? $this->canSelectEvaluationCourse($evaluationCourse)
+            : $this->canLinkEvaluationCourse($primaryCourse, $evaluationCourse);
+    }
+
     public function canLinkEvaluationCourse(Course $primaryCourse, ?Course $evaluationCourse): bool
     {
         if ($evaluationCourse === null) {

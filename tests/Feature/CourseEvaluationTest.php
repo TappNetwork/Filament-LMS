@@ -52,6 +52,17 @@ test('canSelectEvaluationCourse validates evaluation targets on create', functio
         ->and($service->canSelectEvaluationCourse($nestedEvaluation))->toBeFalse();
 });
 
+test('evaluation link validation rejects missing course ids', function () {
+    $service = app(CourseEvaluationService::class);
+
+    $trainingCourse = Course::factory()->create(['is_private' => false]);
+    $missingCourseId = (int) Course::query()->max('id') + 1000;
+
+    expect($service->canUseEvaluationCourseId(null, null))->toBeTrue()
+        ->and($service->canUseEvaluationCourseId(null, $missingCourseId))->toBeFalse()
+        ->and($service->canUseEvaluationCourseId($trainingCourse, $missingCourseId))->toBeFalse();
+});
+
 test('primary course completion is deferred until evaluation is completed', function () {
     $user = TestUser::create([
         'name' => 'Test User',

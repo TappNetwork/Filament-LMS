@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
+use Tapp\FilamentFormBuilder\Models\FilamentForm;
+use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\StepFactory;
 use Tapp\FilamentLms\Events\CourseCompleted;
@@ -403,5 +405,43 @@ class Step extends Model implements Sortable
     public function getSecondsAttribute()
     {
         return $this->progress?->seconds ?? 0;
+    }
+
+    public function formEntryForUser(int|string $userId): ?FilamentFormUser
+    {
+        if ($this->material_type !== 'form') {
+            return null;
+        }
+
+        $this->loadMissing('material');
+
+        if (! $this->material instanceof FilamentForm) {
+            return null;
+        }
+
+        $stepUser = StepUser::query()
+            ->where('user_id', $userId)
+            ->where('step_id', $this->id)
+            ->whereNotNull('completed_at')
+            ->first();
+
+        if ($stepUser === null) {
+            return null;
+        }
+
+        if ($stepUser->filament_form_user_id !== null) {
+            return FilamentFormUser::query()
+                ->whereKey($stepUser->filament_form_user_id)
+                ->where('user_id', $userId)
+                ->where('filament_form_id', $this->material->id)
+                ->first();
+        }
+
+        return FilamentFormUser::query()
+            ->where('filament_form_id', $this->material->id)
+            ->where('user_id', $userId)
+            ->where('created_at', '<=', $stepUser->completed_at)
+            ->orderByDesc('created_at')
+            ->first();
     }
 }

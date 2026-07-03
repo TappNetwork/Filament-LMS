@@ -63,6 +63,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'add_embedded_player_to_lms_courses_table',
                 'add_player_slide_id_to_lms_steps_table',
                 'add_evaluation_course_id_to_lms_courses_table',
+                'add_filament_form_user_id_to_lms_step_user_table',
             ])
             ->hasCommand(BackfillCourseCompletedAt::class)
             ->hasCommand(BackfillEmbeddedPlayerCourses::class)

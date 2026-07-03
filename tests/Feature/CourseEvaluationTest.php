@@ -335,3 +335,73 @@ test('completing evaluation form step marks evaluation course complete and final
     expect($primaryCourse->fresh()->completedByUserAt($user->id))->not->toBeNull()
         ->and($evaluationCourse->fresh()->completedByUserAt($user->id))->not->toBeNull();
 });
+
+test('form steps scope submissions per step when the same form is reused', function () {
+    if (! class_exists(FilamentForm::class)) {
+        $this->markTestSkipped('Filament Form Builder is not installed.');
+    }
+
+    $user = TestUser::create([
+        'name' => 'Shared Form User',
+        'email' => 'shared-form-evaluation@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $form = FilamentForm::create([
+        'name' => 'Shared Evaluation Form',
+        'slug' => 'shared-evaluation-form',
+    ]);
+
+    $webdevEvaluation = Course::factory()->create(['is_private' => true, 'name' => 'Webdev Evaluation']);
+    $webdevLesson = Lesson::factory()->create(['course_id' => $webdevEvaluation->id]);
+    $webdevStep = Step::factory()->create([
+        'lesson_id' => $webdevLesson->id,
+        'material_type' => 'form',
+        'material_id' => $form->id,
+    ]);
+
+    $testEvaluation = Course::factory()->create(['is_private' => true, 'name' => 'Test Evaluation']);
+    $testLesson = Lesson::factory()->create(['course_id' => $testEvaluation->id]);
+    $testStep = Step::factory()->create([
+        'lesson_id' => $testLesson->id,
+        'material_type' => 'form',
+        'material_id' => $form->id,
+    ]);
+
+    $webdevEntry = FilamentFormUser::create([
+        'filament_form_id' => $form->id,
+        'user_id' => $user->id,
+        'entry' => [
+            ['field' => 'rating', 'type' => 'Radio', 'answer' => 'Agree'],
+        ],
+    ]);
+
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $webdevStep->id,
+        'completed_at' => now()->subHour(),
+        'filament_form_user_id' => $webdevEntry->id,
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire\Livewire::test(\Tapp\FilamentLms\Livewire\FormStep::class, ['step' => $testStep])
+        ->assertSet('entry', null);
+
+    $testEntry = FilamentFormUser::create([
+        'filament_form_id' => $form->id,
+        'user_id' => $user->id,
+        'entry' => [
+            ['field' => 'rating', 'type' => 'Radio', 'answer' => 'Disagree'],
+        ],
+    ]);
+
+    Livewire\Livewire::test(\Tapp\FilamentLms\Livewire\FormStep::class, ['step' => $testStep])
+        ->call('entrySaved', $testEntry->id)
+        ->assertSet('entry.id', $testEntry->id);
+
+    expect($webdevStep->fresh()->formEntryForUser($user->id)?->id)->toBe($webdevEntry->id)
+        ->and($testStep->fresh()->formEntryForUser($user->id)?->id)->toBe($testEntry->id)
+        ->and($webdevEntry->fresh()->entry[0]['answer'])->toBe('Agree')
+        ->and($testEntry->fresh()->entry[0]['answer'])->toBe('Disagree');
+});

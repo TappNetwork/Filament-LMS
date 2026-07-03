@@ -6,6 +6,7 @@ use Livewire\Component;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\StepUser;
 
 class FormStep extends Component
 {
@@ -23,14 +24,12 @@ class FormStep extends Component
 
     public ?FilamentFormUser $entry = null;
 
-    public function mount($step)
+    public function mount($step): void
     {
         $this->step = $step;
         $this->form = $step->material;
         $this->seconds = $step->seconds ?? 0;
-        $this->entry = FilamentFormUser::where('filament_form_id', $this->form->id)
-            ->where('user_id', auth()->user()->id)
-            ->first();
+        $this->entry = $step->formEntryForUser(auth()->id());
     }
 
     public function render()
@@ -38,11 +37,20 @@ class FormStep extends Component
         return view('filament-lms::livewire.form-step');
     }
 
-    public function entrySaved(FilamentFormUser $entry): void
+    public function entrySaved(int|FilamentFormUser $entry): void
     {
+        if (is_int($entry)) {
+            $entry = FilamentFormUser::query()->findOrFail($entry);
+        }
+
         $this->entry = $entry;
 
         $this->step->complete();
+
+        StepUser::query()
+            ->where('user_id', auth()->id())
+            ->where('step_id', $this->step->id)
+            ->update(['filament_form_user_id' => $entry->id]);
 
         if ($this->step->lesson->course->isEvaluationCourse()) {
             $this->dispatch('complete-step');

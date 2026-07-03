@@ -2,7 +2,7 @@
     @if($entry)
         @livewire('tapp.filament-form-builder.livewire.filament-form-user.show', [$entry])
     @else
-        @livewire('tapp.filament-form-builder.livewire.filament-form.show', [$form, 'blockRedirect' => true])
+        @livewire('tapp.filament-form-builder.livewire.filament-form.show', [$form, 'blockRedirect' => true, 'allowMultipleSubmissions' => true])
     @endif
 
     @if(! $step->lesson->course->isEvaluationCourse())

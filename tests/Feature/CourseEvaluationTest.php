@@ -127,7 +127,7 @@ test('primary course completion is deferred until evaluation is completed', func
     expect($primaryCourse->fresh()->completedByUserAt($user->id))->toBeNull()
         ->and($evaluationCourse->users()->where('user_id', $user->id)->exists())->toBeTrue();
 
-    $evaluationStep->complete($user);
+    $evaluationStep->complete($user, $primaryCourse->id);
 
     Event::assertDispatched(CourseCompletedEvent::class, function (CourseCompletedEvent $event) use ($user, $primaryCourse): bool {
         return $event->user->is($user) && $event->course->is($primaryCourse);
@@ -135,6 +135,60 @@ test('primary course completion is deferred until evaluation is completed', func
 
     expect($primaryCourse->fresh()->completedByUserAt($user->id))->not->toBeNull()
         ->and($evaluationCourse->fresh()->completedByUserAt($user->id))->not->toBeNull();
+});
+
+test('shared evaluation course requires a separate evaluation completion for each primary course', function () {
+    $user = TestUser::create([
+        'name' => 'Shared Evaluation User',
+        'email' => 'shared-evaluation@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create(['is_private' => true]);
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    $evaluationStep = Step::factory()->create(['lesson_id' => $evaluationLesson->id]);
+
+    $firstPrimary = Course::factory()->create([
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $firstPrimary->users()->attach($user->id);
+    $firstLesson = Lesson::factory()->create(['course_id' => $firstPrimary->id]);
+    $firstStep = Step::factory()->create(['lesson_id' => $firstLesson->id]);
+
+    $secondPrimary = Course::factory()->create([
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $secondPrimary->users()->attach($user->id);
+    $secondLesson = Lesson::factory()->create(['course_id' => $secondPrimary->id]);
+    $secondStep = Step::factory()->create(['lesson_id' => $secondLesson->id]);
+
+    Event::fake([CourseCompletedEvent::class]);
+
+    $firstStep->complete($user);
+    $evaluationStep->complete($user, $firstPrimary->id);
+
+    expect($firstPrimary->fresh()->completedByUserAt($user->id))->not->toBeNull()
+        ->and($firstPrimary->fresh()->evaluationCompletedByUser($user->id))->toBeTrue()
+        ->and($secondPrimary->fresh()->evaluationCompletedByUser($user->id))->toBeFalse();
+
+    $secondStep->complete($user);
+
+    Event::assertNotDispatched(CourseCompletedEvent::class, function (CourseCompletedEvent $event) use ($secondPrimary): bool {
+        return $event->course->is($secondPrimary);
+    });
+
+    expect($secondPrimary->fresh()->completedByUserAt($user->id))->toBeNull();
+
+    $evaluationStep->complete($user, $secondPrimary->id);
+
+    Event::assertDispatched(CourseCompletedEvent::class, function (CourseCompletedEvent $event) use ($user, $secondPrimary): bool {
+        return $event->user->is($user) && $event->course->is($secondPrimary);
+    });
+
+    expect($secondPrimary->fresh()->completedByUserAt($user->id))->not->toBeNull()
+        ->and($secondPrimary->fresh()->evaluationCompletedByUser($user->id))->toBeTrue();
 });
 
 test('completed page for evaluation course redirects to primary course certificate page', function () {
@@ -176,6 +230,7 @@ test('completed page for evaluation course redirects to primary course certifica
     StepUser::create([
         'user_id' => $user->id,
         'step_id' => $evaluationStep->id,
+        'evaluation_primary_course_id' => $primaryCourse->id,
         'completed_at' => now(),
     ]);
 
@@ -466,7 +521,7 @@ test('completing evaluation form step marks evaluation course complete and final
         ],
     ]);
 
-    $evaluationStep->complete($user);
+    $evaluationStep->complete($user, $primaryCourse->id);
 
     expect($primaryCourse->fresh()->completedByUserAt($user->id))->not->toBeNull()
         ->and($evaluationCourse->fresh()->completedByUserAt($user->id))->not->toBeNull();
@@ -505,7 +560,7 @@ test('evaluation redirect does not emit duplicate course completed events after 
 
     Event::fake([CourseCompletedEvent::class]);
 
-    $evaluationStep->complete($user);
+    $evaluationStep->complete($user, $primaryCourse->id);
 
     Event::assertDispatchedTimes(CourseCompletedEvent::class, 2);
 

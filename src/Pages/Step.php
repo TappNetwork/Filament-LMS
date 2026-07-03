@@ -34,6 +34,8 @@ class Step extends Page
 
     public StepModel $step;
 
+    public ?int $evaluationPrimaryCourseId = null;
+
     public function mount($courseSlug, $lessonSlug, $stepSlug)
     {
         $this->course = Course::where('slug', $courseSlug)->firstOrFail();
@@ -62,8 +64,36 @@ class Step extends Page
             return redirect()->to($this->course->linkToCurrentStep());
         }
 
+        $evaluationService = app(CourseEvaluationService::class);
+        $isLmsAdmin = method_exists($user, 'isLmsAdmin') && $user->isLmsAdmin();
+
+        if ($evaluationService->isEvaluationCourse($this->course) && ! $isLmsAdmin) {
+            $primaryCourseId = request()->query('primaryCourse');
+            $primaryCourse = $evaluationService->activePrimaryCourseForEvaluation(
+                $this->course,
+                $user,
+                is_numeric($primaryCourseId) ? (int) $primaryCourseId : null,
+            );
+
+            if ($primaryCourse === null) {
+                return redirect()->to(Dashboard::getUrl());
+            }
+
+            $this->evaluationPrimaryCourseId = $primaryCourse->id;
+
+            if (! $evaluationService->evaluationStepAvailableForPrimary($this->step, $user->id, $primaryCourse->id)) {
+                $currentStepUrl = $evaluationService->evaluationUrlForPrimaryCourse($primaryCourse);
+
+                return redirect()->to($currentStepUrl ?? Dashboard::getUrl());
+            }
+        }
+
         $canAccess = $user->canAccessStep($this->step);
-        $currentStepUrl = $this->course->linkToCurrentStep();
+        $currentStepUrl = $this->evaluationPrimaryCourseId !== null
+            ? app(CourseEvaluationService::class)->evaluationUrlForPrimaryCourse(
+                Course::query()->findOrFail($this->evaluationPrimaryCourseId),
+            )
+            : $this->course->linkToCurrentStep();
         $requestedStepUrl = static::getUrlForStep($this->step);
 
         Log::info('Step page access check', [
@@ -131,7 +161,7 @@ class Step extends Page
         if (Auth::check()) {
             $user = Auth::user();
             // @phpstan-ignore-next-line
-            if ($user && $user->canEditStep($this->step)) {
+            if ($user && method_exists($user, 'canEditStep') && $user->canEditStep($this->step)) {
                 $actions[] = Action::make('edit')
                     ->label('Edit')
                     ->color('primary')
@@ -147,7 +177,9 @@ class Step extends Page
     public function complete(bool $completeStep = true)
     {
         // Form steps may already complete the model before dispatching this event.
-        $nextStep = $completeStep ? $this->step->complete() : $this->step->next_step;
+        $nextStep = $completeStep
+            ? $this->step->complete(evaluationPrimaryCourseId: $this->evaluationPrimaryCourseId)
+            : $this->step->next_step;
 
         $user = Auth::user();
         if (
@@ -156,14 +188,16 @@ class Step extends Page
             && app(CourseEvaluationService::class)->hasPendingEvaluationForUser($this->course, $user->id)
         ) {
             $this->course->ensureEvaluationAssigned($user->id);
-            /** @var Course|null $evaluationCourse */
-            $evaluationCourse = $this->course->evaluationCourse;
 
-            return redirect()->to($evaluationCourse?->linkToCurrentStep() ?? Dashboard::getUrl());
+            return redirect()->to(
+                app(CourseEvaluationService::class)->evaluationUrlForPrimaryCourse($this->course) ?? Dashboard::getUrl(),
+            );
         }
 
         if (! $this->step->last_step && $nextStep) {
-            return redirect()->to(Step::getUrlForStep($nextStep));
+            return redirect()->to(Step::getUrlForStep($nextStep, $this->evaluationPrimaryCourseId !== null
+                ? ['primaryCourse' => $this->evaluationPrimaryCourseId]
+                : []));
         }
 
         if (
@@ -172,7 +206,7 @@ class Step extends Page
             && $user instanceof FilamentLmsUserInterface
         ) {
             $primaryCourse = app(CourseEvaluationService::class)
-                ->completedPrimaryCourseForEvaluation($this->course, $user->id);
+                ->completedPrimaryCourseForEvaluation($this->course, $user->id, $this->evaluationPrimaryCourseId);
 
             if ($primaryCourse !== null) {
                 return redirect()->to(CourseCompleted::getUrl([$primaryCourse->slug]));
@@ -184,9 +218,14 @@ class Step extends Page
         return redirect()->to(CourseCompleted::getUrl([$this->course->slug]));
     }
 
-    public static function getUrlForStep(StepModel $step)
+    public static function getUrlForStep(StepModel $step, array $parameters = [])
     {
-        return static::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]);
+        return static::getUrl([
+            $step->lesson->course->slug,
+            $step->lesson->slug,
+            $step->slug,
+            ...$parameters,
+        ]);
     }
 
     public function getMaxContentWidth(): Width

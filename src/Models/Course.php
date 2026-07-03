@@ -150,20 +150,7 @@ final class Course extends Model implements HasMedia
 
     public function evaluationSubmissionUrl(): ?string
     {
-        if (! $this->hasEvaluation()) {
-            return null;
-        }
-
-        /** @var Course|null $evaluationCourse */
-        $evaluationCourse = $this->evaluationCourse;
-
-        if ($evaluationCourse === null) {
-            return null;
-        }
-
-        $step = $evaluationCourse->steps()->first();
-
-        return $step !== null ? StepPage::getUrlForStep($step) : null;
+        return app(CourseEvaluationService::class)->evaluationUrlForPrimaryCourse($this);
     }
 
     public function lessons(): HasMany
@@ -341,11 +328,15 @@ final class Course extends Model implements HasMedia
         $enrolledUser = $this->users()->where('user_id', $userId)->first();
         $pivot = $enrolledUser?->getRelationValue('pivot');
         $existing = $pivot instanceof Pivot ? $pivot->getAttribute('completed_at') : null;
+        $evaluationService = app(CourseEvaluationService::class);
+
         if ($existing !== null) {
+            if ($evaluationService->isEvaluationCourse($this)) {
+                $evaluationService->finalizePrimaryCoursesAfterEvaluation($this, $userId);
+            }
+
             return;
         }
-
-        $evaluationService = app(CourseEvaluationService::class);
 
         if (! $evaluationService->courseMeetsCompletionRequirements($this, $userId)) {
             return;
@@ -516,12 +507,13 @@ final class Course extends Model implements HasMedia
             return false;
         }
 
-        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
+        $completedStepIds = StepUser::whereIn('step_id', $steps->pluck('id'))
             ->where('user_id', $userId)
             ->whereNotNull('completed_at')
-            ->get();
+            ->pluck('step_id')
+            ->unique();
 
-        return $completedStepUsers->count() === $steps->count();
+        return $completedStepIds->count() === $steps->count();
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
@@ -24,12 +25,15 @@ class FormStep extends Component
 
     public ?FilamentFormUser $entry = null;
 
-    public function mount($step): void
+    public ?int $evaluationPrimaryCourseId = null;
+
+    public function mount($step, ?int $evaluationPrimaryCourseId = null): void
     {
         $this->step = $step;
         $this->form = $step->material;
         $this->seconds = $step->seconds ?? 0;
-        $this->entry = $step->formEntryForUser(auth()->id());
+        $this->evaluationPrimaryCourseId = $evaluationPrimaryCourseId;
+        $this->entry = $step->formEntryForUser(Auth::id(), $evaluationPrimaryCourseId);
     }
 
     public function render()
@@ -45,11 +49,16 @@ class FormStep extends Component
 
         $this->entry = $entry;
 
-        $this->step->complete();
+        $this->step->complete(evaluationPrimaryCourseId: $this->evaluationPrimaryCourseId);
 
         StepUser::query()
-            ->where('user_id', auth()->id())
+            ->where('user_id', Auth::id())
             ->where('step_id', $this->step->id)
+            ->when(
+                $this->evaluationPrimaryCourseId !== null,
+                fn ($query) => $query->where('evaluation_primary_course_id', $this->evaluationPrimaryCourseId),
+                fn ($query) => $query->whereNull('evaluation_primary_course_id'),
+            )
             ->update(['filament_form_user_id' => $entry->id]);
 
         if ($this->step->lesson->course->isEvaluationCourse()) {

@@ -46,7 +46,7 @@
     @elseif ($step->material_type == 'video')
         <livewire:video-step :step="$step"/>
     @elseif ($step->material_type == 'form')
-        <livewire:form-step :step="$step"/>
+        <livewire:form-step :step="$step" :evaluation-primary-course-id="$evaluationPrimaryCourseId"/>
     @elseif ($step->material_type == 'document')
         <livewire:document-step :step="$step"/>
     @elseif ($step->material_type == 'link')

@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
 /**
+ * @property int|null $evaluation_primary_course_id
  * @property int|null $filament_form_user_id
  * @property string|null $completed_at
  * @property Carbon|null $created_at

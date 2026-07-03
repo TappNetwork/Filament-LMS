@@ -208,14 +208,20 @@ class Step extends Model implements Sortable
         }
     }
 
-    public function complete($user = null)
+    public function complete($user = null, ?int $evaluationPrimaryCourseId = null)
     {
         // @phpstan-ignore-next-line
         $user = $user ?: Auth::user();
 
-        $userStep = StepUser::where('user_id', $user->id)
+        $userStepQuery = StepUser::where('user_id', $user->id)
             ->where('step_id', $this->id)
-            ->first();
+            ->when(
+                $evaluationPrimaryCourseId !== null,
+                fn ($query) => $query->where('evaluation_primary_course_id', $evaluationPrimaryCourseId),
+                fn ($query) => $query->whereNull('evaluation_primary_course_id'),
+            );
+
+        $userStep = $userStepQuery->first();
 
         $nextStep = $this->next_step;
 
@@ -224,6 +230,7 @@ class Step extends Model implements Sortable
             StepUser::create([
                 'user_id' => $user->id,
                 'step_id' => $this->id,
+                'evaluation_primary_course_id' => $evaluationPrimaryCourseId,
                 'completed_at' => now(),
             ]);
 
@@ -247,6 +254,7 @@ class Step extends Model implements Sortable
             StepUser::firstOrCreate([
                 'user_id' => $user->id,
                 'step_id' => $nextStep->id,
+                'evaluation_primary_course_id' => $evaluationPrimaryCourseId,
             ]);
 
             $this->lesson->course->maybeSetCompletedAtForUser($user->id);
@@ -405,7 +413,7 @@ class Step extends Model implements Sortable
         return $this->progress?->seconds ?? 0;
     }
 
-    public function formEntryForUser(int|string $userId): ?FilamentFormUser
+    public function formEntryForUser(int|string $userId, ?int $evaluationPrimaryCourseId = null): ?FilamentFormUser
     {
         if ($this->material_type !== 'form') {
             return null;
@@ -420,6 +428,11 @@ class Step extends Model implements Sortable
         $stepUser = StepUser::query()
             ->where('user_id', $userId)
             ->where('step_id', $this->id)
+            ->when(
+                $evaluationPrimaryCourseId !== null,
+                fn ($query) => $query->where('evaluation_primary_course_id', $evaluationPrimaryCourseId),
+                fn ($query) => $query->whereNull('evaluation_primary_course_id'),
+            )
             ->whereNotNull('completed_at')
             ->first();
 

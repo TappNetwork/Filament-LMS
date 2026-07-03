@@ -26,6 +26,8 @@ final class CourseCompleted extends Page
 
     public ?Course $evaluationCourse = null;
 
+    public ?string $evaluationUrl = null;
+
     public ?float $overallPercent = null;
 
     public ?int $requiredPercent = null;
@@ -86,6 +88,7 @@ final class CourseCompleted extends Page
 
             $this->pendingEvaluation = true;
             $this->evaluationCourse = $evaluationCourse;
+            $this->evaluationUrl = $this->course->evaluationSubmissionUrl();
             $this->course->ensureEvaluationAssigned($userId);
             $this->qualifiedForCertificate = false;
 

@@ -552,6 +552,7 @@ Important:
 - Set the evaluation link on the **training** course, not on the evaluation course. Linking the evaluation course back to the training course will hide the training course from the dashboard.
 - Only **private** courses can be selected as evaluation targets.
 - An evaluation course cannot itself have an evaluation course linked to it.
+- The same evaluation course can be linked from multiple training courses. Each training course still requires its own evaluation submission before that course is marked complete or its certificate is issued.
 
 ### Learner experience
 

@@ -14,7 +14,7 @@
                     View All Courses
                 </x-filament::button>
             </a>
-            <x-filament::button tag="a" href="{{ $evaluationCourse->linkToCurrentStep() }}">
+            <x-filament::button tag="a" href="{{ $evaluationUrl ?? $evaluationCourse->linkToCurrentStep() }}">
                 Complete Evaluation
             </x-filament::button>
         </div>

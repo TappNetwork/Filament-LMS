@@ -115,6 +115,12 @@ parameters:
 			path: src/Models/Course.php
 
 		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasManyThrough\:\:ordered\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/CourseEvaluationService.php
+
+		-
 			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:canAccessStep\(\)\.$#'
 			identifier: method.notFound
 			count: 1

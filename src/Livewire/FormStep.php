@@ -34,6 +34,8 @@ class FormStep extends Component
         $this->seconds = $step->seconds ?? 0;
         $this->evaluationPrimaryCourseId = $evaluationPrimaryCourseId;
         $this->entry = $step->formEntryForUser(Auth::id(), $evaluationPrimaryCourseId);
+
+        $this->resetErrorBag();
     }
 
     public function render()

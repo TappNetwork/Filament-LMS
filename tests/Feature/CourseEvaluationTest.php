@@ -460,6 +460,58 @@ test('required test percentage must be met before evaluation is unlocked', funct
         ->and($page->requiredPercent)->toBe(80);
 });
 
+test('only evaluation form steps allow multiple submissions', function () {
+    if (! class_exists(FilamentForm::class)) {
+        $this->markTestSkipped('Filament Form Builder is not installed.');
+    }
+
+    $user = TestUser::create([
+        'name' => 'Multiple Submission User',
+        'email' => 'multiple-submission-evaluation@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $form = FilamentForm::create([
+        'name' => 'Multiple Submission Form',
+        'slug' => 'multiple-submission-form',
+    ]);
+
+    $trainingCourse = Course::factory()->create(['is_private' => false]);
+    $trainingLesson = Lesson::factory()->create(['course_id' => $trainingCourse->id]);
+    $trainingStep = Step::factory()->create([
+        'lesson_id' => $trainingLesson->id,
+        'material_type' => 'form',
+        'material_id' => $form->id,
+    ]);
+
+    $evaluationCourse = Course::factory()->create(['is_private' => true]);
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    $evaluationStep = Step::factory()->create([
+        'lesson_id' => $evaluationLesson->id,
+        'material_type' => 'form',
+        'material_id' => $form->id,
+    ]);
+
+    Course::factory()->create([
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => false,
+    ]);
+
+    $this->actingAs($user);
+
+    TestFilamentFormShow::resetLastAllowMultipleSubmissions();
+
+    Livewire::test(FormStep::class, ['step' => $trainingStep]);
+
+    expect(TestFilamentFormShow::$lastAllowMultipleSubmissions)->toBeFalse();
+
+    TestFilamentFormShow::resetLastAllowMultipleSubmissions();
+
+    Livewire::test(FormStep::class, ['step' => $evaluationStep]);
+
+    expect(TestFilamentFormShow::$lastAllowMultipleSubmissions)->toBeTrue();
+});
+
 test('evaluation form step hides next button and advances after submit', function () {
     if (! class_exists(FilamentForm::class)) {
         $this->markTestSkipped('Filament Form Builder is not installed.');

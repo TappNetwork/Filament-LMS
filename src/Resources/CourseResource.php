@@ -172,13 +172,18 @@ class CourseResource extends Resource
                     })
                     ->rules([
                         fn (?Course $record): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($record): void {
-                            if ($value === null || $record === null) {
+                            if ($value === null) {
                                 return;
                             }
 
                             $evaluationCourse = Course::query()->find($value);
+                            $service = app(CourseEvaluationService::class);
 
-                            if (! app(CourseEvaluationService::class)->canLinkEvaluationCourse($record, $evaluationCourse)) {
+                            $canLink = $record === null
+                                ? $service->canSelectEvaluationCourse($evaluationCourse)
+                                : $service->canLinkEvaluationCourse($record, $evaluationCourse);
+
+                            if (! $canLink) {
                                 $fail('Choose an evaluation-only course that is not already linked as a training course.');
                             }
                         },

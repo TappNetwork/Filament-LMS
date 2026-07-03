@@ -11,10 +11,38 @@ use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\StepUser;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Tests\TestUser;
 
 beforeEach(function () {
     config(['filament-lms.evaluations.enabled' => true]);
+});
+
+test('evaluation link validation rejects public courses and backwards configuration', function () {
+    $trainingCourse = Course::factory()->create(['is_private' => false]);
+    $evaluationCourse = Course::factory()->create(['is_private' => true]);
+
+    $service = app(CourseEvaluationService::class);
+
+    expect($service->canLinkEvaluationCourse($trainingCourse, $evaluationCourse))->toBeTrue()
+        ->and($service->canLinkEvaluationCourse($evaluationCourse, $trainingCourse))->toBeFalse()
+        ->and($service->canLinkEvaluationCourse($trainingCourse, $trainingCourse))->toBeFalse();
+});
+
+test('canSelectEvaluationCourse validates evaluation targets on create', function () {
+    $service = app(CourseEvaluationService::class);
+
+    $validTarget = Course::factory()->create(['is_private' => true]);
+    $publicCourse = Course::factory()->create(['is_private' => false]);
+    $nestedEvaluation = Course::factory()->create([
+        'is_private' => true,
+        'evaluation_course_id' => Course::factory()->create(['is_private' => true])->id,
+    ]);
+
+    expect($service->canSelectEvaluationCourse(null))->toBeTrue()
+        ->and($service->canSelectEvaluationCourse($validTarget))->toBeTrue()
+        ->and($service->canSelectEvaluationCourse($publicCourse))->toBeFalse()
+        ->and($service->canSelectEvaluationCourse($nestedEvaluation))->toBeFalse();
 });
 
 test('primary course completion is deferred until evaluation is completed', function () {

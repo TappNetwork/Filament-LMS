@@ -170,6 +170,19 @@ final class CourseEvaluationService
         return $course->evaluation_course_id === null;
     }
 
+    public function canSelectEvaluationCourse(?Course $evaluationCourse): bool
+    {
+        if ($evaluationCourse === null) {
+            return true;
+        }
+
+        if (! $evaluationCourse->is_private) {
+            return false;
+        }
+
+        return $this->isValidEvaluationTarget($evaluationCourse);
+    }
+
     public function canLinkEvaluationCourse(Course $primaryCourse, ?Course $evaluationCourse): bool
     {
         if ($evaluationCourse === null) {
@@ -184,10 +197,6 @@ final class CourseEvaluationService
             return false;
         }
 
-        if (! $evaluationCourse->is_private) {
-            return false;
-        }
-
-        return $this->isValidEvaluationTarget($evaluationCourse);
+        return $this->canSelectEvaluationCourse($evaluationCourse);
     }
 }

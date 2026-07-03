@@ -80,7 +80,7 @@ final class CourseCompleted extends Page
             return redirect()->to(Dashboard::getUrl());
         }
 
-        if ($this->course->hasEvaluation() && ! $this->course->evaluationCompletedByUser($userId)) {
+        if ($evaluationService->hasPendingEvaluationForUser($this->course, $userId)) {
             $this->pendingEvaluation = true;
             $this->evaluationCourse = $this->course->evaluationCourse;
             $this->course->ensureEvaluationAssigned($userId);

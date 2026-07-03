@@ -153,9 +153,7 @@ class Step extends Page
         if (
             $this->step->last_step
             && $user instanceof FilamentLmsUserInterface
-            && $this->course->hasEvaluation()
-            && ! $this->course->evaluationCompletedByUser($user->id)
-            && $this->course->evaluationCourse !== null
+            && app(CourseEvaluationService::class)->hasPendingEvaluationForUser($this->course, $user->id)
         ) {
             $this->course->ensureEvaluationAssigned($user->id);
 

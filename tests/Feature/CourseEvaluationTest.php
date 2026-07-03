@@ -300,6 +300,60 @@ test('user cannot access evaluation step before primary course is finished', fun
     expect($user->canAccessStep($evaluationStep))->toBeTrue();
 });
 
+test('required test percentage must be met before evaluation is unlocked', function () {
+    $user = TestUser::create([
+        'name' => 'Failed Test User',
+        'email' => 'failed-test-evaluation@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create(['is_private' => true]);
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    $evaluationStep = Step::factory()->create(['lesson_id' => $evaluationLesson->id]);
+
+    $primaryCourse = Course::factory()->create([
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+        'required_test_percentage' => 80,
+    ]);
+
+    $primaryCourse->users()->attach($user->id);
+
+    $primaryLesson = Lesson::factory()->create(['course_id' => $primaryCourse->id]);
+    $primaryStep = Step::factory()->create([
+        'lesson_id' => $primaryLesson->id,
+        'material_type' => 'test',
+        'material_id' => null,
+    ]);
+
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $primaryStep->id,
+        'completed_at' => now(),
+    ]);
+
+    $service = app(CourseEvaluationService::class);
+
+    expect($primaryCourse->allStepsCompletedByUser($user->id))->toBeTrue()
+        ->and($primaryCourse->getOverallTestPercentageForUser($user->id))->toBe(0.0)
+        ->and($service->hasPendingEvaluationForUser($primaryCourse, $user->id))->toBeFalse()
+        ->and($user->canAccessStep($evaluationStep))->toBeFalse();
+
+    $primaryCourse->ensureEvaluationAssigned($user->id);
+
+    expect($evaluationCourse->users()->where('user_id', $user->id)->exists())->toBeFalse();
+
+    $this->actingAs($user);
+
+    $page = app(CourseCompleted::class);
+    $page->mount($primaryCourse->slug);
+
+    expect($page->pendingEvaluation)->toBeFalse()
+        ->and($page->qualifiedForCertificate)->toBeFalse()
+        ->and($page->overallPercent)->toBe(0.0)
+        ->and($page->requiredPercent)->toBe(80);
+});
+
 test('evaluation form step hides next button and advances after submit', function () {
     if (! class_exists(FilamentForm::class)) {
         $this->markTestSkipped('Filament Form Builder is not installed.');

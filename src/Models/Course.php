@@ -339,21 +339,11 @@ final class Course extends Model implements HasMedia
             return;
         }
 
-        if (! $this->allStepsCompletedByUser($userId)) {
+        $evaluationService = app(CourseEvaluationService::class);
+
+        if (! $evaluationService->courseMeetsCompletionRequirements($this, $userId)) {
             return;
         }
-
-        if ($this->required_test_percentage !== null) {
-            $testSteps = $this->getOrderedTestSteps();
-            if ($testSteps->isNotEmpty()) {
-                $overall = $this->getOverallTestPercentageForUser($userId);
-                if ($overall < (float) $this->required_test_percentage) {
-                    return;
-                }
-            }
-        }
-
-        $evaluationService = app(CourseEvaluationService::class);
 
         if ($evaluationService->hasEvaluation($this)) {
             $this->ensureEvaluationAssigned($userId);

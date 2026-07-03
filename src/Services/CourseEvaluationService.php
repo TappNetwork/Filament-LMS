@@ -50,7 +50,34 @@ final class CourseEvaluationService
         }
 
         return $this->primaryCoursesFor($evaluationCourse)
-            ->first(fn (Course $primary): bool => $primary->allStepsCompletedByUser($userId));
+            ->first(fn (Course $primary): bool => $this->courseMeetsCompletionRequirements($primary, $userId));
+    }
+
+    public function courseMeetsCompletionRequirements(Course $course, int|string $userId): bool
+    {
+        if (! $course->allStepsCompletedByUser($userId)) {
+            return false;
+        }
+
+        if ($course->required_test_percentage === null) {
+            return true;
+        }
+
+        $testSteps = $course->getOrderedTestSteps();
+
+        if ($testSteps->isEmpty()) {
+            return true;
+        }
+
+        return $course->getOverallTestPercentageForUser($userId) >= (float) $course->required_test_percentage;
+    }
+
+    public function hasPendingEvaluationForUser(Course $primaryCourse, int|string $userId): bool
+    {
+        return $this->hasEvaluation($primaryCourse)
+            && $primaryCourse->evaluationCourse !== null
+            && $this->courseMeetsCompletionRequirements($primaryCourse, $userId)
+            && ! $this->evaluationCompletedByUser($primaryCourse, $userId);
     }
 
     public function evaluationCompletedByUser(Course $primaryCourse, int|string $userId): bool
@@ -74,6 +101,10 @@ final class CourseEvaluationService
             return;
         }
 
+        if (! $this->courseMeetsCompletionRequirements($primaryCourse, $userId)) {
+            return;
+        }
+
         $evaluationCourse = $primaryCourse->evaluationCourse;
 
         if ($evaluationCourse === null) {
@@ -93,7 +124,7 @@ final class CourseEvaluationService
 
     public function isPrimaryTrainingCompletedForUser(Course $primary, Authenticatable $user): bool
     {
-        if (! $primary->allStepsCompletedByUser($user->id)) {
+        if (! $this->courseMeetsCompletionRequirements($primary, $user->id)) {
             return false;
         }
 
@@ -121,7 +152,7 @@ final class CourseEvaluationService
         }
 
         foreach ($this->primaryCoursesFor($evaluationCourse) as $primaryCourse) {
-            if (! $primaryCourse->allStepsCompletedByUser($userId)) {
+            if (! $this->courseMeetsCompletionRequirements($primaryCourse, $userId)) {
                 continue;
             }
 

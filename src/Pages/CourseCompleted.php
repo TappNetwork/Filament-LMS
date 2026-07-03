@@ -7,6 +7,7 @@ namespace Tapp\FilamentLms\Pages;
 use BackedEnum;
 use Exception;
 use Filament\Pages\Page;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Concerns\CourseLayout;
@@ -48,13 +49,26 @@ final class CourseCompleted extends Page
     {
         $this->course = Course::where('slug', $courseSlug)->firstOrFail();
         $evaluationService = app(CourseEvaluationService::class);
-        $userId = Auth::id();
+        $user = Auth::user();
 
-        if ($userId === null) {
+        if (! $user instanceof Authenticatable) {
             return redirect()->to(Dashboard::getUrl());
         }
 
+        $userId = $user->id;
+
         if ($evaluationService->isEvaluationCourse($this->course)) {
+            $activePrimaryCourse = $evaluationService->activePrimaryCourseForEvaluation($this->course, $user);
+
+            if (
+                $activePrimaryCourse !== null
+                && ! $evaluationService->evaluationCompletedByUser($activePrimaryCourse, $userId)
+            ) {
+                return redirect()->to(
+                    $evaluationService->evaluationUrlForPrimaryCourse($activePrimaryCourse) ?? Dashboard::getUrl(),
+                );
+            }
+
             $primaryCourse = $evaluationService->completedPrimaryCourseForEvaluation($this->course, $userId);
 
             if ($primaryCourse !== null) {

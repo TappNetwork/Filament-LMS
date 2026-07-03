@@ -53,8 +53,10 @@ final class CourseEvaluationService
             return null;
         }
 
+        $primaryCourses = $this->primaryCoursesFor($evaluationCourse);
+
         if ($primaryCourseId !== null) {
-            $primaryCourse = $this->primaryCoursesFor($evaluationCourse)
+            $primaryCourse = $primaryCourses
                 ->first(fn (Course $primary): bool => $primary->id === $primaryCourseId);
 
             return $primaryCourse !== null
@@ -64,9 +66,20 @@ final class CourseEvaluationService
                 : null;
         }
 
-        return $this->primaryCoursesFor($evaluationCourse)
-            ->first(fn (Course $primary): bool => $this->courseMeetsCompletionRequirements($primary, $userId)
-                && $this->evaluationCompletedByUser($primary, $userId));
+        foreach ($this->completedEvaluationPrimaryCourseIdsByRecency($evaluationCourse, $userId) as $completedPrimaryCourseId) {
+            $primaryCourse = $primaryCourses
+                ->first(fn (Course $primary): bool => $primary->id === $completedPrimaryCourseId);
+
+            if (
+                $primaryCourse !== null
+                && $this->courseMeetsCompletionRequirements($primaryCourse, $userId)
+                && $this->evaluationCompletedByUser($primaryCourse, $userId)
+            ) {
+                return $primaryCourse;
+            }
+        }
+
+        return null;
     }
 
     public function courseMeetsCompletionRequirements(Course $course, int|string $userId): bool
@@ -377,6 +390,29 @@ final class CourseEvaluationService
             $userId,
             $primaryCourseId,
         )->count() === $stepIds->count();
+    }
+
+    /**
+     * @return Collection<int, int>
+     */
+    private function completedEvaluationPrimaryCourseIdsByRecency(Course $evaluationCourse, int|string $userId): Collection
+    {
+        $stepIds = $evaluationCourse->steps()->pluck('lms_steps.id');
+
+        if ($stepIds->isEmpty()) {
+            return collect();
+        }
+
+        return StepUser::query()
+            ->whereIn('step_id', $stepIds)
+            ->where('user_id', $userId)
+            ->whereNotNull('evaluation_primary_course_id')
+            ->whereNotNull('completed_at')
+            ->orderByDesc('completed_at')
+            ->orderByDesc('id')
+            ->pluck('evaluation_primary_course_id')
+            ->unique()
+            ->values();
     }
 
     /**

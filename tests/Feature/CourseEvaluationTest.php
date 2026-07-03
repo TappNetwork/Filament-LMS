@@ -191,6 +191,59 @@ test('shared evaluation course requires a separate evaluation completion for eac
         ->and($secondPrimary->fresh()->evaluationCompletedByUser($user->id))->toBeTrue();
 });
 
+test('shared evaluation completed page redirect uses the most recently completed primary course', function () {
+    $user = TestUser::create([
+        'name' => 'Shared Evaluation Redirect User',
+        'email' => 'shared-evaluation-redirect@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create([
+        'name' => 'Shared Redirect Evaluation',
+        'slug' => 'shared-redirect-evaluation',
+        'external_id' => 'shared_redirect_evaluation',
+        'is_private' => true,
+    ]);
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    $evaluationStep = Step::factory()->create(['lesson_id' => $evaluationLesson->id]);
+
+    $firstPrimary = Course::factory()->create([
+        'name' => 'First Shared Redirect Training',
+        'slug' => 'first-shared-redirect-training',
+        'external_id' => 'first_shared_redirect_training',
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $firstPrimary->users()->attach($user->id);
+    $firstLesson = Lesson::factory()->create(['course_id' => $firstPrimary->id]);
+    $firstStep = Step::factory()->create(['lesson_id' => $firstLesson->id]);
+
+    $secondPrimary = Course::factory()->create([
+        'name' => 'Second Shared Redirect Training',
+        'slug' => 'second-shared-redirect-training',
+        'external_id' => 'second_shared_redirect_training',
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $secondPrimary->users()->attach($user->id);
+    $secondLesson = Lesson::factory()->create(['course_id' => $secondPrimary->id]);
+    $secondStep = Step::factory()->create(['lesson_id' => $secondLesson->id]);
+
+    $firstStep->complete($user);
+    $evaluationStep->complete($user, $firstPrimary->id);
+
+    $secondStep->complete($user);
+    $evaluationStep->complete($user, $secondPrimary->id);
+
+    $this->actingAs($user);
+
+    $response = app(CourseCompleted::class)->mount($evaluationCourse->slug);
+
+    expect($response)
+        ->toBeInstanceOf(RedirectResponse::class)
+        ->and($response->getTargetUrl())->toBe(CourseCompleted::getUrl([$secondPrimary->slug]));
+});
+
 test('completed page for evaluation course redirects to primary course certificate page', function () {
     $user = TestUser::create([
         'name' => 'Evaluation Certificate User',

@@ -146,6 +146,7 @@ abstract class TestCase extends Orchestra
             $table->id();
             $table->foreignId('step_id')->references('id')->on('lms_steps')->onDelete('cascade');
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('filament_form_user_id')->nullable()->constrained('filament_form_user')->nullOnDelete();
             $table->unsignedInteger('seconds')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();

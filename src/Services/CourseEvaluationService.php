@@ -43,6 +43,16 @@ final class CourseEvaluationService
             ->get();
     }
 
+    public function completedPrimaryCourseForEvaluation(Course $evaluationCourse, int|string $userId): ?Course
+    {
+        if (! $this->isEvaluationCourse($evaluationCourse)) {
+            return null;
+        }
+
+        return $this->primaryCoursesFor($evaluationCourse)
+            ->first(fn (Course $primary): bool => $primary->allStepsCompletedByUser($userId));
+    }
+
     public function evaluationCompletedByUser(Course $primaryCourse, int|string $userId): bool
     {
         if (! $this->hasEvaluation($primaryCourse)) {

@@ -7,10 +7,12 @@ namespace Tapp\FilamentLms\Pages;
 use BackedEnum;
 use Exception;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Auth;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Test;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 
 final class CourseCompleted extends Page
 {
@@ -43,6 +45,20 @@ final class CourseCompleted extends Page
     public function mount($courseSlug)
     {
         $this->course = Course::where('slug', $courseSlug)->firstOrFail();
+        $evaluationService = app(CourseEvaluationService::class);
+        $userId = Auth::id();
+
+        if ($userId === null) {
+            return redirect()->to(Dashboard::getUrl());
+        }
+
+        if ($evaluationService->isEvaluationCourse($this->course)) {
+            $primaryCourse = $evaluationService->completedPrimaryCourseForEvaluation($this->course, $userId);
+
+            if ($primaryCourse !== null) {
+                return redirect()->to(self::getUrl([$primaryCourse->slug]));
+            }
+        }
 
         // If course has no steps, redirect to dashboard
         if (! $this->course->steps()->exists()) {
@@ -51,7 +67,7 @@ final class CourseCompleted extends Page
 
         // Only redirect when the user has not completed all steps. Allow viewing this page when all steps
         // are done even if required_test_percentage is not met (we show retake/certificate state below).
-        if (! $this->course->allStepsCompletedByUser(auth()->id())) {
+        if (! $this->course->allStepsCompletedByUser($userId)) {
             $currentStepUrl = $this->course->linkToCurrentStep();
             if (empty($currentStepUrl)) {
                 return redirect()->to(Dashboard::getUrl());
@@ -60,10 +76,14 @@ final class CourseCompleted extends Page
             return redirect()->to($currentStepUrl);
         }
 
-        if ($this->course->hasEvaluation() && ! $this->course->evaluationCompletedByUser(auth()->id())) {
+        if ($evaluationService->isEvaluationCourse($this->course)) {
+            return redirect()->to(Dashboard::getUrl());
+        }
+
+        if ($this->course->hasEvaluation() && ! $this->course->evaluationCompletedByUser($userId)) {
             $this->pendingEvaluation = true;
             $this->evaluationCourse = $this->course->evaluationCourse;
-            $this->course->ensureEvaluationAssigned(auth()->id());
+            $this->course->ensureEvaluationAssigned($userId);
             $this->qualifiedForCertificate = false;
 
             $this->registerCourseLayout();
@@ -75,7 +95,7 @@ final class CourseCompleted extends Page
             $testSteps = $this->course->getOrderedTestSteps();
             // Only check test percentage if there are test steps
             if ($testSteps->isNotEmpty()) {
-                $overall = $this->course->getOverallTestPercentageForUser(auth()->id());
+                $overall = $this->course->getOverallTestPercentageForUser($userId);
                 if ($overall < (float) $this->course->required_test_percentage) {
                     $this->qualifiedForCertificate = false;
                     $this->overallPercent = $overall;
@@ -88,11 +108,11 @@ final class CourseCompleted extends Page
         $this->testStepDetails = $this->getTestStepDetails();
 
         // Backfill completed_at if user qualifies but it was never set (e.g. course had required_test_percentage but no test steps).
-        $this->course->maybeSetCompletedAtForUser(auth()->id());
+        $this->course->maybeSetCompletedAtForUser($userId);
 
         // Only show certificate UI when the user has actually completed the course (completed_at set).
         // Prevents 403 on download when e.g. required_test_percentage is set but course has no test steps.
-        if ($this->course->completedByUserAt(auth()->id()) === null) {
+        if ($this->course->completedByUserAt($userId) === null) {
             $this->qualifiedForCertificate = false;
         }
 

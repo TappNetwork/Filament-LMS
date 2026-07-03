@@ -172,12 +172,13 @@ class Step extends Page
             && $user instanceof FilamentLmsUserInterface
         ) {
             $primaryCourse = app(CourseEvaluationService::class)
-                ->primaryCoursesFor($this->course)
-                ->first(fn (Course $primary): bool => $primary->allStepsCompletedByUser($user->id));
+                ->completedPrimaryCourseForEvaluation($this->course, $user->id);
 
             if ($primaryCourse !== null) {
                 return redirect()->to(CourseCompleted::getUrl([$primaryCourse->slug]));
             }
+
+            return redirect()->to(Dashboard::getUrl());
         }
 
         return redirect()->to(CourseCompleted::getUrl([$this->course->slug]));

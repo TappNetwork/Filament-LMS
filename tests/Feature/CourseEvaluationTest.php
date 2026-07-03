@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Tests\Feature;
 
+use Livewire\Livewire;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormField;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
@@ -12,6 +13,7 @@ use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\StepUser;
+use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Tests\TestUser;
 
@@ -135,6 +137,59 @@ test('primary course completion is deferred until evaluation is completed', func
 
     expect($primaryCourse->fresh()->completedByUserAt($user->id))->not->toBeNull()
         ->and($evaluationCourse->fresh()->completedByUserAt($user->id))->not->toBeNull();
+});
+
+test('completed page for evaluation course redirects to primary course certificate page', function () {
+    $user = TestUser::create([
+        'name' => 'Evaluation Certificate User',
+        'email' => 'evaluation-certificate@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create([
+        'name' => 'Certificate Evaluation',
+        'slug' => 'certificate-evaluation',
+        'external_id' => 'certificate_evaluation',
+        'is_private' => true,
+    ]);
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    $evaluationStep = Step::factory()->create(['lesson_id' => $evaluationLesson->id]);
+
+    $primaryCourse = Course::factory()->create([
+        'name' => 'Certificate Training',
+        'slug' => 'certificate-training',
+        'external_id' => 'certificate_training',
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $primaryCourse->users()->attach($user->id);
+
+    $primaryLesson = Lesson::factory()->create(['course_id' => $primaryCourse->id]);
+    $primaryStep = Step::factory()->create(['lesson_id' => $primaryLesson->id]);
+
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $primaryStep->id,
+        'completed_at' => now(),
+    ]);
+
+    $primaryCourse->maybeSetCompletedAtForUser($user->id);
+
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $evaluationStep->id,
+        'completed_at' => now(),
+    ]);
+
+    $evaluationCourse->maybeSetCompletedAtForUser($user->id);
+
+    $this->actingAs($user);
+
+    $response = app(CourseCompleted::class)->mount($evaluationCourse->slug);
+
+    expect($response)
+        ->toBeInstanceOf(\Illuminate\Http\RedirectResponse::class)
+        ->and($response->getTargetUrl())->toBe(CourseCompleted::getUrl([$primaryCourse->slug]));
 });
 
 test('evaluation course is never shown on the dashboard', function () {
@@ -276,7 +331,7 @@ test('evaluation form step hides next button and advances after submit', functio
 
     $this->actingAs($user);
 
-    Livewire\Livewire::test(FormStep::class, ['step' => $evaluationStep])
+    Livewire::test(FormStep::class, ['step' => $evaluationStep])
         ->assertDontSee('Next');
 
     $entry = FilamentFormUser::create([
@@ -287,7 +342,7 @@ test('evaluation form step hides next button and advances after submit', functio
         ],
     ]);
 
-    Livewire\Livewire::test(FormStep::class, ['step' => $evaluationStep])
+    Livewire::test(FormStep::class, ['step' => $evaluationStep])
         ->call('entrySaved', $entry)
         ->assertDispatched('complete-step');
 });
@@ -414,7 +469,7 @@ test('form steps scope submissions per step when the same form is reused', funct
 
     $this->actingAs($user);
 
-    Livewire\Livewire::test(FormStep::class, ['step' => $testStep])
+    Livewire::test(FormStep::class, ['step' => $testStep])
         ->assertSet('entry', null);
 
     $testEntry = FilamentFormUser::create([
@@ -425,7 +480,7 @@ test('form steps scope submissions per step when the same form is reused', funct
         ],
     ]);
 
-    Livewire\Livewire::test(FormStep::class, ['step' => $testStep])
+    Livewire::test(FormStep::class, ['step' => $testStep])
         ->call('entrySaved', $testEntry->id)
         ->assertSet('entry.id', $testEntry->id);
 

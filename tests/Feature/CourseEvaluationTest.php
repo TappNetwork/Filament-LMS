@@ -7,6 +7,7 @@ namespace Tapp\FilamentLms\Tests\Feature;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormField;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
+use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
@@ -275,7 +276,7 @@ test('evaluation form step hides next button and advances after submit', functio
 
     $this->actingAs($user);
 
-    Livewire\Livewire::test(\Tapp\FilamentLms\Livewire\FormStep::class, ['step' => $evaluationStep])
+    Livewire\Livewire::test(FormStep::class, ['step' => $evaluationStep])
         ->assertDontSee('Next');
 
     $entry = FilamentFormUser::create([
@@ -286,7 +287,7 @@ test('evaluation form step hides next button and advances after submit', functio
         ],
     ]);
 
-    Livewire\Livewire::test(\Tapp\FilamentLms\Livewire\FormStep::class, ['step' => $evaluationStep])
+    Livewire\Livewire::test(FormStep::class, ['step' => $evaluationStep])
         ->call('entrySaved', $entry)
         ->assertDispatched('complete-step');
 });

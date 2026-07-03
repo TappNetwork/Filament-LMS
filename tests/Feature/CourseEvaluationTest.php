@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Tests\Feature;
 
+use Illuminate\Http\RedirectResponse;
 use Livewire\Livewire;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormField;
@@ -188,7 +189,7 @@ test('completed page for evaluation course redirects to primary course certifica
     $response = app(CourseCompleted::class)->mount($evaluationCourse->slug);
 
     expect($response)
-        ->toBeInstanceOf(\Illuminate\Http\RedirectResponse::class)
+        ->toBeInstanceOf(RedirectResponse::class)
         ->and($response->getTargetUrl())->toBe(CourseCompleted::getUrl([$primaryCourse->slug]));
 });
 

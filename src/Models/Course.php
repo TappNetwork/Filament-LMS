@@ -49,6 +49,7 @@ use Tapp\FilamentLms\Traits\HasMediaUrl;
  * @property int|null $evaluation_course_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property-read Course|null $evaluationCourse
  * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
  * @property-read \Illuminate\Database\Eloquent\Collection|Step[] $steps
  */
@@ -119,6 +120,9 @@ final class Course extends Model implements HasMedia
             });
     }
 
+    /**
+     * @return BelongsTo<Course, $this>
+     */
     public function evaluationCourse(): BelongsTo
     {
         return $this->belongsTo(self::class, 'evaluation_course_id');
@@ -150,6 +154,7 @@ final class Course extends Model implements HasMedia
             return null;
         }
 
+        /** @var Course|null $evaluationCourse */
         $evaluationCourse = $this->evaluationCourse;
 
         if ($evaluationCourse === null) {

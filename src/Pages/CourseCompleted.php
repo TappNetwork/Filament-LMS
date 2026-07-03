@@ -81,8 +81,11 @@ final class CourseCompleted extends Page
         }
 
         if ($evaluationService->hasPendingEvaluationForUser($this->course, $userId)) {
+            /** @var Course|null $evaluationCourse */
+            $evaluationCourse = $this->course->evaluationCourse;
+
             $this->pendingEvaluation = true;
-            $this->evaluationCourse = $this->course->evaluationCourse;
+            $this->evaluationCourse = $evaluationCourse;
             $this->course->ensureEvaluationAssigned($userId);
             $this->qualifiedForCertificate = false;
 

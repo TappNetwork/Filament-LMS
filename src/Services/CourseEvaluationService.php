@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Services;
 
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Collection;
-use Illuminate\UniqueConstraintViolationException;
 use Tapp\FilamentLms\Models\Course;
 
 final class CourseEvaluationService
@@ -75,7 +75,7 @@ final class CourseEvaluationService
     public function hasPendingEvaluationForUser(Course $primaryCourse, int|string $userId): bool
     {
         return $this->hasEvaluation($primaryCourse)
-            && $primaryCourse->evaluationCourse !== null
+            && $this->evaluationCourseFor($primaryCourse) !== null
             && $this->courseMeetsCompletionRequirements($primaryCourse, $userId)
             && ! $this->evaluationCompletedByUser($primaryCourse, $userId);
     }
@@ -86,7 +86,7 @@ final class CourseEvaluationService
             return true;
         }
 
-        $evaluationCourse = $primaryCourse->evaluationCourse;
+        $evaluationCourse = $this->evaluationCourseFor($primaryCourse);
 
         if ($evaluationCourse === null) {
             return true;
@@ -105,7 +105,7 @@ final class CourseEvaluationService
             return;
         }
 
-        $evaluationCourse = $primaryCourse->evaluationCourse;
+        $evaluationCourse = $this->evaluationCourseFor($primaryCourse);
 
         if ($evaluationCourse === null) {
             return;
@@ -256,5 +256,13 @@ final class CourseEvaluationService
         }
 
         return $this->canSelectEvaluationCourse($evaluationCourse);
+    }
+
+    private function evaluationCourseFor(Course $primaryCourse): ?Course
+    {
+        /** @var Course|null $evaluationCourse */
+        $evaluationCourse = $primaryCourse->evaluationCourse;
+
+        return $evaluationCourse;
     }
 }

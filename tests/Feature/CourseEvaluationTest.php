@@ -19,10 +19,15 @@ use Tapp\FilamentLms\Models\StepUser;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
+use Tapp\FilamentLms\Tests\TestFilamentFormShow;
+use Tapp\FilamentLms\Tests\TestFilamentFormUserShow;
 use Tapp\FilamentLms\Tests\TestUser;
 
 beforeEach(function () {
     config(['filament-lms.evaluations.enabled' => true]);
+
+    Livewire::component('tapp.filament-form-builder.livewire.filament-form.show', TestFilamentFormShow::class);
+    Livewire::component('tapp.filament-form-builder.livewire.filament-form-user.show', TestFilamentFormUserShow::class);
 });
 
 test('evaluation link validation rejects public courses and backwards configuration', function () {

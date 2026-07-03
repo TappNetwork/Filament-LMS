@@ -206,7 +206,7 @@ return [
     |
     */
     'evaluations' => [
-        'enabled' => env('LMS_EVALUATIONS_ENABLED', false),
+        'enabled' => false,
         'template_form_slug' => 'course-evaluation-feedback',
     ],
 ];

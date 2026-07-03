@@ -156,8 +156,10 @@ class Step extends Page
             && app(CourseEvaluationService::class)->hasPendingEvaluationForUser($this->course, $user->id)
         ) {
             $this->course->ensureEvaluationAssigned($user->id);
+            /** @var Course|null $evaluationCourse */
+            $evaluationCourse = $this->course->evaluationCourse;
 
-            return redirect()->to($this->course->evaluationCourse->linkToCurrentStep());
+            return redirect()->to($evaluationCourse?->linkToCurrentStep() ?? Dashboard::getUrl());
         }
 
         if (! $this->step->last_step && $nextStep) {

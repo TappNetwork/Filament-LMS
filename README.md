@@ -531,12 +531,10 @@ In `config/filament-lms.php`:
 
 ```php
 'evaluations' => [
-    'enabled' => env('LMS_EVALUATIONS_ENABLED', true),
+    'enabled' => true,
     'template_form_slug' => 'course-evaluation-feedback',
 ],
 ```
-
-Or set `LMS_EVALUATIONS_ENABLED=true` in your `.env`.
 
 The `template_form_slug` value is a convention for referencing your feedback form in application code or docs. Create a form with that slug in Form Builder, or use any form and attach it to the evaluation step.
 

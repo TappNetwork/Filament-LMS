@@ -15,6 +15,7 @@ use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step as StepModel;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Services\ScormProgressService;
 
 class Step extends Page
@@ -148,8 +149,35 @@ class Step extends Page
         // Use the Model's complete() method which handles all events and progress tracking
         $nextStep = $this->step->complete();
 
+        $user = Auth::user();
+        if (
+            $this->step->last_step
+            && $user instanceof FilamentLmsUserInterface
+            && $this->course->hasEvaluation()
+            && ! $this->course->evaluationCompletedByUser($user->id)
+            && $this->course->evaluationCourse !== null
+        ) {
+            $this->course->ensureEvaluationAssigned($user->id);
+
+            return redirect()->to($this->course->evaluationCourse->linkToCurrentStep());
+        }
+
         if (! $this->step->last_step && $nextStep) {
             return redirect()->to(Step::getUrlForStep($nextStep));
+        }
+
+        if (
+            $this->step->last_step
+            && $this->course->isEvaluationCourse()
+            && $user instanceof FilamentLmsUserInterface
+        ) {
+            $primaryCourse = app(CourseEvaluationService::class)
+                ->primaryCoursesFor($this->course)
+                ->first(fn (Course $primary): bool => $primary->allStepsCompletedByUser($user->id));
+
+            if ($primaryCourse !== null) {
+                return redirect()->to(CourseCompleted::getUrl([$primaryCourse->slug]));
+            }
         }
 
         return redirect()->to(CourseCompleted::getUrl([$this->course->slug]));

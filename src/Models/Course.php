@@ -10,6 +10,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -28,6 +29,7 @@ use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
 
 /**
@@ -43,6 +45,7 @@ use Tapp\FilamentLms\Traits\HasMediaUrl;
  * @property bool $is_private
  * @property bool $embedded_player
  * @property CompletionMode|string $completion_mode
+ * @property int|null $evaluation_course_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
@@ -105,7 +108,56 @@ final class Course extends Model implements HasMedia
                 });
         })
         // Only include courses that have at least one step
-            ->whereHas('steps');
+            ->whereHas('steps')
+            ->when(config('filament-lms.evaluations.enabled', false), function (Builder $query): void {
+                $evaluationCourseIds = app(CourseEvaluationService::class)->lockedEvaluationCourseIds();
+
+                if ($evaluationCourseIds->isNotEmpty()) {
+                    $query->whereNotIn('lms_courses.id', $evaluationCourseIds);
+                }
+            });
+    }
+
+    public function evaluationCourse(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'evaluation_course_id');
+    }
+
+    public function hasEvaluation(): bool
+    {
+        return app(CourseEvaluationService::class)->hasEvaluation($this);
+    }
+
+    public function isEvaluationCourse(): bool
+    {
+        return app(CourseEvaluationService::class)->isEvaluationCourse($this);
+    }
+
+    public function evaluationCompletedByUser(int|string $userId): bool
+    {
+        return app(CourseEvaluationService::class)->evaluationCompletedByUser($this, $userId);
+    }
+
+    public function ensureEvaluationAssigned(int|string $userId): void
+    {
+        app(CourseEvaluationService::class)->ensureEvaluationAssigned($this, $userId);
+    }
+
+    public function evaluationSubmissionUrl(): ?string
+    {
+        if (! $this->hasEvaluation()) {
+            return null;
+        }
+
+        $evaluationCourse = $this->evaluationCourse;
+
+        if ($evaluationCourse === null) {
+            return null;
+        }
+
+        $step = $evaluationCourse->steps()->first();
+
+        return $step !== null ? StepPage::getUrlForStep($step) : null;
     }
 
     public function lessons(): HasMany
@@ -301,18 +353,30 @@ final class Course extends Model implements HasMedia
             }
         }
 
+        $evaluationService = app(CourseEvaluationService::class);
+
+        if ($evaluationService->hasEvaluation($this)) {
+            $this->ensureEvaluationAssigned($userId);
+
+            if (! $this->evaluationCompletedByUser($userId)) {
+                return;
+            }
+        }
+
         $completedAt = now();
 
         if ($this->users()->where('user_id', $userId)->exists()) {
             $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
-
-            return;
+        } else {
+            try {
+                $this->users()->attach($userId, ['completed_at' => $completedAt]);
+            } catch (UniqueConstraintViolationException) {
+                $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
+            }
         }
 
-        try {
-            $this->users()->attach($userId, ['completed_at' => $completedAt]);
-        } catch (UniqueConstraintViolationException) {
-            $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
+        if ($evaluationService->isEvaluationCourse($this)) {
+            $evaluationService->finalizePrimaryCoursesAfterEvaluation($this, $userId);
         }
     }
 
@@ -465,6 +529,15 @@ final class Course extends Model implements HasMedia
     {
         if (! $user) {
             return false;
+        }
+
+        if ($this->isEvaluationCourse()) {
+            if ($user->isLmsAdmin()) {
+                return true;
+            }
+
+            return app(CourseEvaluationService::class)->isEvaluationUnlockedForUser($this, $user)
+                && ($this->users()->where('user_id', $user->id)->exists() || ! $this->is_private);
         }
 
         // Public courses (not private) - accessible to everyone

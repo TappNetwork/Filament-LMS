@@ -38,10 +38,14 @@ class FormStep extends Component
         return view('filament-lms::livewire.form-step');
     }
 
-    public function entrySaved(FilamentFormUser $entry)
+    public function entrySaved(FilamentFormUser $entry): void
     {
         $this->entry = $entry;
 
         $this->step->complete();
+
+        if ($this->step->lesson->course->isEvaluationCourse()) {
+            $this->dispatch('complete-step');
+        }
     }
 }

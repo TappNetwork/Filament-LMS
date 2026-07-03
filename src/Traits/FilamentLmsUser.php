@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 
 /**
  * Trait for User models to provide LMS functionality.
@@ -81,6 +82,17 @@ trait FilamentLmsUser
     public function canAccessStep(Step $step): bool
     {
         $course = $step->lesson->course;
+
+        if ($course->isEvaluationCourse() && config('filament-lms.evaluations.enabled', false)) {
+            if ($this->isLmsAdmin()) {
+                return $step->checkPreviousStepsCompleted();
+            }
+
+            if (! app(CourseEvaluationService::class)->isEvaluationUnlockedForUser($course, $this)) {
+                return false;
+            }
+        }
+
         if ($course->isEmbeddedPlayer()) {
             $launchStep = $course->launchStep();
 

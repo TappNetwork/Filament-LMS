@@ -5,5 +5,7 @@
         @livewire('tapp.filament-form-builder.livewire.filament-form.show', [$form, 'blockRedirect' => true])
     @endif
 
-    <x-filament-lms::next-button :disabled="!$step->is_optional && !$entry" />
+    @if(! $step->lesson->course->isEvaluationCourse())
+        <x-filament-lms::next-button :disabled="!$step->is_optional && !$entry" />
+    @endif
 </div>

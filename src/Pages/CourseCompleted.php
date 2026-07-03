@@ -20,6 +20,10 @@ final class CourseCompleted extends Page
 
     public bool $qualifiedForCertificate = true;
 
+    public bool $pendingEvaluation = false;
+
+    public ?Course $evaluationCourse = null;
+
     public ?float $overallPercent = null;
 
     public ?int $requiredPercent = null;
@@ -54,6 +58,17 @@ final class CourseCompleted extends Page
             }
 
             return redirect()->to($currentStepUrl);
+        }
+
+        if ($this->course->hasEvaluation() && ! $this->course->evaluationCompletedByUser(auth()->id())) {
+            $this->pendingEvaluation = true;
+            $this->evaluationCourse = $this->course->evaluationCourse;
+            $this->course->ensureEvaluationAssigned(auth()->id());
+            $this->qualifiedForCertificate = false;
+
+            $this->registerCourseLayout();
+
+            return;
         }
 
         if ($this->course->required_test_percentage !== null) {

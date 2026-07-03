@@ -193,4 +193,20 @@ return [
 
     // Optional path to Node binary for Articulate slide JSON extraction
     'node_binary' => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Course evaluations
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, primary courses may link to a required evaluation course
+    | via evaluation_course_id. Learners are auto-assigned after completing
+    | the primary course and must finish the evaluation before the primary
+    | course is marked complete or a certificate is issued.
+    |
+    */
+    'evaluations' => [
+        'enabled' => env('LMS_EVALUATIONS_ENABLED', false),
+        'template_form_slug' => 'course-evaluation-feedback',
+    ],
 ];

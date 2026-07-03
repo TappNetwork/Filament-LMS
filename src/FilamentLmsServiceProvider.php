@@ -62,6 +62,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'add_scorm_package_columns_to_lms_documents_table',
                 'add_embedded_player_to_lms_courses_table',
                 'add_player_slide_id_to_lms_steps_table',
+                'add_evaluation_course_id_to_lms_courses_table',
             ])
             ->hasCommand(BackfillCourseCompletedAt::class)
             ->hasCommand(BackfillEmbeddedPlayerCourses::class)

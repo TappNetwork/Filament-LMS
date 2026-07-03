@@ -13,6 +13,7 @@ use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -31,6 +32,7 @@ use Tapp\FilamentLms\Resources\CourseResource\Pages\CreateCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\ListCourses;
 use Tapp\FilamentLms\Resources\CourseResource\RelationManagers\LessonsRelationManager;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 
 class CourseResource extends Resource
 {
@@ -139,6 +141,49 @@ class CourseResource extends Resource
                 Checkbox::make('is_private')
                     ->label('Private Course')
                     ->helperText('Private courses are only visible to assigned users and LMS admins'),
+                Select::make('evaluation_course_id')
+                    ->label('Evaluation course')
+                    ->relationship(
+                        'evaluationCourse',
+                        'name',
+                        modifyQueryUsing: function (Builder $query, Get $get, $livewire): void {
+                            $recordId = $livewire->record?->id;
+                            if ($recordId !== null) {
+                                $query->where('id', '!=', $recordId);
+                            }
+
+                            $query->whereNull('evaluation_course_id')
+                                ->where('is_private', true);
+                        },
+                    )
+                    ->searchable()
+                    ->preload()
+                    ->nullable()
+                    ->visible(function (?Course $record): bool {
+                        if (! config('filament-lms.evaluations.enabled', false)) {
+                            return false;
+                        }
+
+                        if ($record === null) {
+                            return true;
+                        }
+
+                        return ! app(CourseEvaluationService::class)->isEvaluationCourse($record);
+                    })
+                    ->rules([
+                        fn (?Course $record): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($record): void {
+                            if ($value === null || $record === null) {
+                                return;
+                            }
+
+                            $evaluationCourse = Course::query()->find($value);
+
+                            if (! app(CourseEvaluationService::class)->canLinkEvaluationCourse($record, $evaluationCourse)) {
+                                $fail('Choose an evaluation-only course that is not already linked as a training course.');
+                            }
+                        },
+                    ])
+                    ->helperText('Set this on the training course and select its evaluation course — not the other way around.'),
 
                 Repeater::make('courseCreditCategories')
                     ->relationship()

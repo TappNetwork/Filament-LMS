@@ -107,6 +107,7 @@ abstract class TestCase extends Orchestra
             $table->boolean('is_private')->default(false);
             $table->boolean('embedded_player')->default(false);
             $table->string('completion_mode', 32)->default('native');
+            $table->foreignId('evaluation_course_id')->nullable()->constrained('lms_courses')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

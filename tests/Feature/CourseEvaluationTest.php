@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Tests\Feature;
 
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
@@ -255,14 +257,14 @@ test('shared evaluation progress stays scoped to the active primary course', fun
 
     $this->actingAs($user);
 
-    app()->instance('request', \Illuminate\Http\Request::create('/', 'GET', [
+    app()->instance('request', Request::create('/', 'GET', [
         'primaryCourse' => (string) $secondPrimary->id,
     ]));
 
     expect($evaluationStep->fresh()->completed_at)->toBeNull()
         ->and((float) $evaluationCourse->fresh()->completion_percentage)->toBe(0.0);
 
-    app()->instance('request', \Illuminate\Http\Request::create('/', 'GET', [
+    app()->instance('request', Request::create('/', 'GET', [
         'primaryCourse' => (string) $firstPrimary->id,
     ]));
 
@@ -346,7 +348,7 @@ test('evaluation step urls preserve requested primary course context', function 
     ]);
 
     $this->actingAs($user);
-    app()->instance('request', \Illuminate\Http\Request::create('/', 'GET', [
+    app()->instance('request', Request::create('/', 'GET', [
         'primaryCourse' => (string) $secondPrimary->id,
     ]));
 
@@ -446,8 +448,8 @@ test('step page uses primary scoped evaluation progress for access checks', func
         'created_at' => now(),
     ]);
 
-    \Illuminate\Support\Facades\Auth::login($user);
-    app()->instance('request', \Illuminate\Http\Request::create('/', 'GET', [
+    Auth::login($user);
+    app()->instance('request', Request::create('/', 'GET', [
         'primaryCourse' => (string) $secondPrimary->id,
     ]));
 

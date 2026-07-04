@@ -225,6 +225,29 @@ final class CourseEvaluationService
             ?? $eligiblePrimaryCourses->first();
     }
 
+    public function evaluationPrimaryCourseIdFromRequest(): ?int
+    {
+        $primaryCourseId = request()->query('primaryCourse');
+
+        if (! is_numeric($primaryCourseId)) {
+            return null;
+        }
+
+        $courseSlug = request()->route('courseSlug');
+
+        if ($courseSlug === null) {
+            return (int) $primaryCourseId;
+        }
+
+        $course = Course::query()
+            ->where('slug', $courseSlug)
+            ->first();
+
+        return $course !== null && $this->isEvaluationCourse($course)
+            ? (int) $primaryCourseId
+            : null;
+    }
+
     public function evaluationStepAvailableForPrimary(Step $step, int|string $userId, int $primaryCourseId): bool
     {
         if ($step->lesson->course->evaluation_course_id !== null) {

@@ -418,7 +418,12 @@ final class Course extends Model implements HasMedia
             return 0;
         }
 
-        return $this->getCompletionPercentageForUser(Auth::id());
+        $evaluationPrimaryCourseId = app(CourseEvaluationService::class)->evaluationPrimaryCourseIdFromRequest();
+
+        return $this->getCompletionPercentageForUser(
+            Auth::id(),
+            $this->resolveEvaluationPrimaryCourseIdForCurrentUser($evaluationPrimaryCourseId),
+        );
     }
 
     public function getCompletionPercentageForUser($userId, ?int $evaluationPrimaryCourseId = null): float
@@ -670,7 +675,11 @@ final class Course extends Model implements HasMedia
 
     private function resolveEvaluationPrimaryCourseIdForCurrentUser(?int $evaluationPrimaryCourseId): ?int
     {
-        if ($evaluationPrimaryCourseId !== null || ! $this->isEvaluationCourse() || ! Auth::check()) {
+        if (! $this->isEvaluationCourse() || ! Auth::check()) {
+            return null;
+        }
+
+        if ($evaluationPrimaryCourseId !== null) {
             return $evaluationPrimaryCourseId;
         }
 

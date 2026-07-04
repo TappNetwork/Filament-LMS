@@ -23,6 +23,7 @@ use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Events\StepCompleted;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\Step as StepPage;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 
 /**
  * @property int $id
@@ -354,12 +355,18 @@ class Step extends Model implements Sortable
     {
         // @phpstan-ignore-next-line
         $currentUserId = Auth::check() ? Auth::user()->id : null;
+        $evaluationPrimaryCourseId = app(CourseEvaluationService::class)->evaluationPrimaryCourseIdFromRequest();
 
         return $this->hasOne(StepUser::class)->ofMany([
             // TODO is this started_at => max needed?
             'created_at' => 'max',
-        ], function ($query) use ($currentUserId) {
-            $query->where('user_id', '=', $currentUserId);
+        ], function ($query) use ($currentUserId, $evaluationPrimaryCourseId) {
+            $query->where('user_id', '=', $currentUserId)
+                ->when(
+                    $evaluationPrimaryCourseId !== null,
+                    fn ($query) => $query->where('evaluation_primary_course_id', $evaluationPrimaryCourseId),
+                    fn ($query) => $query->whereNull('evaluation_primary_course_id'),
+                );
         });
     }
 

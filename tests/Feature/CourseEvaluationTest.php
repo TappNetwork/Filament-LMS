@@ -10,6 +10,7 @@ use Livewire\Livewire;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormField;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Events\CourseCompleted as CourseCompletedEvent;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Models\Course;
@@ -22,6 +23,8 @@ use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Tests\TestFilamentFormShow;
 use Tapp\FilamentLms\Tests\TestFilamentFormUserShow;
 use Tapp\FilamentLms\Tests\TestUser;
+
+class CourseEvaluationLmsUser extends TestUser implements FilamentLmsUserInterface {}
 
 beforeEach(function () {
     config(['filament-lms.evaluations.enabled' => true]);
@@ -252,6 +255,20 @@ test('shared evaluation progress stays scoped to the active primary course', fun
 
     $this->actingAs($user);
 
+    app()->instance('request', \Illuminate\Http\Request::create('/', 'GET', [
+        'primaryCourse' => (string) $secondPrimary->id,
+    ]));
+
+    expect($evaluationStep->fresh()->completed_at)->toBeNull()
+        ->and((float) $evaluationCourse->fresh()->completion_percentage)->toBe(0.0);
+
+    app()->instance('request', \Illuminate\Http\Request::create('/', 'GET', [
+        'primaryCourse' => (string) $firstPrimary->id,
+    ]));
+
+    expect($evaluationStep->fresh()->completed_at)->not->toBeNull()
+        ->and((float) $evaluationCourse->fresh()->completion_percentage)->toBe(100.0);
+
     $expectedSecondEvaluationUrl = StepPage::getUrlForStep($evaluationStep, [
         'primaryCourse' => $secondPrimary->id,
     ]);
@@ -267,6 +284,184 @@ test('shared evaluation progress stays scoped to the active primary course', fun
     expect($response)
         ->toBeInstanceOf(RedirectResponse::class)
         ->and($response->getTargetUrl())->toBe($expectedSecondEvaluationUrl);
+});
+
+test('evaluation step urls preserve requested primary course context', function () {
+    $user = TestUser::create([
+        'name' => 'Evaluation Url User',
+        'email' => 'evaluation-url@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create([
+        'name' => 'Shared Url Evaluation',
+        'slug' => 'shared-url-evaluation',
+        'external_id' => 'shared_url_evaluation',
+        'is_private' => true,
+    ]);
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    $evaluationStep = Step::factory()->create([
+        'lesson_id' => $evaluationLesson->id,
+        'name' => 'Shared Url Evaluation Step',
+        'slug' => 'shared-url-evaluation-step',
+    ]);
+
+    $firstPrimary = Course::factory()->create([
+        'name' => 'First Url Training',
+        'slug' => 'first-url-training',
+        'external_id' => 'first_url_training',
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $firstPrimary->users()->attach($user->id);
+    $firstLesson = Lesson::factory()->create(['course_id' => $firstPrimary->id]);
+    $firstStep = Step::factory()->create([
+        'lesson_id' => $firstLesson->id,
+        'slug' => 'first-url-step',
+    ]);
+
+    $secondPrimary = Course::factory()->create([
+        'name' => 'Second Url Training',
+        'slug' => 'second-url-training',
+        'external_id' => 'second_url_training',
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $secondPrimary->users()->attach($user->id);
+    $secondLesson = Lesson::factory()->create(['course_id' => $secondPrimary->id]);
+    $secondStep = Step::factory()->create([
+        'lesson_id' => $secondLesson->id,
+        'slug' => 'second-url-step',
+    ]);
+
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $firstStep->id,
+        'completed_at' => now(),
+    ]);
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $secondStep->id,
+        'completed_at' => now(),
+    ]);
+
+    $this->actingAs($user);
+    app()->instance('request', \Illuminate\Http\Request::create('/', 'GET', [
+        'primaryCourse' => (string) $secondPrimary->id,
+    ]));
+
+    $expectedEvaluationUrl = StepPage::getUrl([
+        $evaluationCourse->slug,
+        $evaluationLesson->slug,
+        $evaluationStep->slug,
+        'primaryCourse' => $secondPrimary->id,
+    ]);
+    $expectedPrimaryUrl = StepPage::getUrl([
+        $secondPrimary->slug,
+        $secondLesson->slug,
+        $secondStep->slug,
+    ]);
+
+    expect(app(CourseEvaluationService::class)->activePrimaryCourseForEvaluation($evaluationCourse, $user)?->id)->toBe($firstPrimary->id)
+        ->and(StepPage::getUrlForStep($evaluationStep))->toBe($expectedEvaluationUrl)
+        ->and($evaluationStep->fresh()->url)->toBe($expectedEvaluationUrl)
+        ->and(StepPage::getUrlForStep($secondStep))->toBe($expectedPrimaryUrl)
+        ->and($secondStep->fresh()->url)->toBe($expectedPrimaryUrl);
+});
+
+test('step page uses primary scoped evaluation progress for access checks', function () {
+    $user = CourseEvaluationLmsUser::create([
+        'name' => 'Scoped Step Access User',
+        'email' => 'scoped-step-access@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create([
+        'name' => 'Scoped Step Access Evaluation',
+        'slug' => 'scoped-step-access-evaluation',
+        'external_id' => 'scoped_step_access_evaluation',
+        'is_private' => true,
+    ]);
+    $evaluationLesson = Lesson::factory()->create([
+        'course_id' => $evaluationCourse->id,
+        'order' => 1,
+    ]);
+    $evaluationStepOne = Step::factory()->create([
+        'lesson_id' => $evaluationLesson->id,
+        'order' => 1,
+        'name' => 'Evaluation Step One',
+        'slug' => 'evaluation-step-one',
+    ]);
+    $evaluationStepTwo = Step::factory()->create([
+        'lesson_id' => $evaluationLesson->id,
+        'order' => 2,
+        'name' => 'Evaluation Step Two',
+        'slug' => 'evaluation-step-two',
+    ]);
+
+    $firstPrimary = Course::factory()->create([
+        'name' => 'First Step Access Training',
+        'slug' => 'first-step-access-training',
+        'external_id' => 'first_step_access_training',
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $firstPrimary->users()->attach($user->id);
+    $firstLesson = Lesson::factory()->create(['course_id' => $firstPrimary->id]);
+    $firstStep = Step::factory()->create(['lesson_id' => $firstLesson->id]);
+
+    $secondPrimary = Course::factory()->create([
+        'name' => 'Second Step Access Training',
+        'slug' => 'second-step-access-training',
+        'external_id' => 'second_step_access_training',
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $secondPrimary->users()->attach($user->id);
+    $secondLesson = Lesson::factory()->create(['course_id' => $secondPrimary->id]);
+    $secondStep = Step::factory()->create(['lesson_id' => $secondLesson->id]);
+
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $firstStep->id,
+        'completed_at' => now(),
+    ]);
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $secondStep->id,
+        'completed_at' => now(),
+    ]);
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $evaluationStepOne->id,
+        'evaluation_primary_course_id' => $secondPrimary->id,
+        'completed_at' => now()->subMinute(),
+        'created_at' => now()->subMinute(),
+    ]);
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $evaluationStepOne->id,
+        'evaluation_primary_course_id' => $firstPrimary->id,
+        'completed_at' => null,
+        'created_at' => now(),
+    ]);
+
+    \Illuminate\Support\Facades\Auth::login($user);
+    app()->instance('request', \Illuminate\Http\Request::create('/', 'GET', [
+        'primaryCourse' => (string) $secondPrimary->id,
+    ]));
+
+    $evaluationService = app(CourseEvaluationService::class);
+
+    expect($evaluationService->activePrimaryCourseForEvaluation($evaluationCourse, $user, $secondPrimary->id)?->id)->toBe($secondPrimary->id)
+        ->and($evaluationService->evaluationStepAvailableForPrimary($evaluationStepTwo, $user->id, $secondPrimary->id))->toBeTrue()
+        ->and($user->canAccessStep($evaluationStepTwo))->toBeTrue();
+
+    $page = app(StepPage::class);
+    $response = $page->mount($evaluationCourse->slug, $evaluationLesson->slug, $evaluationStepTwo->slug);
+
+    expect($response)->toBeNull()
+        ->and($page->evaluationPrimaryCourseId)->toBe($secondPrimary->id);
 });
 
 test('shared evaluation completed page redirect uses the most recently completed primary course', function () {

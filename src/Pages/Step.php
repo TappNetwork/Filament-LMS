@@ -88,13 +88,17 @@ class Step extends Page
             }
         }
 
-        $canAccess = $user->canAccessStep($this->step);
+        $isPrimaryScopedEvaluation = $this->evaluationPrimaryCourseId !== null;
+        $stepUrlParameters = $isPrimaryScopedEvaluation
+            ? ['primaryCourse' => $this->evaluationPrimaryCourseId]
+            : [];
+        $canAccess = $isPrimaryScopedEvaluation || $user->canAccessStep($this->step);
         $currentStepUrl = $this->evaluationPrimaryCourseId !== null
             ? app(CourseEvaluationService::class)->evaluationUrlForPrimaryCourse(
                 Course::query()->findOrFail($this->evaluationPrimaryCourseId),
             )
             : $this->course->linkToCurrentStep();
-        $requestedStepUrl = static::getUrlForStep($this->step);
+        $requestedStepUrl = static::getUrlForStep($this->step, $stepUrlParameters);
 
         Log::info('Step page access check', [
             'user_id' => $user->id,
@@ -103,7 +107,7 @@ class Step extends Page
             'can_access' => $canAccess,
             'requested_step_url' => $requestedStepUrl,
             'current_step_url' => $currentStepUrl,
-            'step_available' => $this->step->available,
+            'step_available' => $canAccess,
         ]);
 
         if (! $canAccess) {
@@ -220,6 +224,17 @@ class Step extends Page
 
     public static function getUrlForStep(StepModel $step, array $parameters = [])
     {
+        $evaluationService = app(CourseEvaluationService::class);
+        $evaluationPrimaryCourseId = $evaluationService->evaluationPrimaryCourseIdFromRequest();
+
+        if (
+            $evaluationPrimaryCourseId !== null
+            && ! array_key_exists('primaryCourse', $parameters)
+            && $evaluationService->isEvaluationCourse($step->lesson->course)
+        ) {
+            $parameters['primaryCourse'] = $evaluationPrimaryCourseId;
+        }
+
         return static::getUrl([
             $step->lesson->course->slug,
             $step->lesson->slug,

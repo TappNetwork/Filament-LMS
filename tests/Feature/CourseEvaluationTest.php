@@ -23,8 +23,6 @@ use Tapp\FilamentLms\Tests\TestFilamentFormShow;
 use Tapp\FilamentLms\Tests\TestFilamentFormUserShow;
 use Tapp\FilamentLms\Tests\TestUser;
 
-use function Livewire\store;
-
 beforeEach(function () {
     config(['filament-lms.evaluations.enabled' => true]);
 
@@ -635,10 +633,14 @@ test('evaluation form step hides next button and advances after submit', functio
 
     $component->entrySaved($entry);
 
-    $dispatchedEvents = collect(store($component)->get('dispatched', []))
-        ->map(fn ($event) => $event->serialize()['name']);
+    $stepUser = StepUser::query()
+        ->where('user_id', $user->id)
+        ->where('step_id', $evaluationStep->id)
+        ->first();
 
-    expect($dispatchedEvents)->toContain('complete-step');
+    expect($component->entry?->id)->toBe($entry->id)
+        ->and($stepUser?->completed_at)->not->toBeNull()
+        ->and($stepUser?->filament_form_user_id)->toBe($entry->id);
 });
 
 test('primary course without evaluation has no evaluation submission url', function () {

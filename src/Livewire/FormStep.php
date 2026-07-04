@@ -27,12 +27,15 @@ class FormStep extends Component
 
     public ?int $evaluationPrimaryCourseId = null;
 
+    public bool $isEvaluationCourse = false;
+
     public function mount($step, ?int $evaluationPrimaryCourseId = null): void
     {
         $this->step = $step;
         $this->form = $step->material;
         $this->seconds = $step->seconds ?? 0;
         $this->evaluationPrimaryCourseId = $evaluationPrimaryCourseId;
+        $this->isEvaluationCourse = $step->lesson->course->isEvaluationCourse();
         $this->entry = $step->formEntryForUser(Auth::id(), $evaluationPrimaryCourseId);
 
         $this->resetErrorBag();
@@ -41,6 +44,23 @@ class FormStep extends Component
     public function render()
     {
         return view('filament-lms::livewire.form-step');
+    }
+
+    /**
+     * @return array{form: FilamentForm, blockRedirect: bool, allowMultipleSubmissions: bool}
+     */
+    public function formComponentParameters(): array
+    {
+        return [
+            'form' => $this->form,
+            'blockRedirect' => true,
+            'allowMultipleSubmissions' => $this->isEvaluationCourse,
+        ];
+    }
+
+    public function shouldShowNextButton(): bool
+    {
+        return ! $this->isEvaluationCourse;
     }
 
     public function entrySaved(int|FilamentFormUser $entry): void
@@ -63,7 +83,7 @@ class FormStep extends Component
             )
             ->update(['filament_form_user_id' => $entry->id]);
 
-        if ($this->step->lesson->course->isEvaluationCourse()) {
+        if ($this->isEvaluationCourse) {
             $this->dispatch('complete-step', completeStep: false);
         }
     }

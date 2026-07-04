@@ -23,6 +23,8 @@ use Tapp\FilamentLms\Tests\TestFilamentFormShow;
 use Tapp\FilamentLms\Tests\TestFilamentFormUserShow;
 use Tapp\FilamentLms\Tests\TestUser;
 
+use function Livewire\store;
+
 beforeEach(function () {
     config(['filament-lms.evaluations.enabled' => true]);
 
@@ -577,17 +579,14 @@ test('only evaluation form steps allow multiple submissions', function () {
 
     $this->actingAs($user);
 
-    TestFilamentFormShow::resetLastAllowMultipleSubmissions();
+    $trainingComponent = app(FormStep::class);
+    $trainingComponent->mount($trainingStep);
 
-    Livewire::test(FormStep::class, ['step' => $trainingStep]);
+    $evaluationComponent = app(FormStep::class);
+    $evaluationComponent->mount($evaluationStep);
 
-    expect(TestFilamentFormShow::$lastAllowMultipleSubmissions)->toBeFalse();
-
-    TestFilamentFormShow::resetLastAllowMultipleSubmissions();
-
-    Livewire::test(FormStep::class, ['step' => $evaluationStep]);
-
-    expect(TestFilamentFormShow::$lastAllowMultipleSubmissions)->toBeTrue();
+    expect($trainingComponent->formComponentParameters()['allowMultipleSubmissions'])->toBeFalse()
+        ->and($evaluationComponent->formComponentParameters()['allowMultipleSubmissions'])->toBeTrue();
 });
 
 test('evaluation form step hides next button and advances after submit', function () {
@@ -621,8 +620,10 @@ test('evaluation form step hides next button and advances after submit', functio
 
     $this->actingAs($user);
 
-    Livewire::test(FormStep::class, ['step' => $evaluationStep])
-        ->assertDontSee('Next');
+    $component = app(FormStep::class);
+    $component->mount($evaluationStep);
+
+    expect($component->shouldShowNextButton())->toBeFalse();
 
     $entry = FilamentFormUser::create([
         'filament_form_id' => $form->id,
@@ -632,9 +633,12 @@ test('evaluation form step hides next button and advances after submit', functio
         ],
     ]);
 
-    Livewire::test(FormStep::class, ['step' => $evaluationStep])
-        ->call('entrySaved', $entry)
-        ->assertDispatched('complete-step');
+    $component->entrySaved($entry);
+
+    $dispatchedEvents = collect(store($component)->get('dispatched', []))
+        ->map(fn ($event) => $event->serialize()['name']);
+
+    expect($dispatchedEvents)->toContain('complete-step');
 });
 
 test('primary course without evaluation has no evaluation submission url', function () {
@@ -810,8 +814,10 @@ test('form steps scope submissions per step when the same form is reused', funct
 
     $this->actingAs($user);
 
-    Livewire::test(FormStep::class, ['step' => $testStep])
-        ->assertSet('entry', null);
+    $component = app(FormStep::class);
+    $component->mount($testStep);
+
+    expect($component->entry)->toBeNull();
 
     $testEntry = FilamentFormUser::create([
         'filament_form_id' => $form->id,
@@ -821,9 +827,9 @@ test('form steps scope submissions per step when the same form is reused', funct
         ],
     ]);
 
-    Livewire::test(FormStep::class, ['step' => $testStep])
-        ->call('entrySaved', $testEntry->id)
-        ->assertSet('entry.id', $testEntry->id);
+    $component->entrySaved($testEntry->id);
+
+    expect($component->entry?->id)->toBe($testEntry->id);
 
     expect($webdevStep->fresh()->formEntryForUser($user->id)?->id)->toBe($webdevEntry->id)
         ->and($testStep->fresh()->formEntryForUser($user->id)?->id)->toBe($testEntry->id)

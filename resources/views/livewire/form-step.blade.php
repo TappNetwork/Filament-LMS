@@ -1,13 +1,11 @@
 <div>
-    @php($isEvaluationCourse = $step->lesson->course->isEvaluationCourse())
-
     @if($entry)
         @livewire('tapp.filament-form-builder.livewire.filament-form-user.show', [$entry])
     @else
-        @livewire('tapp.filament-form-builder.livewire.filament-form.show', ['form' => $form, 'blockRedirect' => true, 'allowMultipleSubmissions' => $isEvaluationCourse])
+        @livewire('tapp.filament-form-builder.livewire.filament-form.show', $this->formComponentParameters())
     @endif
 
-    @if(! $isEvaluationCourse)
+    @if($this->shouldShowNextButton())
         <x-filament-lms::next-button :disabled="!$step->is_optional && !$entry" />
     @endif
 </div>

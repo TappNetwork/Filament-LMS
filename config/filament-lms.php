@@ -207,6 +207,5 @@ return [
     */
     'evaluations' => [
         'enabled' => false,
-        'template_form_slug' => 'course-evaluation-feedback',
     ],
 ];

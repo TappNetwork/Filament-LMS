@@ -9,10 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
+use ReflectionMethod;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentFormBuilder\Models\FilamentFormField;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
+use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Events\CourseCompleted as CourseCompletedEvent;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Models\Course;
@@ -20,6 +22,7 @@ use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\StepUser;
 use Tapp\FilamentLms\Pages\CourseCompleted;
+use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Tests\TestFilamentFormShow;
@@ -1034,4 +1037,145 @@ test('form steps scope submissions per step when the same form is reused', funct
         ->and($testStep->fresh()->formEntryForUser($user->id)?->id)->toBe($testEntry->id)
         ->and($webdevEntry->fresh()->entry[0]['answer'])->toBe('Agree')
         ->and($testEntry->fresh()->entry[0]['answer'])->toBe('Disagree');
+});
+
+test('embedded scorm exit course redirects to evaluation when training content is complete', function () {
+    $user = CourseEvaluationLmsUser::create([
+        'name' => 'Scorm Exit User',
+        'email' => 'scorm-exit-evaluation@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create(['is_private' => true]);
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    Step::factory()->create([
+        'lesson_id' => $evaluationLesson->id,
+        'slug' => 'evaluation',
+    ]);
+
+    $primaryCourse = Course::factory()->create([
+        'slug' => 'scorm-primary-training',
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $primaryCourse->users()->attach($user->id);
+
+    $lesson = Lesson::factory()->create([
+        'course_id' => $primaryCourse->id,
+        'slug' => 'lesson-one',
+    ]);
+    $step = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'slug' => 'launch',
+        'order' => 0,
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $step->id,
+        'completed_at' => now(),
+    ]);
+
+    $expectedUrl = app(CourseEvaluationService::class)->evaluationUrlForPrimaryCourse($primaryCourse->fresh());
+
+    $page = app(StepPage::class);
+    $page->course = $primaryCourse->fresh();
+
+    $method = new ReflectionMethod(StepPage::class, 'embeddedCourseExitUrl');
+    $url = $method->invoke($page, $user);
+
+    expect($url)->toBe($expectedUrl);
+
+    $method->invoke($page, $user);
+
+    expect($evaluationCourse->users()->where('user_id', $user->id)->exists())->toBeTrue();
+});
+
+test('embedded scorm exit course returns to dashboard when training is incomplete', function () {
+    $user = CourseEvaluationLmsUser::create([
+        'name' => 'Scorm Incomplete Exit User',
+        'email' => 'scorm-incomplete-exit@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $primaryCourse = Course::factory()->create([
+        'slug' => 'scorm-incomplete-training',
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => true,
+    ]);
+    $primaryCourse->users()->attach($user->id);
+
+    $lesson = Lesson::factory()->create([
+        'course_id' => $primaryCourse->id,
+        'slug' => 'lesson-one',
+    ]);
+    $step = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'slug' => 'launch',
+        'order' => 0,
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $page = app(StepPage::class);
+    $page->course = $primaryCourse->fresh();
+
+    $method = new ReflectionMethod(StepPage::class, 'embeddedCourseExitUrl');
+    $url = $method->invoke($page, $user);
+
+    expect($url)->toBe(Dashboard::getUrl());
+});
+
+test('embedded scorm exit course redirects to course completed when evaluation is finished', function () {
+    $user = CourseEvaluationLmsUser::create([
+        'name' => 'Scorm Completed Exit User',
+        'email' => 'scorm-completed-exit@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create(['is_private' => true]);
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    $evaluationStep = Step::factory()->create(['lesson_id' => $evaluationLesson->id]);
+
+    $primaryCourse = Course::factory()->create([
+        'slug' => 'scorm-finished-training',
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $primaryCourse->users()->attach($user->id);
+
+    $lesson = Lesson::factory()->create([
+        'course_id' => $primaryCourse->id,
+        'slug' => 'lesson-one',
+    ]);
+    $step = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'slug' => 'launch',
+        'order' => 0,
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    StepUser::create([
+        'user_id' => $user->id,
+        'step_id' => $step->id,
+        'completed_at' => now(),
+    ]);
+
+    $evaluationStep->complete($user, $primaryCourse->id);
+
+    $page = app(StepPage::class);
+    $page->course = $primaryCourse->fresh();
+
+    $method = new ReflectionMethod(StepPage::class, 'embeddedCourseExitUrl');
+    $url = $method->invoke($page, $user);
+
+    expect($url)->toBe(CourseCompleted::getUrl([$primaryCourse->slug]));
 });

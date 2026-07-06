@@ -134,13 +134,17 @@ class Step extends Page
         $actions = [];
 
         if ($this->course->isEmbeddedPlayer()) {
+            $user = Auth::user();
+            $evaluationService = app(CourseEvaluationService::class);
+            $pendingEvaluation = $user instanceof FilamentLmsUserInterface
+                && $evaluationService->hasPendingEvaluationForUser($this->course, $user->id);
+
             $exitCourse = Action::make('exitCourse')
-                ->label('Exit Course')
+                ->label($pendingEvaluation ? 'Complete Evaluation' : 'Exit Course')
                 ->color('gray')
                 ->action(fn () => $this->exitCourse());
 
             if ($this->shouldRegisterHtml5Bridge()) {
-                $user = Auth::user();
                 $progressService = app(ScormProgressService::class);
                 $needsCompletionConfirm = $user !== null
                     && ! $progressService->courseCompletedByUser($this->course, $user);
@@ -150,6 +154,11 @@ class Step extends Page
                         ->requiresConfirmation()
                         ->modalHeading('Exit course')
                         ->modalDescription('Mark this course as complete before returning to your courses?');
+                } elseif ($pendingEvaluation) {
+                    $exitCourse
+                        ->requiresConfirmation()
+                        ->modalHeading('Complete evaluation')
+                        ->modalDescription('You have finished the course content. Continue to the course evaluation?');
                 }
             }
 
@@ -277,7 +286,7 @@ class Step extends Page
             }
         }
 
-        $this->redirect(Dashboard::getUrl());
+        $this->redirect($this->embeddedCourseExitUrl($user));
     }
 
     #[On('scorm-course-complete')]
@@ -289,6 +298,55 @@ class Step extends Page
         }
 
         app(ScormProgressService::class)->completeAllEligibleSteps($this->course, $user);
+
+        $evaluationService = app(CourseEvaluationService::class);
+
+        if ($evaluationService->hasPendingEvaluationForUser($this->course, $user->id)) {
+            $this->course->ensureEvaluationAssigned($user->id);
+
+            $evaluationUrl = $evaluationService->evaluationUrlForPrimaryCourse($this->course);
+
+            if ($evaluationUrl !== null) {
+                $this->redirect($evaluationUrl);
+
+                return;
+            }
+
+            Notification::make()
+                ->title('Evaluation is not available yet')
+                ->body('The linked evaluation course does not have a form step configured. Please contact your administrator.')
+                ->warning()
+                ->send();
+        }
+    }
+
+    protected function embeddedCourseExitUrl(FilamentLmsUserInterface $user): string
+    {
+        $evaluationService = app(CourseEvaluationService::class);
+
+        if ($evaluationService->hasPendingEvaluationForUser($this->course, $user->id)) {
+            $this->course->ensureEvaluationAssigned($user->id);
+
+            $evaluationUrl = $evaluationService->evaluationUrlForPrimaryCourse($this->course);
+
+            if ($evaluationUrl !== null) {
+                return $evaluationUrl;
+            }
+
+            Notification::make()
+                ->title('Evaluation is not available yet')
+                ->body('The linked evaluation course does not have a form step configured. Please contact your administrator.')
+                ->warning()
+                ->send();
+
+            return Dashboard::getUrl();
+        }
+
+        if ($this->course->allStepsCompletedByUser($user->id)) {
+            return CourseCompleted::getUrl([$this->course->slug]);
+        }
+
+        return Dashboard::getUrl();
     }
 
     public function shouldRegisterScormBridge(): bool

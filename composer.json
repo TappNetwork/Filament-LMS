@@ -17,7 +17,7 @@
         "maatwebsite/excel": "^4.0",
         "spatie/browsershot": "^5.0",
         "spatie/eloquent-sortable": "^5.0",
-        "tapp/filament-form-builder": "^4.0"
+        "tapp/filament-form-builder": "^4.3.5"
     },
     "suggest": {
         "tapp/filament-library": "Required for Library file / Library link step materials (set filament-lms.integrations.filament_library.enabled for the admin material picker)."

@@ -1,5 +1,24 @@
 <x-filament::section class="m-8">
-    @if($qualifiedForCertificate)
+    @if($pendingEvaluation && $evaluationCourse)
+        <x-slot name="heading">
+            One more step for "{{ $course->name }}"
+        </x-slot>
+
+        <p class="text-gray-700 dark:text-gray-300 mb-4">
+            Please complete the course evaluation before receiving your certificate.
+        </p>
+
+        <div class="mt-4 flex gap-3">
+            <a href="{{ \Tapp\FilamentLms\Pages\Dashboard::getUrl() }}">
+                <x-filament::button color="gray">
+                    View All Courses
+                </x-filament::button>
+            </a>
+            <x-filament::button tag="a" href="{{ $evaluationUrl ?? $evaluationCourse->linkToCurrentStep() }}">
+                Complete Evaluation
+            </x-filament::button>
+        </div>
+    @elseif($qualifiedForCertificate)
         <x-slot name="heading">
             Congratulations! You have completed "{{ $course->name }}"
         </x-slot>
@@ -9,12 +28,17 @@
 
         Download your certificate below.
 
-        <div class="mt-4 flex gap-3">
+        <div class="mt-4 flex flex-wrap gap-3">
             <a href="{{ \Tapp\FilamentLms\Pages\Dashboard::getUrl() }}">
                 <x-filament::button color="gray">
                     View All Courses
                 </x-filament::button>
             </a>
+            @if($course->hasEvaluation() && $course->evaluationCompletedByUser(auth()->id()) && $course->evaluationSubmissionUrl())
+                <x-filament::button tag="a" href="{{ $course->evaluationSubmissionUrl() }}" color="gray">
+                    View Evaluation
+                </x-filament::button>
+            @endif
             <x-filament::button tag="a" href="{{ route('filament-lms::certificates.download', [$course->id]) }}">
                 Download Certificate
             </x-filament::button>

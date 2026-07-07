@@ -24,8 +24,11 @@ class TestStep extends Component
 
     protected $listeners = ['entrySaved'];
 
-    public function mount($step)
+    public ?int $evaluationPrimaryCourseId = null;
+
+    public function mount($step, ?int $evaluationPrimaryCourseId = null)
     {
+        $this->evaluationPrimaryCourseId = $evaluationPrimaryCourseId;
         $this->step = $step;
         $this->step->load(['retryStep.lesson.course', 'lesson.course']);
         $this->test = $step->material;
@@ -65,7 +68,7 @@ class TestStep extends Component
         // Only complete the step if test passed (or if perfect score is not required)
         if ($this->testPassed || ! $this->step->require_perfect_score) {
             $this->testCompleted = true;
-            $this->step->complete();
+            $this->step->complete(evaluationPrimaryCourseId: $this->evaluationPrimaryCourseId);
         } else {
             $this->testCompleted = false;
         }

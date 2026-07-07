@@ -15,13 +15,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
+use Tapp\FilamentFormBuilder\Models\FilamentForm;
+use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\StepFactory;
-use Tapp\FilamentLms\Events\CourseCompleted;
 use Tapp\FilamentLms\Events\CourseStarted;
 use Tapp\FilamentLms\Events\StepCompleted;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\Step as StepPage;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 
 /**
  * @property int $id
@@ -207,14 +209,20 @@ class Step extends Model implements Sortable
         }
     }
 
-    public function complete($user = null)
+    public function complete($user = null, ?int $evaluationPrimaryCourseId = null)
     {
         // @phpstan-ignore-next-line
         $user = $user ?: Auth::user();
 
-        $userStep = StepUser::where('user_id', $user->id)
+        $userStepQuery = StepUser::where('user_id', $user->id)
             ->where('step_id', $this->id)
-            ->first();
+            ->when(
+                $evaluationPrimaryCourseId !== null,
+                fn ($query) => $query->where('evaluation_primary_course_id', $evaluationPrimaryCourseId),
+                fn ($query) => $query->whereNull('evaluation_primary_course_id'),
+            );
+
+        $userStep = $userStepQuery->first();
 
         $nextStep = $this->next_step;
 
@@ -223,6 +231,7 @@ class Step extends Model implements Sortable
             StepUser::create([
                 'user_id' => $user->id,
                 'step_id' => $this->id,
+                'evaluation_primary_course_id' => $evaluationPrimaryCourseId,
                 'completed_at' => now(),
             ]);
 
@@ -246,13 +255,13 @@ class Step extends Model implements Sortable
             StepUser::firstOrCreate([
                 'user_id' => $user->id,
                 'step_id' => $nextStep->id,
+                'evaluation_primary_course_id' => $evaluationPrimaryCourseId,
             ]);
 
             $this->lesson->course->maybeSetCompletedAtForUser($user->id);
 
             return $nextStep;
         } else {
-            CourseCompleted::dispatch($user, $this->lesson->course);
             $this->lesson->course->maybeSetCompletedAtForUser($user->id);
         }
     }
@@ -346,12 +355,18 @@ class Step extends Model implements Sortable
     {
         // @phpstan-ignore-next-line
         $currentUserId = Auth::check() ? Auth::user()->id : null;
+        $evaluationPrimaryCourseId = app(CourseEvaluationService::class)->evaluationPrimaryCourseIdFromRequest();
 
         return $this->hasOne(StepUser::class)->ofMany([
             // TODO is this started_at => max needed?
             'created_at' => 'max',
-        ], function ($query) use ($currentUserId) {
-            $query->where('user_id', '=', $currentUserId);
+        ], function ($query) use ($currentUserId, $evaluationPrimaryCourseId) {
+            $query->where('user_id', '=', $currentUserId)
+                ->when(
+                    $evaluationPrimaryCourseId !== null,
+                    fn ($query) => $query->where('evaluation_primary_course_id', $evaluationPrimaryCourseId),
+                    fn ($query) => $query->whereNull('evaluation_primary_course_id'),
+                );
         });
     }
 
@@ -403,5 +418,48 @@ class Step extends Model implements Sortable
     public function getSecondsAttribute()
     {
         return $this->progress?->seconds ?? 0;
+    }
+
+    public function formEntryForUser(int|string $userId, ?int $evaluationPrimaryCourseId = null): ?FilamentFormUser
+    {
+        if ($this->material_type !== 'form') {
+            return null;
+        }
+
+        $this->loadMissing('material');
+
+        if (! $this->material instanceof FilamentForm) {
+            return null;
+        }
+
+        $stepUser = StepUser::query()
+            ->where('user_id', $userId)
+            ->where('step_id', $this->id)
+            ->when(
+                $evaluationPrimaryCourseId !== null,
+                fn ($query) => $query->where('evaluation_primary_course_id', $evaluationPrimaryCourseId),
+                fn ($query) => $query->whereNull('evaluation_primary_course_id'),
+            )
+            ->whereNotNull('completed_at')
+            ->first();
+
+        if ($stepUser === null) {
+            return null;
+        }
+
+        if ($stepUser->filament_form_user_id !== null) {
+            return FilamentFormUser::query()
+                ->whereKey($stepUser->filament_form_user_id)
+                ->where('user_id', $userId)
+                ->where('filament_form_id', $this->material->id)
+                ->first();
+        }
+
+        return FilamentFormUser::query()
+            ->where('filament_form_id', $this->material->id)
+            ->where('user_id', $userId)
+            ->where('created_at', '<=', $stepUser->completed_at)
+            ->orderByDesc('created_at')
+            ->first();
     }
 }

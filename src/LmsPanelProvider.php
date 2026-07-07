@@ -31,6 +31,7 @@ use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 
 class LmsPanelProvider extends PanelProvider
 {
@@ -159,23 +160,29 @@ class LmsPanelProvider extends PanelProvider
                 return $builder;
             }
 
-            $navigationGroups = $course->lessons->map(function ($lesson) {
+            $evaluationService = app(CourseEvaluationService::class);
+            $evaluationPrimaryCourseId = $evaluationService->evaluationPrimaryCourseIdFromRequest();
+            $stepUrlParameters = $evaluationPrimaryCourseId !== null && $evaluationService->isEvaluationCourse($course)
+                ? ['primaryCourse' => $evaluationPrimaryCourseId]
+                : [];
+
+            $navigationGroups = $course->lessons->map(function ($lesson) use ($stepUrlParameters) {
                 /** @var Lesson $lesson */
                 return NavigationGroup::make($lesson->name)
                     ->collapsed(fn (): bool => ! $lesson->isActive())
                     // ->collapsible(true)
-                    ->items($lesson->steps->map(function ($step) {
+                    ->items($lesson->steps->map(function ($step) use ($stepUrlParameters) {
                         /** @var Models\Step $step */
                         return NavigationItem::make($step->name)
                             ->icon(fn (): string => $step->completed_at ? 'heroicon-o-check-circle' : '')
                             ->isActiveWhen(fn (): bool => $step->isActive())
-                            ->url(function () use ($step): string {
+                            ->url(function () use ($step, $stepUrlParameters): string {
                                 $user = auth()->user();
                                 if (! $user instanceof FilamentLmsUserInterface) {
                                     return '';
                                 }
 
-                                return $user->canAccessStep($step) ? $step->url : '';
+                                return $user->canAccessStep($step) ? Step::getUrlForStep($step, $stepUrlParameters) : '';
                             });
                     })->toArray());
             })->toArray();

@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('lms_step_user', function (Blueprint $table) {
+            $table->foreignId('evaluation_primary_course_id')
+                ->nullable()
+                ->after('step_id')
+                ->constrained('lms_courses')
+                ->nullOnDelete();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('lms_step_user', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('evaluation_primary_course_id');
+        });
+    }
+};

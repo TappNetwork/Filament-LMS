@@ -6,6 +6,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
@@ -15,6 +16,7 @@ use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step as StepModel;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Services\ScormProgressService;
 
 class Step extends Page
@@ -32,6 +34,8 @@ class Step extends Page
     public Lesson $lesson;
 
     public StepModel $step;
+
+    public ?int $evaluationPrimaryCourseId = null;
 
     public function mount($courseSlug, $lessonSlug, $stepSlug)
     {
@@ -61,9 +65,45 @@ class Step extends Page
             return redirect()->to($this->course->linkToCurrentStep());
         }
 
-        $canAccess = $user->canAccessStep($this->step);
-        $currentStepUrl = $this->course->linkToCurrentStep();
-        $requestedStepUrl = static::getUrlForStep($this->step);
+        $evaluationService = app(CourseEvaluationService::class);
+        $isLmsAdmin = method_exists($user, 'isLmsAdmin') && $user->isLmsAdmin();
+
+        if ($evaluationService->isEvaluationCourse($this->course) && ! $isLmsAdmin) {
+            $primaryCourseId = request()->query('primaryCourse');
+            $primaryCourse = $evaluationService->activePrimaryCourseForEvaluation(
+                $this->course,
+                $user,
+                is_numeric($primaryCourseId) ? (int) $primaryCourseId : null,
+            );
+
+            if ($primaryCourse === null) {
+                return redirect()->to(Dashboard::getUrl());
+            }
+
+            $this->evaluationPrimaryCourseId = $primaryCourse->id;
+
+            // Keep progress lookups, completion percentages, and navigation links in sync
+            // with the primary course resolved above, even when it wasn't in the query string.
+            request()->query->set('primaryCourse', (string) $primaryCourse->id);
+
+            if (! $evaluationService->evaluationStepAvailableForPrimary($this->step, $user->id, $primaryCourse->id)) {
+                $currentStepUrl = $evaluationService->evaluationUrlForPrimaryCourse($primaryCourse);
+
+                return redirect()->to($currentStepUrl ?? Dashboard::getUrl());
+            }
+        }
+
+        $isPrimaryScopedEvaluation = $this->evaluationPrimaryCourseId !== null;
+        $stepUrlParameters = $isPrimaryScopedEvaluation
+            ? ['primaryCourse' => $this->evaluationPrimaryCourseId]
+            : [];
+        $canAccess = $isPrimaryScopedEvaluation || $user->canAccessStep($this->step);
+        $currentStepUrl = $this->evaluationPrimaryCourseId !== null
+            ? app(CourseEvaluationService::class)->evaluationUrlForPrimaryCourse(
+                Course::query()->findOrFail($this->evaluationPrimaryCourseId),
+            )
+            : $this->course->linkToCurrentStep();
+        $requestedStepUrl = static::getUrlForStep($this->step, $stepUrlParameters);
 
         Log::info('Step page access check', [
             'user_id' => $user->id,
@@ -72,7 +112,7 @@ class Step extends Page
             'can_access' => $canAccess,
             'requested_step_url' => $requestedStepUrl,
             'current_step_url' => $currentStepUrl,
-            'step_available' => $this->step->available,
+            'step_available' => $canAccess,
         ]);
 
         if (! $canAccess) {
@@ -99,13 +139,17 @@ class Step extends Page
         $actions = [];
 
         if ($this->course->isEmbeddedPlayer()) {
+            $user = Auth::user();
+            $evaluationService = app(CourseEvaluationService::class);
+            $pendingEvaluation = $user instanceof FilamentLmsUserInterface
+                && $evaluationService->hasPendingEvaluationForUser($this->course, $user->id);
+
             $exitCourse = Action::make('exitCourse')
-                ->label('Exit Course')
+                ->label($pendingEvaluation ? 'Complete Evaluation' : 'Exit Course')
                 ->color('gray')
                 ->action(fn () => $this->exitCourse());
 
             if ($this->shouldRegisterHtml5Bridge()) {
-                $user = Auth::user();
                 $progressService = app(ScormProgressService::class);
                 $needsCompletionConfirm = $user !== null
                     && ! $progressService->courseCompletedByUser($this->course, $user);
@@ -115,6 +159,11 @@ class Step extends Page
                         ->requiresConfirmation()
                         ->modalHeading('Exit course')
                         ->modalDescription('Mark this course as complete before returning to your courses?');
+                } elseif ($pendingEvaluation) {
+                    $exitCourse
+                        ->requiresConfirmation()
+                        ->modalHeading('Complete evaluation')
+                        ->modalDescription('You have finished the course content. Continue to the course evaluation?');
                 }
             }
 
@@ -130,7 +179,7 @@ class Step extends Page
         if (Auth::check()) {
             $user = Auth::user();
             // @phpstan-ignore-next-line
-            if ($user && $user->canEditStep($this->step)) {
+            if ($user && method_exists($user, 'canEditStep') && $user->canEditStep($this->step)) {
                 $actions[] = Action::make('edit')
                     ->label('Edit')
                     ->color('primary')
@@ -143,21 +192,69 @@ class Step extends Page
     }
 
     #[On('complete-step')]
-    public function complete()
+    public function complete(bool $completeStep = true)
     {
-        // Use the Model's complete() method which handles all events and progress tracking
-        $nextStep = $this->step->complete();
+        // Form steps may already complete the model before dispatching this event.
+        $nextStep = $completeStep
+            ? $this->step->complete(evaluationPrimaryCourseId: $this->evaluationPrimaryCourseId)
+            : $this->step->next_step;
+
+        $user = Auth::user();
+        if (
+            $this->step->last_step
+            && $user instanceof FilamentLmsUserInterface
+            && app(CourseEvaluationService::class)->hasPendingEvaluationForUser($this->course, $user->id)
+        ) {
+            $this->course->ensureEvaluationAssigned($user->id);
+
+            return redirect()->to(
+                app(CourseEvaluationService::class)->evaluationUrlForPrimaryCourse($this->course) ?? Dashboard::getUrl(),
+            );
+        }
 
         if (! $this->step->last_step && $nextStep) {
-            return redirect()->to(Step::getUrlForStep($nextStep));
+            return redirect()->to(Step::getUrlForStep($nextStep, $this->evaluationPrimaryCourseId !== null
+                ? ['primaryCourse' => $this->evaluationPrimaryCourseId]
+                : []));
+        }
+
+        if (
+            $this->step->last_step
+            && $this->course->isEvaluationCourse()
+            && $user instanceof FilamentLmsUserInterface
+        ) {
+            $primaryCourse = app(CourseEvaluationService::class)
+                ->completedPrimaryCourseForEvaluation($this->course, $user->id, $this->evaluationPrimaryCourseId);
+
+            if ($primaryCourse !== null) {
+                return redirect()->to(CourseCompleted::getUrl([$primaryCourse->slug]));
+            }
+
+            return redirect()->to(Dashboard::getUrl());
         }
 
         return redirect()->to(CourseCompleted::getUrl([$this->course->slug]));
     }
 
-    public static function getUrlForStep(StepModel $step)
+    public static function getUrlForStep(StepModel $step, array $parameters = [])
     {
-        return static::getUrl([$step->lesson->course->slug, $step->lesson->slug, $step->slug]);
+        $evaluationService = app(CourseEvaluationService::class);
+        $evaluationPrimaryCourseId = $evaluationService->evaluationPrimaryCourseIdFromRequest();
+
+        if (
+            $evaluationPrimaryCourseId !== null
+            && ! array_key_exists('primaryCourse', $parameters)
+            && $evaluationService->isEvaluationCourse($step->lesson->course)
+        ) {
+            $parameters['primaryCourse'] = $evaluationPrimaryCourseId;
+        }
+
+        return static::getUrl([
+            $step->lesson->course->slug,
+            $step->lesson->slug,
+            $step->slug,
+            ...$parameters,
+        ]);
     }
 
     public function getMaxContentWidth(): Width
@@ -194,7 +291,7 @@ class Step extends Page
             }
         }
 
-        $this->redirect(Dashboard::getUrl());
+        $this->redirect($this->embeddedCourseExitUrl($user));
     }
 
     #[On('scorm-course-complete')]
@@ -206,6 +303,55 @@ class Step extends Page
         }
 
         app(ScormProgressService::class)->completeAllEligibleSteps($this->course, $user);
+
+        $evaluationService = app(CourseEvaluationService::class);
+
+        if ($evaluationService->hasPendingEvaluationForUser($this->course, $user->id)) {
+            $this->course->ensureEvaluationAssigned($user->id);
+
+            $evaluationUrl = $evaluationService->evaluationUrlForPrimaryCourse($this->course);
+
+            if ($evaluationUrl !== null) {
+                $this->redirect($evaluationUrl);
+
+                return;
+            }
+
+            Notification::make()
+                ->title('Evaluation is not available yet')
+                ->body('The linked evaluation course does not have a form step configured. Please contact your administrator.')
+                ->warning()
+                ->send();
+        }
+    }
+
+    protected function embeddedCourseExitUrl(Authenticatable&FilamentLmsUserInterface $user): string
+    {
+        $evaluationService = app(CourseEvaluationService::class);
+
+        if ($evaluationService->hasPendingEvaluationForUser($this->course, $user->id)) {
+            $this->course->ensureEvaluationAssigned($user->id);
+
+            $evaluationUrl = $evaluationService->evaluationUrlForPrimaryCourse($this->course);
+
+            if ($evaluationUrl !== null) {
+                return $evaluationUrl;
+            }
+
+            Notification::make()
+                ->title('Evaluation is not available yet')
+                ->body('The linked evaluation course does not have a form step configured. Please contact your administrator.')
+                ->warning()
+                ->send();
+
+            return Dashboard::getUrl();
+        }
+
+        if ($this->course->allStepsCompletedByUser($user->id)) {
+            return CourseCompleted::getUrl([$this->course->slug]);
+        }
+
+        return Dashboard::getUrl();
     }
 
     public function shouldRegisterScormBridge(): bool

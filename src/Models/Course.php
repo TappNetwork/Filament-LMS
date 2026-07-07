@@ -10,6 +10,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -24,10 +25,12 @@ use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Database\Factories\CourseFactory;
 use Tapp\FilamentLms\Enums\CompletionMode;
+use Tapp\FilamentLms\Events\CourseCompleted as CourseCompletedEvent;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
+use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
 
 /**
@@ -43,8 +46,10 @@ use Tapp\FilamentLms\Traits\HasMediaUrl;
  * @property bool $is_private
  * @property bool $embedded_player
  * @property CompletionMode|string $completion_mode
+ * @property int|null $evaluation_course_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property-read Course|null $evaluationCourse
  * @property-read \Illuminate\Database\Eloquent\Collection|Lesson[] $lessons
  * @property-read \Illuminate\Database\Eloquent\Collection|Step[] $steps
  */
@@ -105,7 +110,47 @@ final class Course extends Model implements HasMedia
                 });
         })
         // Only include courses that have at least one step
-            ->whereHas('steps');
+            ->whereHas('steps')
+            ->when(config('filament-lms.evaluations.enabled', false), function (Builder $query): void {
+                $evaluationCourseIds = app(CourseEvaluationService::class)->lockedEvaluationCourseIds();
+
+                if ($evaluationCourseIds->isNotEmpty()) {
+                    $query->whereNotIn('lms_courses.id', $evaluationCourseIds);
+                }
+            });
+    }
+
+    /**
+     * @return BelongsTo<Course, $this>
+     */
+    public function evaluationCourse(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'evaluation_course_id');
+    }
+
+    public function hasEvaluation(): bool
+    {
+        return app(CourseEvaluationService::class)->hasEvaluation($this);
+    }
+
+    public function isEvaluationCourse(): bool
+    {
+        return app(CourseEvaluationService::class)->isEvaluationCourse($this);
+    }
+
+    public function evaluationCompletedByUser(int|string $userId): bool
+    {
+        return app(CourseEvaluationService::class)->evaluationCompletedByUser($this, $userId);
+    }
+
+    public function ensureEvaluationAssigned(int|string $userId): void
+    {
+        app(CourseEvaluationService::class)->ensureEvaluationAssigned($this, $userId);
+    }
+
+    public function evaluationSubmissionUrl(): ?string
+    {
+        return app(CourseEvaluationService::class)->evaluationUrlForPrimaryCourse($this);
     }
 
     public function lessons(): HasMany
@@ -155,8 +200,10 @@ final class Course extends Model implements HasMedia
         return null;
     }
 
-    public function linkToCurrentStep(): string
+    public function linkToCurrentStep(?int $evaluationPrimaryCourseId = null): string
     {
+        $evaluationPrimaryCourseId = $this->resolveEvaluationPrimaryCourseIdForCurrentUser($evaluationPrimaryCourseId);
+
         if ($this->isEmbeddedPlayer()) {
             $launchStep = $this->launchStep();
 
@@ -174,11 +221,13 @@ final class Course extends Model implements HasMedia
         }
 
         // Get all completed steps for this user
-        $completedStepIds = StepUser::whereIn('step_id', $allSteps->pluck('id'))
-            ->where('user_id', Auth::user()->id)
-            ->whereNotNull('completed_at')
-            ->pluck('step_id')
-            ->toArray();
+        $user = Auth::user();
+
+        if (! $user instanceof Authenticatable) {
+            return Dashboard::getUrl();
+        }
+
+        $completedStepIds = $this->completedStepIdsForUser($allSteps, $user->id, $evaluationPrimaryCourseId);
 
         // Find the first step that hasn't been completed
         $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
@@ -188,25 +237,29 @@ final class Course extends Model implements HasMedia
                 return false;
             }
 
-            return ! in_array($step->id, $completedStepIds) && $user->canAccessStep($step);
+            return ! $completedStepIds->contains($step->id) && $user->canAccessStep($step);
         });
 
         // If no incomplete step is available, check if course is complete
         if (! $firstIncompleteStep) {
             // @phpstan-ignore-next-line
-            if ($allSteps->every->completed_at) {
+            if ($completedStepIds->count() === $allSteps->count()) {
                 return $this->certificateUrl();
             }
             // If course is not complete but no step is available, find the first incomplete step
             $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
-                return ! in_array($step->id, $completedStepIds);
+                return ! $completedStepIds->contains($step->id);
             });
         }
 
-        return $firstIncompleteStep ? StepPage::getUrl([$firstIncompleteStep->lesson->course->slug, $firstIncompleteStep->lesson->slug, $firstIncompleteStep->slug]) : Dashboard::getUrl();
+        return $firstIncompleteStep
+            ? StepPage::getUrlForStep($firstIncompleteStep, $evaluationPrimaryCourseId !== null
+                ? ['primaryCourse' => $evaluationPrimaryCourseId]
+                : [])
+            : Dashboard::getUrl();
     }
 
-    public function currentStep(?Authenticatable $user = null): ?Step
+    public function currentStep(?Authenticatable $user = null, ?int $evaluationPrimaryCourseId = null): ?Step
     {
         $user = $user ?: Auth::user();
         if (! $user) {
@@ -215,15 +268,11 @@ final class Course extends Model implements HasMedia
         $allSteps = $this->steps;
 
         // Get all completed steps for this user
-        $completedStepIds = StepUser::whereIn('step_id', $allSteps->pluck('id'))
-            ->where('user_id', $user->id)
-            ->whereNotNull('completed_at')
-            ->pluck('step_id')
-            ->toArray();
+        $completedStepIds = $this->completedStepIdsForUser($allSteps, $user->id, $evaluationPrimaryCourseId);
 
         // Find the first step that hasn't been completed
         $firstIncompleteStep = $allSteps->first(function ($step) use ($completedStepIds) {
-            return ! in_array($step->id, $completedStepIds);
+            return ! $completedStepIds->contains($step->id);
         });
 
         return $firstIncompleteStep ?: $allSteps->first();
@@ -283,21 +332,31 @@ final class Course extends Model implements HasMedia
         $enrolledUser = $this->users()->where('user_id', $userId)->first();
         $pivot = $enrolledUser?->getRelationValue('pivot');
         $existing = $pivot instanceof Pivot ? $pivot->getAttribute('completed_at') : null;
+        $evaluationService = app(CourseEvaluationService::class);
+
         if ($existing !== null) {
+            if ($evaluationService->isEvaluationCourse($this)) {
+                $evaluationService->finalizePrimaryCoursesAfterEvaluation($this, $userId);
+            }
+
             return;
         }
 
-        if (! $this->allStepsCompletedByUser($userId)) {
+        if ($evaluationService->isEvaluationCourse($this)) {
+            $evaluationService->finalizePrimaryCoursesAfterEvaluation($this, $userId);
+
+            if ($evaluationService->completedPrimaryCourseForEvaluation($this, $userId) === null) {
+                return;
+            }
+        } elseif (! $evaluationService->courseMeetsCompletionRequirements($this, $userId)) {
             return;
         }
 
-        if ($this->required_test_percentage !== null) {
-            $testSteps = $this->getOrderedTestSteps();
-            if ($testSteps->isNotEmpty()) {
-                $overall = $this->getOverallTestPercentageForUser($userId);
-                if ($overall < (float) $this->required_test_percentage) {
-                    return;
-                }
+        if ($evaluationService->hasEvaluation($this)) {
+            $this->ensureEvaluationAssigned($userId);
+
+            if (! $this->evaluationCompletedByUser($userId)) {
+                return;
             }
         }
 
@@ -305,14 +364,22 @@ final class Course extends Model implements HasMedia
 
         if ($this->users()->where('user_id', $userId)->exists()) {
             $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
-
-            return;
+        } else {
+            try {
+                $this->users()->attach($userId, ['completed_at' => $completedAt]);
+            } catch (UniqueConstraintViolationException) {
+                $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
+            }
         }
 
-        try {
-            $this->users()->attach($userId, ['completed_at' => $completedAt]);
-        } catch (UniqueConstraintViolationException) {
-            $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
+        $completedUser = $this->users()->where('user_id', $userId)->first();
+
+        if ($completedUser !== null) {
+            CourseCompletedEvent::dispatch($completedUser, $this);
+        }
+
+        if ($evaluationService->isEvaluationCourse($this)) {
+            $evaluationService->finalizePrimaryCoursesAfterEvaluation($this, $userId);
         }
     }
 
@@ -351,10 +418,15 @@ final class Course extends Model implements HasMedia
             return 0;
         }
 
-        return $this->getCompletionPercentageForUser(Auth::id());
+        $evaluationPrimaryCourseId = app(CourseEvaluationService::class)->evaluationPrimaryCourseIdFromRequest();
+
+        return $this->getCompletionPercentageForUser(
+            Auth::id(),
+            $this->resolveEvaluationPrimaryCourseIdForCurrentUser($evaluationPrimaryCourseId),
+        );
     }
 
-    public function getCompletionPercentageForUser($userId): float
+    public function getCompletionPercentageForUser($userId, ?int $evaluationPrimaryCourseId = null): float
     {
         // Use eager-loaded steps when available to avoid N+1 queries on dashboard
         $steps = $this->relationLoaded('steps') ? $this->steps : $this->steps()->get();
@@ -368,6 +440,7 @@ final class Course extends Model implements HasMedia
         if (
             Auth::check()
             && (string) $userId === (string) Auth::id()
+            && $evaluationPrimaryCourseId === null
             && $steps->first()->relationLoaded('progress')
         ) {
             $completedCount = $steps->filter(fn (Step $step) => $step->progress?->completed_at !== null)->count();
@@ -376,10 +449,7 @@ final class Course extends Model implements HasMedia
         }
 
         // Fallback: query for completed steps
-        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
-            ->where('user_id', $userId)
-            ->whereNotNull('completed_at')
-            ->get();
+        $completedStepUsers = $this->completedStepIdsForUser($steps, $userId, $evaluationPrimaryCourseId);
 
         return $completedStepUsers->count() / $steps->count() * 100;
     }
@@ -442,7 +512,7 @@ final class Course extends Model implements HasMedia
      * Check if all steps are completed by the user (regardless of test percentage requirement).
      * This is useful for determining if a user has finished all steps but may not have met the test percentage requirement.
      */
-    public function allStepsCompletedByUser(int|string $userId): bool
+    public function allStepsCompletedByUser(int|string $userId, ?int $evaluationPrimaryCourseId = null): bool
     {
         $steps = $this->steps()->get();
 
@@ -450,12 +520,9 @@ final class Course extends Model implements HasMedia
             return false;
         }
 
-        $completedStepUsers = StepUser::whereIn('step_id', $steps->pluck('id'))
-            ->where('user_id', $userId)
-            ->whereNotNull('completed_at')
-            ->get();
+        $completedStepIds = $this->completedStepIdsForUser($steps, $userId, $evaluationPrimaryCourseId);
 
-        return $completedStepUsers->count() === $steps->count();
+        return $completedStepIds->count() === $steps->count();
     }
 
     /**
@@ -465,6 +532,15 @@ final class Course extends Model implements HasMedia
     {
         if (! $user) {
             return false;
+        }
+
+        if ($this->isEvaluationCourse()) {
+            if ($user->isLmsAdmin()) {
+                return true;
+            }
+
+            return app(CourseEvaluationService::class)->isEvaluationUnlockedForUser($this, $user)
+                && ($this->users()->where('user_id', $user->id)->exists() || ! $this->is_private);
         }
 
         // Public courses (not private) - accessible to everyone
@@ -576,5 +652,50 @@ final class Course extends Model implements HasMedia
         }
 
         return (float) $grade;
+    }
+
+    /**
+     * @param  Collection<int, Step>  $steps
+     * @return Collection<int, int>
+     */
+    private function completedStepIdsForUser(Collection $steps, int|string $userId, ?int $evaluationPrimaryCourseId = null): Collection
+    {
+        return StepUser::whereIn('step_id', $steps->pluck('id'))
+            ->where('user_id', $userId)
+            ->when(
+                $evaluationPrimaryCourseId !== null,
+                fn ($query) => $query->where('evaluation_primary_course_id', $evaluationPrimaryCourseId),
+                fn ($query) => $query->whereNull('evaluation_primary_course_id'),
+            )
+            ->whereNotNull('completed_at')
+            ->pluck('step_id')
+            ->unique()
+            ->values();
+    }
+
+    private function resolveEvaluationPrimaryCourseIdForCurrentUser(?int $evaluationPrimaryCourseId): ?int
+    {
+        if (! $this->isEvaluationCourse() || ! Auth::check()) {
+            return null;
+        }
+
+        if ($evaluationPrimaryCourseId !== null) {
+            return $evaluationPrimaryCourseId;
+        }
+
+        $user = Auth::user();
+
+        if (! $user instanceof Authenticatable || (method_exists($user, 'isLmsAdmin') && $user->isLmsAdmin())) {
+            return null;
+        }
+
+        $evaluationService = app(CourseEvaluationService::class);
+        $primaryCourse = $evaluationService->activePrimaryCourseForEvaluation($this, $user);
+
+        if ($primaryCourse === null || $evaluationService->evaluationCompletedByUser($primaryCourse, $user->id)) {
+            return null;
+        }
+
+        return $primaryCourse->id;
     }
 }

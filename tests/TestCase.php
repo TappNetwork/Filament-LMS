@@ -107,6 +107,7 @@ abstract class TestCase extends Orchestra
             $table->boolean('is_private')->default(false);
             $table->boolean('embedded_player')->default(false);
             $table->string('completion_mode', 32)->default('native');
+            $table->foreignId('evaluation_course_id')->nullable()->constrained('lms_courses')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -145,6 +146,8 @@ abstract class TestCase extends Orchestra
             $table->id();
             $table->foreignId('step_id')->references('id')->on('lms_steps')->onDelete('cascade');
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('evaluation_primary_course_id')->nullable()->constrained('lms_courses')->nullOnDelete();
+            $table->foreignId('filament_form_user_id')->nullable()->constrained('filament_form_user')->nullOnDelete();
             $table->unsignedInteger('seconds')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();

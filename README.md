@@ -513,6 +513,61 @@ class User extends Authenticatable
 
 This allows you to implement any business rules you need for course visibility, while still leveraging the default logic from the trait if desired.
 
+## Course Evaluations
+
+Course evaluations let you require learners to complete a feedback form after finishing a training course and before the primary course is marked complete or a certificate is issued.
+
+This uses a **linked evaluation course** model: the training course points to a separate private evaluation course via `evaluation_course_id`. Learners are auto-assigned to the evaluation course when they finish the training content.
+
+### Prerequisites
+
+- [Filament Form Builder](https://github.com/TappNetwork/Filament-Form-Builder) installed with its migrations published
+- Package migrations published and run (including `add_evaluation_course_id_to_lms_courses_table`)
+- A feedback form created in Form Builder (via the admin UI or an application-specific migration)
+
+### Enable evaluations
+
+In `config/filament-lms.php`:
+
+```php
+'evaluations' => [
+    'enabled' => true,
+],
+```
+
+Create a feedback form in Form Builder, then attach it to the evaluation course's form step.
+
+### Admin setup
+
+Create **two courses**:
+
+| Course | Settings |
+|--------|----------|
+| **Training course** (e.g. "Workplace Safety") | Public or private as needed. Set **Evaluation course** to the evaluation course below. |
+| **Evaluation course** (e.g. "Workplace Safety Evaluation") | Must be **private**. Leave **Evaluation course** empty. Add one lesson with a **Form** step using your feedback form. |
+
+Important:
+
+- Set the evaluation link on the **training** course, not on the evaluation course. Linking the evaluation course back to the training course will hide the training course from the dashboard.
+- Only **private** courses can be selected as evaluation targets.
+- An evaluation course cannot itself have an evaluation course linked to it.
+- The same evaluation course can be linked from multiple training courses. Each training course still requires its own evaluation submission before that course is marked complete or its certificate is issued.
+
+### Learner experience
+
+1. Learner completes all steps on the training course.
+2. If an evaluation is required, they see a **Complete Evaluation** prompt instead of the certificate.
+3. They are auto-enrolled on the private evaluation course (no manual assignment needed for public training courses).
+4. After submitting the evaluation form, they are redirected to the training course certificate page.
+5. After completion, learners can review their submission via **View Evaluation** on the certificate page.
+
+Evaluation form steps do not show a **Next** button — **Submit** completes the step and advances automatically.
+
+### Public vs private training courses
+
+- **Public training courses:** learners do not need to be assigned to the training course. They are auto-assigned to the evaluation course when training is complete.
+- **Private training courses:** learners must be assigned to the training course as usual. The evaluation course is still auto-assigned when they finish.
+
 ## Step Access Control
 
 ### Customizing Step Access

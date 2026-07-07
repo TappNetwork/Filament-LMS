@@ -44,15 +44,15 @@
             </x-filament::card>
         </div>
     @elseif ($step->material_type == 'video')
-        <livewire:video-step :step="$step"/>
+        <livewire:video-step :step="$step" :evaluation-primary-course-id="$evaluationPrimaryCourseId"/>
     @elseif ($step->material_type == 'form')
-        <livewire:form-step :step="$step"/>
+        <livewire:form-step :step="$step" :evaluation-primary-course-id="$evaluationPrimaryCourseId"/>
     @elseif ($step->material_type == 'document')
         <livewire:document-step :step="$step"/>
     @elseif ($step->material_type == 'link')
         <livewire:link-step :step="$step"/>
     @elseif ($step->material_type == 'test')
-        <livewire:test-step :step="$step"/>
+        <livewire:test-step :step="$step" :evaluation-primary-course-id="$evaluationPrimaryCourseId"/>
     @elseif ($step->material_type == 'image')
         <livewire:image-step :step="$step"/>
     @elseif ($step->material_type == 'library_file')

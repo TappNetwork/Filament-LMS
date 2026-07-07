@@ -17,12 +17,15 @@ class VideoStep extends Component
 
     public bool $videoCompleted;
 
-    public function mount($step)
+    public ?int $evaluationPrimaryCourseId = null;
+
+    public function mount($step, ?int $evaluationPrimaryCourseId = null)
     {
         $this->step = $step;
         $this->video = $step->material;
         $this->seconds = $step->seconds ?? 0;
         $this->videoCompleted = (bool) $step->completed_at;
+        $this->evaluationPrimaryCourseId = $evaluationPrimaryCourseId;
     }
 
     #[On('video-progress')]
@@ -36,7 +39,7 @@ class VideoStep extends Component
     {
         $this->videoCompleted = true;
 
-        $this->step->complete();
+        $this->step->complete(evaluationPrimaryCourseId: $this->evaluationPrimaryCourseId);
     }
 
     public function markExternalOpened(): void

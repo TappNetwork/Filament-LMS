@@ -1195,3 +1195,60 @@ test('embedded scorm exit course redirects to course completed when evaluation i
 
     expect($url)->toBe(CourseCompleted::getUrl([$primaryCourse->slug]));
 });
+
+test('step page mount resolves and syncs the implicit primary course for progress lookups', function () {
+    $user = CourseEvaluationLmsUser::create([
+        'name' => 'Implicit Primary User',
+        'email' => 'implicit-primary@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create([
+        'name' => 'Implicit Primary Evaluation',
+        'slug' => 'implicit-primary-evaluation',
+        'external_id' => 'implicit_primary_evaluation',
+        'is_private' => true,
+    ]);
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    $evaluationStep = Step::factory()->create([
+        'lesson_id' => $evaluationLesson->id,
+        'slug' => 'implicit-primary-evaluation-step',
+    ]);
+
+    $completedPrimary = Course::factory()->create([
+        'name' => 'Completed Implicit Training',
+        'slug' => 'completed-implicit-training',
+        'external_id' => 'completed_implicit_training',
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $completedPrimary->users()->attach($user->id);
+    $completedLesson = Lesson::factory()->create(['course_id' => $completedPrimary->id]);
+    $completedStep = Step::factory()->create(['lesson_id' => $completedLesson->id]);
+    $completedStep->complete($user);
+
+    $incompletePrimary = Course::factory()->create([
+        'name' => 'Incomplete Implicit Training',
+        'slug' => 'incomplete-implicit-training',
+        'external_id' => 'incomplete_implicit_training',
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+    $incompletePrimary->users()->attach($user->id);
+    Lesson::factory()->create(['course_id' => $incompletePrimary->id]);
+
+    // Only $completedPrimary has finished its training requirements, so
+    // activePrimaryCourseForEvaluation() deterministically resolves to it.
+    $evaluationStep->complete($user, $completedPrimary->id);
+
+    Auth::login($user);
+    fakeRequestForCourse(null, $evaluationCourse->slug);
+
+    $page = app(StepPage::class);
+    $page->mount($evaluationCourse->slug, $evaluationLesson->slug, $evaluationStep->slug);
+
+    expect($page->evaluationPrimaryCourseId)->toBe($completedPrimary->id)
+        ->and(app(CourseEvaluationService::class)->evaluationPrimaryCourseIdFromRequest())->toBe($completedPrimary->id)
+        ->and($evaluationStep->fresh()->completed_at)->not->toBeNull()
+        ->and((float) $evaluationCourse->fresh()->completion_percentage)->toBe(100.0);
+});

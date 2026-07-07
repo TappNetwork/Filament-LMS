@@ -82,6 +82,10 @@ class Step extends Page
 
             $this->evaluationPrimaryCourseId = $primaryCourse->id;
 
+            // Keep progress lookups, completion percentages, and navigation links in sync
+            // with the primary course resolved above, even when it wasn't in the query string.
+            request()->query->set('primaryCourse', (string) $primaryCourse->id);
+
             if (! $evaluationService->evaluationStepAvailableForPrimary($this->step, $user->id, $primaryCourse->id)) {
                 $currentStepUrl = $evaluationService->evaluationUrlForPrimaryCourse($primaryCourse);
 

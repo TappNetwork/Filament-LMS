@@ -6,6 +6,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
@@ -320,7 +321,7 @@ class Step extends Page
         }
     }
 
-    protected function embeddedCourseExitUrl(FilamentLmsUserInterface $user): string
+    protected function embeddedCourseExitUrl(Authenticatable&FilamentLmsUserInterface $user): string
     {
         $evaluationService = app(CourseEvaluationService::class);
 

@@ -236,7 +236,7 @@ final class CourseEvaluationService
         $courseSlug = request()->route('courseSlug');
 
         if ($courseSlug === null) {
-            return (int) $primaryCourseId;
+            return null;
         }
 
         $course = Course::query()
@@ -250,10 +250,6 @@ final class CourseEvaluationService
 
     public function evaluationStepAvailableForPrimary(Step $step, int|string $userId, int $primaryCourseId): bool
     {
-        if ($step->lesson->course->evaluation_course_id !== null) {
-            return true;
-        }
-
         $previousStepIds = $step->lesson->course->steps()
             ->where(function ($query) use ($step): void {
                 $query->where('lms_lessons.order', '<', $step->lesson->order)

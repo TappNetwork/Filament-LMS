@@ -31,6 +31,30 @@ use Tapp\FilamentLms\Tests\TestUser;
 
 class CourseEvaluationLmsUser extends TestUser implements FilamentLmsUserInterface {}
 
+/**
+ * Simulate a request to a step/course page, binding a `courseSlug` route
+ * parameter the way the real Step and CourseCompleted routes do, so
+ * evaluationPrimaryCourseIdFromRequest() can verify the current course.
+ */
+function fakeRequestForCourse(?int $primaryCourseId, string $courseSlug): void
+{
+    $request = Request::create('/', 'GET', $primaryCourseId !== null ? [
+        'primaryCourse' => (string) $primaryCourseId,
+    ] : []);
+
+    $request->setRouteResolver(fn () => new class($courseSlug)
+    {
+        public function __construct(private readonly string $courseSlug) {}
+
+        public function parameter($name, $default = null)
+        {
+            return $name === 'courseSlug' ? $this->courseSlug : $default;
+        }
+    });
+
+    app()->instance('request', $request);
+}
+
 beforeEach(function () {
     config(['filament-lms.evaluations.enabled' => true]);
 
@@ -260,16 +284,12 @@ test('shared evaluation progress stays scoped to the active primary course', fun
 
     $this->actingAs($user);
 
-    app()->instance('request', Request::create('/', 'GET', [
-        'primaryCourse' => (string) $secondPrimary->id,
-    ]));
+    fakeRequestForCourse($secondPrimary->id, $evaluationCourse->slug);
 
     expect($evaluationStep->fresh()->completed_at)->toBeNull()
         ->and((float) $evaluationCourse->fresh()->completion_percentage)->toBe(0.0);
 
-    app()->instance('request', Request::create('/', 'GET', [
-        'primaryCourse' => (string) $firstPrimary->id,
-    ]));
+    fakeRequestForCourse($firstPrimary->id, $evaluationCourse->slug);
 
     expect($evaluationStep->fresh()->completed_at)->not->toBeNull()
         ->and((float) $evaluationCourse->fresh()->completion_percentage)->toBe(100.0);
@@ -351,9 +371,7 @@ test('evaluation step urls preserve requested primary course context', function 
     ]);
 
     $this->actingAs($user);
-    app()->instance('request', Request::create('/', 'GET', [
-        'primaryCourse' => (string) $secondPrimary->id,
-    ]));
+    fakeRequestForCourse($secondPrimary->id, $evaluationCourse->slug);
 
     $expectedEvaluationUrl = StepPage::getUrl([
         $evaluationCourse->slug,
@@ -452,9 +470,7 @@ test('step page uses primary scoped evaluation progress for access checks', func
     ]);
 
     Auth::login($user);
-    app()->instance('request', Request::create('/', 'GET', [
-        'primaryCourse' => (string) $secondPrimary->id,
-    ]));
+    fakeRequestForCourse($secondPrimary->id, $evaluationCourse->slug);
 
     $evaluationService = app(CourseEvaluationService::class);
 

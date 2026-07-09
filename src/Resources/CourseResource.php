@@ -82,11 +82,13 @@ class CourseResource extends Resource
                             $set('external_id', Str::slug($state ?? '', '_'));
                         }
                     })
+                    ->unique(ignoreRecord: true)
                     ->required(),
                 TextInput::make('external_id')
                     ->label('External ID')
                     ->helperText('Used for external integrations like HubSpot. Updating this will cause a new property to be added to the integration.')
                     ->required()
+                    ->unique(ignoreRecord: true)
                     ->rules([
                         'regex:/^[a-z][a-z0-9_]*$/',
                         'max:100',
@@ -97,6 +99,7 @@ class CourseResource extends Resource
                     ]),
                 TextInput::make('slug')
                     ->helperText('Used for urls.')
+                    ->unique(ignoreRecord: true)
                     ->required(),
                 SpatieMediaLibraryFileUpload::make('image')
                     ->helperText('Upload a course image.')

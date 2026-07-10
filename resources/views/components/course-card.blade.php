@@ -1,10 +1,17 @@
 @php
+    use Illuminate\Support\Facades\Auth;
+    use Tapp\FilamentLms\Services\CourseEvaluationService;
+
     $creditsEnabled = config('filament-lms.credits_enabled');
     $creditCategories = $creditsEnabled ? $course->courseCreditCategories : collect();
     $isCompleted = $course->completed_at !== null;
     $completionPercentage = $course->completion_percentage;
     $isInProgress = ! $isCompleted && $completionPercentage > 0;
     $moduleCount = (int) ($course->lessons_count ?? $course->lessons()->count());
+    $evaluationService = app(CourseEvaluationService::class);
+    $pendingEvaluation = Auth::check()
+        && $evaluationService->hasPendingEvaluationForUser($course, Auth::id());
+    $evaluationUrl = $pendingEvaluation ? $course->evaluationSubmissionUrl() : null;
 @endphp
 <div class="flex overflow-hidden relative flex-col bg-white rounded-lg border border-gray-200 group">
   {{-- Image section: fixed height, image or grey + icon --}}
@@ -55,7 +62,14 @@
       <p class="text-sm text-gray-500">
         {{ $moduleCount }} {{ Str::plural('module', $moduleCount) }}
       </p>
-      @if ($isCompleted)
+      @if ($pendingEvaluation && $evaluationUrl)
+        <a
+          href="{{ $evaluationUrl }}"
+          class="relative z-10 inline-flex items-center rounded-lg bg-primary-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm ring-1 ring-primary-600 transition hover:bg-primary-700"
+        >
+          Complete Evaluation
+        </a>
+      @elseif ($isCompleted)
         <span class="inline-flex items-center rounded-full bg-success-50 px-2.5 py-1 text-xs font-medium text-success-700">Completed</span>
       @elseif ($isInProgress)
         <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">In Progress</span>

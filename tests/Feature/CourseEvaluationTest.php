@@ -632,6 +632,57 @@ test('evaluation course is never shown on the dashboard', function () {
         ->and(Course::accessibleTo($user)->pluck('id'))->toContain($primaryCourse->id);
 });
 
+test('pending evaluation replaces course card status badge conditions', function () {
+    $user = TestUser::create([
+        'name' => 'Course Card Evaluation User',
+        'email' => 'course-card-evaluation@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $evaluationCourse = Course::factory()->create([
+        'name' => 'Course Card Evaluation',
+        'slug' => 'course-card-evaluation',
+        'is_private' => true,
+    ]);
+
+    $evaluationLesson = Lesson::factory()->create(['course_id' => $evaluationCourse->id]);
+    Step::factory()->create(['lesson_id' => $evaluationLesson->id]);
+
+    $primaryCourse = Course::factory()->create([
+        'name' => 'Course Card Training',
+        'slug' => 'course-card-training',
+        'evaluation_course_id' => $evaluationCourse->id,
+        'is_private' => true,
+    ]);
+
+    $primaryCourse->users()->attach($user->id);
+
+    $primaryLesson = Lesson::factory()->create(['course_id' => $primaryCourse->id]);
+    $primaryStep = Step::factory()->create(['lesson_id' => $primaryLesson->id]);
+
+    $this->actingAs($user);
+
+    $service = app(CourseEvaluationService::class);
+
+    expect($service->hasPendingEvaluationForUser($primaryCourse, $user->id))->toBeFalse()
+        ->and((float) $primaryCourse->fresh()->completion_percentage)->toBe(0.0);
+
+    $primaryStep->complete($user);
+
+    $primaryCourse = $primaryCourse->fresh();
+    $evaluationUrl = $service->evaluationUrlForPrimaryCourse($primaryCourse);
+
+    expect($service->hasPendingEvaluationForUser($primaryCourse, $user->id))->toBeTrue()
+        ->and($evaluationUrl)->not->toBeNull()
+        ->and($primaryCourse->completed_at)->toBeNull()
+        ->and((float) $primaryCourse->completion_percentage)->toBe(100.0);
+
+    $evaluationCourse->steps()->first()->complete($user, $primaryCourse->id);
+
+    expect($service->hasPendingEvaluationForUser($primaryCourse->fresh(), $user->id))->toBeFalse()
+        ->and($primaryCourse->fresh()->completed_at)->not->toBeNull();
+});
+
 test('public primary course unlocks evaluation without enrollment on the training course', function () {
     $user = TestUser::create([
         'name' => 'Public Primary User',

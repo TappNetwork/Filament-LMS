@@ -176,7 +176,8 @@ return [
     'embedded_player_min_session_seconds_html5' => 300,
 
     // When true, incoming SCORM commit payloads are logged at debug level for troubleshooting.
-    'debug_scorm_commits' => env('FILAMENT_LMS_DEBUG_SCORM_COMMITS', false),
+    // Override in the consuming app's config/filament-lms.php (e.g. env('FILAMENT_LMS_DEBUG_SCORM_COMMITS', false)).
+    'debug_scorm_commits' => false,
 
     'common_cartridge_import' => [
         'delete_after_success' => true,

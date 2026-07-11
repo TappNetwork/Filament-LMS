@@ -333,6 +333,6 @@ final class ScormProgressService
         $parts = explode('.', $location);
         $last = end($parts);
 
-        return is_string($last) && $last !== '' ? $last : null;
+        return $last !== '' ? $last : null;
     }
 }

@@ -144,20 +144,28 @@ final class ScormProgressService
     public function completeStepByLocation(Course $course, Authenticatable $user, string $location): void
     {
         $step = $this->findStepByPlayerReference($course, $location);
+
         if ($step !== null) {
-            $step->complete($user);
+            $this->completeStepsUpTo($course, $user, $step);
         }
     }
 
     public function completeStepBySuspendData(Course $course, Authenticatable $user, string $suspendData): void
     {
-        foreach ($course->steps()->whereNotNull('player_slide_id')->pluck('player_slide_id') as $slideId) {
-            if ($slideId !== '' && str_contains($suspendData, (string) $slideId)) {
-                $step = $course->steps()->where('player_slide_id', $slideId)->first();
-                if ($step instanceof Step) {
-                    $step->complete($user);
-                }
+        $furthestStep = null;
+
+        foreach ($this->orderedEligibleSteps($course) as $step) {
+            if ($step->player_slide_id === null || $step->player_slide_id === '') {
+                continue;
             }
+
+            if (str_contains($suspendData, (string) $step->player_slide_id)) {
+                $furthestStep = $step;
+            }
+        }
+
+        if ($furthestStep instanceof Step) {
+            $this->completeStepsUpTo($course, $user, $furthestStep);
         }
     }
 
@@ -260,6 +268,31 @@ final class ScormProgressService
         return 'lms_player_progress_'.$course->id.'_'.$user->getAuthIdentifier();
     }
 
+    /**
+     * @return Collection<int, Step>
+     */
+    private function orderedEligibleSteps(Course $course): Collection
+    {
+        $course->loadMissing(['lessons.steps']);
+
+        return $course->lessons
+            ->sortBy('order')
+            ->flatMap(fn ($lesson) => $lesson->steps->sortBy('order'))
+            ->filter(fn (Step $step): bool => $step->material_type !== 'test')
+            ->values();
+    }
+
+    private function completeStepsUpTo(Course $course, Authenticatable $user, Step $targetStep): void
+    {
+        foreach ($this->orderedEligibleSteps($course) as $step) {
+            $step->complete($user);
+
+            if ($step->is($targetStep)) {
+                break;
+            }
+        }
+    }
+
     private function findStepByPlayerReference(Course $course, string $location): ?Step
     {
         $location = trim($location);
@@ -272,6 +305,15 @@ final class ScormProgressService
             return $exact;
         }
 
+        $locationSegment = $this->extractPlayerSlideSegment($location);
+
+        if ($locationSegment !== null) {
+            $segmentMatch = $course->steps()->where('player_slide_id', $locationSegment)->first();
+            if ($segmentMatch instanceof Step) {
+                return $segmentMatch;
+            }
+        }
+
         $matchingStep = $course->steps()
             ->whereNotNull('player_slide_id')
             ->get()
@@ -280,5 +322,17 @@ final class ScormProgressService
                     || str_contains($step->player_slide_id, $location)));
 
         return $matchingStep instanceof Step ? $matchingStep : null;
+    }
+
+    private function extractPlayerSlideSegment(string $location): ?string
+    {
+        if (! str_contains($location, '_player.') && ! str_contains($location, '.')) {
+            return null;
+        }
+
+        $parts = explode('.', $location);
+        $last = end($parts);
+
+        return is_string($last) && $last !== '' ? $last : null;
     }
 }

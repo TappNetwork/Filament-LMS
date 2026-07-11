@@ -428,6 +428,10 @@ final class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId, ?int $evaluationPrimaryCourseId = null): float
     {
+        if ($this->isEmbeddedPlayer() && $evaluationPrimaryCourseId === null) {
+            return $this->getEmbeddedPlayerCompletionPercentageForUser($userId);
+        }
+
         // Use eager-loaded steps when available to avoid N+1 queries on dashboard
         $steps = $this->relationLoaded('steps') ? $this->steps : $this->steps()->get();
 
@@ -452,6 +456,43 @@ final class Course extends Model implements HasMedia
         $completedStepUsers = $this->completedStepIdsForUser($steps, $userId, $evaluationPrimaryCourseId);
 
         return $completedStepUsers->count() / $steps->count() * 100;
+    }
+
+    private function getEmbeddedPlayerCompletionPercentageForUser(int|string $userId): float
+    {
+        $lessons = $this->relationLoaded('lessons')
+            ? $this->lessons
+            : $this->lessons()->with('steps')->get();
+
+        if ($lessons->isEmpty()) {
+            return 0;
+        }
+
+        $completedLessons = $lessons->filter(function (Lesson $lesson) use ($userId): bool {
+            $steps = $lesson->relationLoaded('steps')
+                ? $lesson->steps
+                : $lesson->steps()->get();
+
+            $eligibleSteps = $steps
+                ->filter(fn (Step $step): bool => $step->material_type !== 'test')
+                ->sortBy('order')
+                ->values();
+
+            if ($eligibleSteps->isEmpty()) {
+                return false;
+            }
+
+            /** @var Step $lastStep */
+            $lastStep = $eligibleSteps->last();
+
+            return StepUser::query()
+                ->where('user_id', $userId)
+                ->where('step_id', $lastStep->id)
+                ->whereNotNull('completed_at')
+                ->exists();
+        })->count();
+
+        return ($completedLessons / $lessons->count()) * 100;
     }
 
     public function certificateUrl(): string

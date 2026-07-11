@@ -149,22 +149,18 @@ class Step extends Page
                 ->color('gray')
                 ->action(fn () => $this->exitCourse());
 
-            if ($this->shouldRegisterHtml5Bridge()) {
-                $progressService = app(ScormProgressService::class);
-                $needsCompletionConfirm = $user !== null
-                    && ! $progressService->courseCompletedByUser($this->course, $user);
+            $progressService = app(ScormProgressService::class);
+            $needsCompletionConfirm = $this->shouldRegisterHtml5Bridge()
+                && $user !== null
+                && ! $progressService->courseCompletedByUser($this->course, $user);
 
-                if ($needsCompletionConfirm) {
-                    $exitCourse
-                        ->requiresConfirmation()
-                        ->modalHeading('Exit course')
-                        ->modalDescription('Mark this course as complete before returning to your courses?');
-                } elseif ($pendingEvaluation) {
-                    $exitCourse
-                        ->requiresConfirmation()
-                        ->modalHeading('Complete evaluation')
-                        ->modalDescription('You have finished the course content. Continue to the course evaluation?');
-                }
+            if ($needsCompletionConfirm) {
+                $exitCourse
+                    ->requiresConfirmation()
+                    ->modalHeading('Exit course')
+                    ->modalDescription('Mark this course as complete before returning to your courses?');
+            } elseif ($pendingEvaluation) {
+                $this->configureEvaluationPromptModal($exitCourse);
             }
 
             $actions[] = $exitCourse;
@@ -189,6 +185,25 @@ class Step extends Page
         }
 
         return $actions;
+    }
+
+    public function evaluationPromptAction(): Action
+    {
+        $action = Action::make('evaluationPrompt')
+            ->action(fn () => $this->redirectToEvaluation());
+
+        return $this->configureEvaluationPromptModal($action);
+    }
+
+    protected function configureEvaluationPromptModal(Action $action): Action
+    {
+        return $action
+            ->requiresConfirmation()
+            ->modalIcon('heroicon-o-check-circle')
+            ->modalIconColor('success')
+            ->modalHeading('Congratulations!')
+            ->modalDescription(fn (): string => 'You have completed "'.$this->course->name.'". Please complete the course evaluation before receiving your certificate.')
+            ->modalSubmitActionLabel('Complete Evaluation');
     }
 
     #[On('complete-step')]
@@ -307,22 +322,37 @@ class Step extends Page
         $evaluationService = app(CourseEvaluationService::class);
 
         if ($evaluationService->hasPendingEvaluationForUser($this->course, $user->id)) {
-            $this->course->ensureEvaluationAssigned($user->id);
+            $this->mountAction('evaluationPrompt');
 
-            $evaluationUrl = $evaluationService->evaluationUrlForPrimaryCourse($this->course);
-
-            if ($evaluationUrl !== null) {
-                $this->redirect($evaluationUrl);
-
-                return;
-            }
-
-            Notification::make()
-                ->title('Evaluation is not available yet')
-                ->body('The linked evaluation course does not have a form step configured. Please contact your administrator.')
-                ->warning()
-                ->send();
+            return;
         }
+    }
+
+    protected function redirectToEvaluation(): void
+    {
+        $user = Auth::user();
+        if (! $user instanceof FilamentLmsUserInterface) {
+            $this->redirect(Dashboard::getUrl());
+
+            return;
+        }
+
+        $evaluationService = app(CourseEvaluationService::class);
+        $this->course->ensureEvaluationAssigned($user->id);
+
+        $evaluationUrl = $evaluationService->evaluationUrlForPrimaryCourse($this->course);
+
+        if ($evaluationUrl !== null) {
+            $this->redirect($evaluationUrl);
+
+            return;
+        }
+
+        Notification::make()
+            ->title('Evaluation is not available yet')
+            ->body('The linked evaluation course does not have a form step configured. Please contact your administrator.')
+            ->warning()
+            ->send();
     }
 
     protected function embeddedCourseExitUrl(Authenticatable&FilamentLmsUserInterface $user): string

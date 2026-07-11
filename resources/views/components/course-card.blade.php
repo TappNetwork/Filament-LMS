@@ -1,12 +1,15 @@
 @php
     use Illuminate\Support\Facades\Auth;
     use Tapp\FilamentLms\Services\CourseEvaluationService;
+    use Tapp\FilamentLms\Services\ScormProgressService;
 
     $creditsEnabled = config('filament-lms.credits_enabled');
     $creditCategories = $creditsEnabled ? $course->courseCreditCategories : collect();
     $isCompleted = $course->completed_at !== null;
     $completionPercentage = $course->completion_percentage;
-    $isInProgress = ! $isCompleted && $completionPercentage > 0;
+    $hasStarted = Auth::check()
+        && app(ScormProgressService::class)->courseStartedByUser($course, Auth::user());
+    $isInProgress = ! $isCompleted && ($completionPercentage > 0 || $hasStarted);
     $moduleCount = (int) ($course->lessons_count ?? $course->lessons()->count());
     $evaluationService = app(CourseEvaluationService::class);
     $pendingEvaluation = Auth::check()

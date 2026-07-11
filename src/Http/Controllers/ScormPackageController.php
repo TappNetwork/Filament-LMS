@@ -45,12 +45,20 @@ final class ScormPackageController extends Controller
         $mimeType = $this->mimeType($realFile);
         $headers = $this->headersForMimeType($mimeType);
 
-        if ($course->isEmbeddedPlayer()
-            && $course->completionMode() === CompletionMode::Html5
-            && in_array($mimeType, ['text/html'], true)) {
+        if ($course->isEmbeddedPlayer() && in_array($mimeType, ['text/html'], true)) {
             $content = file_get_contents($realFile);
             if (is_string($content)) {
-                $content = $this->injectHtml5BridgeIntoHtml($content);
+                if ($course->completionMode() === CompletionMode::Html5) {
+                    $content = $this->injectHtml5BridgeIntoHtml($content);
+                }
+
+                if ($course->completionMode() === CompletionMode::Scorm12) {
+                    $content = $this->injectScorm12EmbeddedBridgesIntoHtml($content, $course, $relativePath);
+                }
+
+                // Injected progress bridges change per deploy; never let the browser cache the player HTML.
+                $headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0';
+                $headers['Pragma'] = 'no-cache';
 
                 return response($content, 200, $headers);
             }
@@ -63,11 +71,126 @@ final class ScormPackageController extends Controller
     {
         $script = view('filament-lms::components.html5-package-bridge-script')->render();
 
+        return $this->injectScriptIntoHtml($content, $script);
+    }
+
+    private function injectScorm12EmbeddedBridgesIntoHtml(string $content, Course $course, string $relativePath): string
+    {
+        $commitUrl = route('filament-lms.scorm-commit.store', ['course' => $course]);
+
+        if (! str_contains($content, 'data-lms-scorm-api-bridge')) {
+            $apiBridge = view('filament-lms::components.scorm-api-bridge-script', [
+                'commitUrl' => $commitUrl,
+            ])->render();
+            $content = $this->injectScriptIntoHead($content, $apiBridge);
+        }
+
+        if ($this->isRiseScormContentPage($relativePath) && ! str_contains($content, 'data-lms-rise-scorm-content-bridge')) {
+            $riseBridge = view('filament-lms::components.rise-scorm-content-bridge-script', [
+                'commitUrl' => $commitUrl,
+            ])->render();
+            $content = $this->injectScriptIntoHtml($content, $riseBridge);
+        }
+
+        if ($this->usesStorylineRusticiDriver($content) && ! str_contains($content, 'data-lms-storyline-rustici-driver-hook')) {
+            $rusticiHook = view('filament-lms::components.storyline-rustici-driver-hook-script', [
+                'commitUrl' => $commitUrl,
+            ])->render();
+            $content = $this->injectScriptAfterScormDriver($content, $rusticiHook);
+        }
+
+        return $this->injectStorylineScormBridgeIntoHtml($content, $course, $relativePath);
+    }
+
+    private function injectStorylineScormBridgeIntoHtml(string $content, Course $course, string $relativePath): string
+    {
+        if (str_contains($content, 'data-lms-storyline-scorm-bridge')) {
+            return $content;
+        }
+
+        $script = view('filament-lms::components.storyline-scorm-bridge-script', [
+            'commitUrl' => route('filament-lms.scorm-commit.store', ['course' => $course]),
+        ])->render();
+
+        if ($this->isStorylineLaunchPage($relativePath) && str_contains($content, 'bootstrapper.min.js')) {
+            return $this->injectScriptAfterBootstrapper($content, $script);
+        }
+
+        return $this->injectScriptIntoHtml($content, $script);
+    }
+
+    private function isRiseScormContentPage(string $relativePath): bool
+    {
+        $normalized = mb_strtolower($relativePath);
+
+        return str_contains($normalized, 'scormcontent/')
+            && (str_ends_with($normalized, '.html') || str_ends_with($normalized, '.htm'));
+    }
+
+    private function isStorylineLaunchPage(string $relativePath): bool
+    {
+        $normalized = mb_strtolower($relativePath);
+
+        return str_ends_with($normalized, 'index_lms.html');
+    }
+
+    private function usesStorylineRusticiDriver(string $content): bool
+    {
+        return str_contains($content, 'lms/scormdriver.js');
+    }
+
+    private function injectScriptAfterScormDriver(string $content, string $script): string
+    {
+        $updated = preg_replace(
+            '/(<script[^>]*lms\/scormdriver\.js[^>]*><\/script>)/i',
+            '$1'.$script,
+            $content,
+            1,
+        );
+
+        if (is_string($updated) && $updated !== $content) {
+            return $updated;
+        }
+
+        return $this->injectScriptIntoHead($content, $script);
+    }
+
+    private function injectScriptIntoHead(string $content, string $script): string
+    {
+        if (str_contains($content, '</head>')) {
+            return str_replace('</head>', $script.'</head>', $content);
+        }
+
+        if (str_contains($content, '<body')) {
+            return preg_replace('/<body\b/i', $script.'<body', $content, 1) ?? ($script.$content);
+        }
+
+        return $script.$content;
+    }
+
+    private function injectScriptIntoHtml(string $content, string $script): string
+    {
         if (str_contains($content, '</body>')) {
             return str_replace('</body>', $script.'</body>', $content);
         }
 
         return $content.$script;
+    }
+
+    private function injectScriptAfterBootstrapper(string $content, string $script): string
+    {
+        $updated = preg_replace(
+            '/(<script[^>]*bootstrapper\.min\.js[^>]*><\/script>)/i',
+            '$1'.$script,
+            $content,
+            1,
+        );
+
+        if (is_string($updated) && $updated !== $content) {
+            return $updated;
+        }
+
+        return $this->injectScriptIntoHtml($content, $script);
     }
 
     private function resolvePackageRoot(Document $document): ?string

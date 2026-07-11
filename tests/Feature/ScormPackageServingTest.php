@@ -263,3 +263,115 @@ test('serves html5 package index with injected bridge for embedded player course
         ->and($response->getContent())->toContain('hasSeenSlideChange')
         ->and($response->getContent())->toContain('count === 1 && isBeforeUnload');
 });
+
+test('serves scorm 1.2 package index with injected storyline bridge for embedded player courses', function () {
+    config([
+        'filament-lms.user_model' => TestUser::class,
+    ]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm12-bridge@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $packageId = (string) Str::uuid();
+    $relativePath = 'lms-scorm-packages/'.$packageId;
+    $packageRoot = storage_path('app/'.$relativePath);
+    if (! is_dir($packageRoot)) {
+        mkdir($packageRoot, 0755, true);
+    }
+    file_put_contents($packageRoot.'/index_lms.html', '<html><head><script src="lms/scormdriver.js"></script></head><body>Storyline player<script src="html5/lib/scripts/bootstrapper.min.js"></script></body></html>');
+
+    $course = Course::factory()->create([
+        'name' => 'Storyline SCORM Course',
+        'slug' => 'storyline-scorm-course',
+        'is_private' => false,
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $document = Document::query()->create([
+        'name' => 'Home',
+        'package_disk' => 'local',
+        'package_path' => $relativePath,
+        'package_launch_path' => 'index_lms.html',
+    ]);
+    Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'material_type' => 'document',
+        'material_id' => $document->id,
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get(route('filament-lms.scorm-package.show', [
+        'document' => $document->id,
+        'entry' => 'index_lms.html',
+    ]));
+
+    $response->assertSuccessful();
+    expect($response->getContent())->toContain('data-lms-storyline-scorm-bridge')
+        ->and($response->getContent())->toContain('data-lms-scorm-api-bridge')
+        ->and($response->getContent())->toContain('data-lms-storyline-rustici-driver-hook')
+        ->and($response->getContent())->toContain('getCurrentWindowSlide')
+        ->and($response->getContent())->toContain('loadTracker')
+        ->and($response->getContent())->toContain('scorm-commit');
+});
+
+test('serves rise scorm content pages with injected progress bridge for embedded player courses', function () {
+    config([
+        'filament-lms.user_model' => TestUser::class,
+    ]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'rise-content-bridge@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $packageId = (string) Str::uuid();
+    $relativePath = 'lms-scorm-packages/'.$packageId;
+    $packageRoot = storage_path('app/'.$relativePath);
+    if (! is_dir($packageRoot)) {
+        mkdir($packageRoot, 0755, true);
+    }
+    mkdir($packageRoot.'/scormcontent', 0755, true);
+    file_put_contents($packageRoot.'/scormcontent/index.html', '<html><body>Rise content</body></html>');
+
+    $course = Course::factory()->create([
+        'name' => 'Rise SCORM Course',
+        'slug' => 'rise-scorm-course',
+        'is_private' => false,
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $document = Document::query()->create([
+        'name' => 'Home',
+        'package_disk' => 'local',
+        'package_path' => $relativePath,
+        'package_launch_path' => 'scormdriver/indexAPI.html',
+    ]);
+    Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'material_type' => 'document',
+        'material_id' => $document->id,
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get(route('filament-lms.scorm-package.show', [
+        'document' => $document->id,
+        'entry' => 'scormcontent/index.html',
+    ]));
+
+    $response->assertSuccessful();
+    expect($response->getContent())->toContain('data-lms-rise-scorm-content-bridge')
+        ->and($response->getContent())->toContain('data-lms-scorm-api-bridge')
+        ->and($response->getContent())->toContain('scormcontent/');
+});

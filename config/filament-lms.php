@@ -175,6 +175,9 @@ return [
     'embedded_player_min_session_seconds' => 90,
     'embedded_player_min_session_seconds_html5' => 300,
 
+    // When true, incoming SCORM commit payloads are logged at debug level for troubleshooting.
+    'debug_scorm_commits' => env('FILAMENT_LMS_DEBUG_SCORM_COMMITS', false),
+
     'common_cartridge_import' => [
         'delete_after_success' => true,
         // Staging disk for UI uploads and extracted packages. Must be a local filesystem disk

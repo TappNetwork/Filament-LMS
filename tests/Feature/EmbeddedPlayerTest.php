@@ -260,6 +260,52 @@ test('scorm commit marks furthest step from storyline load tracker style suspend
         ->count())->toBe(2);
 });
 
+test('html5 embedded player completion percentage uses step count not lesson count', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'html5-step-progress@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Html5,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $firstStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $lastStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 1,
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    StepUser::query()->create([
+        'user_id' => $user->id,
+        'step_id' => $firstStep->id,
+        'completed_at' => now(),
+    ]);
+
+    expect((float) $course->fresh()->getCompletionPercentageForUser($user->id))->toBe(50.0);
+
+    StepUser::query()->create([
+        'user_id' => $user->id,
+        'step_id' => $lastStep->id,
+        'completed_at' => now(),
+    ]);
+
+    expect((float) $course->fresh()->getCompletionPercentageForUser($user->id))->toBe(100.0);
+});
+
 test('embedded player completion percentage is based on completed modules', function () {
     config(['filament-lms.user_model' => TestUser::class]);
 

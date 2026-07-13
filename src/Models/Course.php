@@ -428,7 +428,11 @@ final class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId, ?int $evaluationPrimaryCourseId = null): float
     {
-        if ($this->isEmbeddedPlayer() && $evaluationPrimaryCourseId === null) {
+        if (
+            $this->isEmbeddedPlayer()
+            && $this->completionMode() === CompletionMode::Scorm12
+            && $evaluationPrimaryCourseId === null
+        ) {
             return $this->getEmbeddedPlayerCompletionPercentageForUser($userId);
         }
 

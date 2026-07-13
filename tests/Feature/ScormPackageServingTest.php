@@ -386,3 +386,11 @@ test('embedded scorm parent bridge listens for iframe course completion messages
     expect($html)->toContain('lms-scorm-course-complete')
         ->and($html)->toContain('scorm-course-complete');
 });
+
+test('embedded scorm api bridge commits on LMSCommit when lesson status is terminal', function () {
+    $html = view('filament-lms::components.scorm-api-bridge-script', [
+        'commitUrl' => 'https://example.test/scorm-commit',
+    ])->render();
+
+    expect($html)->toContain("normalizedStatus === 'completed' || normalizedStatus === 'passed'");
+});

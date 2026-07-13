@@ -91,8 +91,12 @@
             return 'true';
         }),
         LMSCommit: apiMethod('LMSCommit', function () {
-            if (store['cmi.core.lesson_location'] || store['cmi.suspend_data']) {
-                commitAndMaybeComplete(store['cmi.core.lesson_status']);
+            const status = store['cmi.core.lesson_status'];
+            const hasProgress = Boolean(store['cmi.core.lesson_location'] || store['cmi.suspend_data']);
+            const normalizedStatus = String(status ?? '').toLowerCase();
+
+            if (hasProgress || normalizedStatus === 'completed' || normalizedStatus === 'passed') {
+                commitAndMaybeComplete(status);
             }
 
             return 'true';

@@ -318,6 +318,7 @@ test('serves scorm 1.2 package index with injected storyline bridge for embedded
         ->and($response->getContent())->toContain('data-lms-storyline-rustici-driver-hook')
         ->and($response->getContent())->toContain('getCurrentWindowSlide')
         ->and($response->getContent())->toContain('loadTracker')
+        ->and($response->getContent())->toContain('lms-scorm-course-complete')
         ->and($response->getContent())->toContain('scorm-commit');
 });
 
@@ -373,5 +374,15 @@ test('serves rise scorm content pages with injected progress bridge for embedded
     $response->assertSuccessful();
     expect($response->getContent())->toContain('data-lms-rise-scorm-content-bridge')
         ->and($response->getContent())->toContain('data-lms-scorm-api-bridge')
+        ->and($response->getContent())->toContain('lms-scorm-course-complete')
         ->and($response->getContent())->toContain('scormcontent/');
+});
+
+test('embedded scorm parent bridge listens for iframe course completion messages', function () {
+    $html = view('filament-lms::components.scorm-api-bridge', [
+        'commitUrl' => 'https://example.test/scorm-commit',
+    ])->render();
+
+    expect($html)->toContain('lms-scorm-course-complete')
+        ->and($html)->toContain('scorm-course-complete');
 });

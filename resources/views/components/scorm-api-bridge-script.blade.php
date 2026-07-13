@@ -36,7 +36,13 @@
         const normalized = String(status ?? '').toLowerCase();
 
         if (normalized === 'completed' || normalized === 'passed') {
-            window.dispatchEvent(new CustomEvent('scorm-course-complete'));
+            const origin = window.location.origin;
+
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'lms-scorm-course-complete' }, origin);
+            } else {
+                window.dispatchEvent(new CustomEvent('scorm-course-complete'));
+            }
         }
     }
 

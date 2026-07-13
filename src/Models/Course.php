@@ -468,35 +468,34 @@ final class Course extends Model implements HasMedia
             ? $this->lessons
             : $this->lessons()->with('steps')->get();
 
-        if ($lessons->isEmpty()) {
+        // Only lessons with non-test steps are trackable; test-only lessons are never
+        // marked complete and must not inflate the denominator below 100%.
+        $lastTrackableSteps = $lessons
+            ->map(function (Lesson $lesson): ?Step {
+                $steps = $lesson->relationLoaded('steps')
+                    ? $lesson->steps
+                    : $lesson->steps()->get();
+
+                $eligibleSteps = $steps
+                    ->filter(fn (Step $step): bool => $step->material_type !== 'test')
+                    ->sortBy('order')
+                    ->values();
+
+                return $eligibleSteps->isEmpty() ? null : $eligibleSteps->last();
+            })
+            ->filter();
+
+        if ($lastTrackableSteps->isEmpty()) {
             return 0;
         }
 
-        $completedLessons = $lessons->filter(function (Lesson $lesson) use ($userId): bool {
-            $steps = $lesson->relationLoaded('steps')
-                ? $lesson->steps
-                : $lesson->steps()->get();
+        $completedLessons = StepUser::query()
+            ->where('user_id', $userId)
+            ->whereIn('step_id', $lastTrackableSteps->pluck('id'))
+            ->whereNotNull('completed_at')
+            ->count();
 
-            $eligibleSteps = $steps
-                ->filter(fn (Step $step): bool => $step->material_type !== 'test')
-                ->sortBy('order')
-                ->values();
-
-            if ($eligibleSteps->isEmpty()) {
-                return false;
-            }
-
-            /** @var Step $lastStep */
-            $lastStep = $eligibleSteps->last();
-
-            return StepUser::query()
-                ->where('user_id', $userId)
-                ->where('step_id', $lastStep->id)
-                ->whereNotNull('completed_at')
-                ->exists();
-        })->count();
-
-        return ($completedLessons / $lessons->count()) * 100;
+        return ($completedLessons / $lastTrackableSteps->count()) * 100;
     }
 
     public function certificateUrl(): string

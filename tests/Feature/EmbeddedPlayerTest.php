@@ -355,6 +355,50 @@ test('embedded player completion percentage is based on completed modules', func
     expect((float) $course->fresh()->getCompletionPercentageForUser($user->id))->toBe(100.0);
 });
 
+test('embedded player completion percentage ignores lessons with only test steps', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'embedded-test-only-lesson-progress@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+    ]);
+    $contentLesson = Lesson::factory()->create(['course_id' => $course->id, 'order' => 1]);
+    $testOnlyLesson = Lesson::factory()->create(['course_id' => $course->id, 'order' => 2]);
+    $contentStep = Step::factory()->create([
+        'lesson_id' => $contentLesson->id,
+        'order' => 0,
+        'player_slide_id' => 'module-one',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $test = Test::query()->create(['name' => 'Quiz']);
+    Step::factory()->create([
+        'lesson_id' => $testOnlyLesson->id,
+        'order' => 0,
+        'material_type' => 'test',
+        'material_id' => $test->id,
+    ]);
+
+    StepUser::query()->create([
+        'user_id' => $user->id,
+        'step_id' => $contentStep->id,
+        'completed_at' => now(),
+    ]);
+
+    $course = $course->fresh();
+
+    expect((float) $course->getCompletionPercentageForUser($user->id))->toBe(100.0)
+        ->and(app(ScormProgressService::class)->courseCompletedByUser($course, $user))->toBeTrue();
+});
+
 test('scorm commit rejects html5 progress flags for scorm 1.2 courses', function () {
     config(['filament-lms.user_model' => TestUser::class]);
 

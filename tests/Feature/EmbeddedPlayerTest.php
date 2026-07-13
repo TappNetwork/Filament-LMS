@@ -214,6 +214,53 @@ test('scorm commit completes prior storyline steps when a later slide is reached
         ->count())->toBe(2);
 });
 
+test('scorm commit location matching resolves furthest step when player_slide_id values overlap', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm-location-prefix-overlap@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    // Prefix of later slide id — fuzzy str_contains would also match this earlier step.
+    $firstStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'player_slide_id' => 'mod',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $secondStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 1,
+        'player_slide_id' => 'mod-two',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $this->actingAs($user);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'lesson_location' => 'path/mod-two/index.html',
+        'lesson_status' => 'incomplete',
+    ])->assertSuccessful();
+
+    expect(StepUser::query()
+        ->where('user_id', $user->id)
+        ->whereIn('step_id', [$firstStep->id, $secondStep->id])
+        ->whereNotNull('completed_at')
+        ->count())->toBe(2);
+});
+
 test('scorm commit marks furthest step from storyline load tracker style suspend data', function () {
     config(['filament-lms.user_model' => TestUser::class]);
 

@@ -312,28 +312,41 @@ final class ScormProgressService
             return null;
         }
 
-        $exact = $course->steps()->where('player_slide_id', $location)->first();
+        $steps = $this->orderedSteps($course);
+        $locationSegment = $this->extractPlayerSlideSegment($location);
+
+        $exact = $steps->first(fn (Step $step): bool => $step->player_slide_id === $location);
         if ($exact instanceof Step) {
             return $exact;
         }
 
-        $locationSegment = $this->extractPlayerSlideSegment($location);
-
         if ($locationSegment !== null) {
-            $segmentMatch = $course->steps()->where('player_slide_id', $locationSegment)->first();
+            $segmentMatch = $steps->first(
+                fn (Step $step): bool => $step->player_slide_id === $locationSegment,
+            );
             if ($segmentMatch instanceof Step) {
                 return $segmentMatch;
             }
         }
 
-        $matchingStep = $course->steps()
-            ->whereNotNull('player_slide_id')
-            ->get()
-            ->first(fn (Step $step): bool => $step->player_slide_id !== null
-                && (str_contains($location, $step->player_slide_id)
-                    || str_contains($step->player_slide_id, $location)));
+        // Prefer the furthest course-ordered match when multiple player_slide_id values
+        // fuzzy-match the same location (e.g. prefix overlaps like "mod" vs "mod-two").
+        $furthestMatch = null;
 
-        return $matchingStep instanceof Step ? $matchingStep : null;
+        foreach ($steps as $step) {
+            if ($step->player_slide_id === null || $step->player_slide_id === '') {
+                continue;
+            }
+
+            if (
+                str_contains($location, $step->player_slide_id)
+                || str_contains($step->player_slide_id, $location)
+            ) {
+                $furthestMatch = $step;
+            }
+        }
+
+        return $furthestMatch instanceof Step ? $furthestMatch : null;
     }
 
     private function extractPlayerSlideSegment(string $location): ?string

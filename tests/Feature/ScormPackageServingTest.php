@@ -374,8 +374,67 @@ test('serves rise scorm content pages with injected progress bridge for embedded
     $response->assertSuccessful();
     expect($response->getContent())->toContain('data-lms-rise-scorm-content-bridge')
         ->and($response->getContent())->toContain('data-lms-scorm-api-bridge')
+        ->and($response->getContent())->not->toContain('data-lms-storyline-scorm-bridge')
         ->and($response->getContent())->toContain('lms-scorm-course-complete')
         ->and($response->getContent())->toContain('scormcontent/');
+});
+
+test('does not inject storyline bridge into rise scormdriver launch pages', function () {
+    config([
+        'filament-lms.user_model' => TestUser::class,
+    ]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'rise-launch-bridge@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $packageId = (string) Str::uuid();
+    $relativePath = 'lms-scorm-packages/'.$packageId;
+    $packageRoot = storage_path('app/'.$relativePath);
+    if (! is_dir($packageRoot)) {
+        mkdir($packageRoot, 0755, true);
+    }
+    mkdir($packageRoot.'/scormdriver', 0755, true);
+    file_put_contents(
+        $packageRoot.'/scormdriver/indexAPI.html',
+        '<html><head><script src="scormdriver.js"></script></head><body>Rise launch</body></html>',
+    );
+
+    $course = Course::factory()->create([
+        'name' => 'Rise Launch SCORM Course',
+        'slug' => 'rise-launch-scorm-course',
+        'is_private' => false,
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $document = Document::query()->create([
+        'name' => 'Home',
+        'package_disk' => 'local',
+        'package_path' => $relativePath,
+        'package_launch_path' => 'scormdriver/indexAPI.html',
+    ]);
+    Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'material_type' => 'document',
+        'material_id' => $document->id,
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get(route('filament-lms.scorm-package.show', [
+        'document' => $document->id,
+        'entry' => 'scormdriver/indexAPI.html',
+    ]));
+
+    $response->assertSuccessful();
+    expect($response->getContent())->toContain('data-lms-scorm-api-bridge')
+        ->and($response->getContent())->not->toContain('data-lms-storyline-scorm-bridge')
+        ->and($response->getContent())->not->toContain('data-lms-storyline-rustici-driver-hook');
 });
 
 test('embedded scorm parent bridge listens for iframe course completion messages', function () {

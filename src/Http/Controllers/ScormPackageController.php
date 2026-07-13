@@ -108,6 +108,12 @@ final class ScormPackageController extends Controller
             return $content;
         }
 
+        // Storyline-only: wraps SetBookmark/etc. and polls for those globals every 50ms.
+        // Rise (and other non-Storyline) HTML must not get this — those intervals never clear.
+        if (! $this->shouldInjectStorylineScormBridge($content, $relativePath)) {
+            return $content;
+        }
+
         $script = view('filament-lms::components.storyline-scorm-bridge-script', [
             'commitUrl' => route('filament-lms.scorm-commit.store', ['course' => $course]),
         ])->render();
@@ -117,6 +123,12 @@ final class ScormPackageController extends Controller
         }
 
         return $this->injectScriptIntoHtml($content, $script);
+    }
+
+    private function shouldInjectStorylineScormBridge(string $content, string $relativePath): bool
+    {
+        return $this->isStorylineLaunchPage($relativePath)
+            || str_contains($content, 'bootstrapper.min.js');
     }
 
     private function isRiseScormContentPage(string $relativePath): bool

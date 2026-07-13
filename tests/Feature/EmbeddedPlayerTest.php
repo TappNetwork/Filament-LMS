@@ -507,6 +507,70 @@ test('scorm commit does not bulk complete test steps', function () {
         ->exists())->toBeFalse();
 });
 
+test('scorm commit location matching a test step does not complete later content steps', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm-test-location@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $firstStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'player_slide_id' => 'content-before',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $test = Test::query()->create(['name' => 'Quiz']);
+    $testStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 1,
+        'player_slide_id' => 'test-slide',
+        'material_type' => 'test',
+        'material_id' => $test->id,
+    ]);
+    $laterStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 2,
+        'player_slide_id' => 'content-after',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $this->actingAs($user);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'lesson_location' => 'test-slide',
+        'lesson_status' => 'incomplete',
+    ])->assertSuccessful();
+
+    expect(StepUser::query()
+        ->where('user_id', $user->id)
+        ->where('step_id', $firstStep->id)
+        ->whereNotNull('completed_at')
+        ->exists())->toBeTrue()
+        ->and(StepUser::query()
+            ->where('user_id', $user->id)
+            ->where('step_id', $testStep->id)
+            ->whereNotNull('completed_at')
+            ->exists())->toBeFalse()
+        ->and(StepUser::query()
+            ->where('user_id', $user->id)
+            ->where('step_id', $laterStep->id)
+            ->whereNotNull('completed_at')
+            ->exists())->toBeFalse();
+});
+
 test('html5 record started creates launch step progress row', function () {
     config(['filament-lms.user_model' => TestUser::class]);
 

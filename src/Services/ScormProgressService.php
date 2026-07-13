@@ -271,21 +271,33 @@ final class ScormProgressService
     /**
      * @return Collection<int, Step>
      */
-    private function orderedEligibleSteps(Course $course): Collection
+    private function orderedSteps(Course $course): Collection
     {
         $course->loadMissing(['lessons.steps']);
 
         return $course->lessons
             ->sortBy('order')
             ->flatMap(fn ($lesson) => $lesson->steps->sortBy('order'))
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, Step>
+     */
+    private function orderedEligibleSteps(Course $course): Collection
+    {
+        return $this->orderedSteps($course)
             ->filter(fn (Step $step): bool => $step->material_type !== 'test')
             ->values();
     }
 
     private function completeStepsUpTo(Course $course, Authenticatable $user, Step $targetStep): void
     {
-        foreach ($this->orderedEligibleSteps($course) as $step) {
-            $step->complete($user);
+        // Include tests in iteration so a test target still stops the cascade.
+        foreach ($this->orderedSteps($course) as $step) {
+            if ($step->material_type !== 'test') {
+                $step->complete($user);
+            }
 
             if ($step->is($targetStep)) {
                 break;

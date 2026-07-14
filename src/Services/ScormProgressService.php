@@ -144,20 +144,28 @@ final class ScormProgressService
     public function completeStepByLocation(Course $course, Authenticatable $user, string $location): void
     {
         $step = $this->findStepByPlayerReference($course, $location);
+
         if ($step !== null) {
-            $step->complete($user);
+            $this->completeStepsUpTo($course, $user, $step);
         }
     }
 
     public function completeStepBySuspendData(Course $course, Authenticatable $user, string $suspendData): void
     {
-        foreach ($course->steps()->whereNotNull('player_slide_id')->pluck('player_slide_id') as $slideId) {
-            if ($slideId !== '' && str_contains($suspendData, (string) $slideId)) {
-                $step = $course->steps()->where('player_slide_id', $slideId)->first();
-                if ($step instanceof Step) {
-                    $step->complete($user);
-                }
+        $furthestStep = null;
+
+        foreach ($this->orderedEligibleSteps($course) as $step) {
+            if ($step->player_slide_id === null || $step->player_slide_id === '') {
+                continue;
             }
+
+            if (str_contains($suspendData, (string) $step->player_slide_id)) {
+                $furthestStep = $step;
+            }
+        }
+
+        if ($furthestStep instanceof Step) {
+            $this->completeStepsUpTo($course, $user, $furthestStep);
         }
     }
 
@@ -260,6 +268,43 @@ final class ScormProgressService
         return 'lms_player_progress_'.$course->id.'_'.$user->getAuthIdentifier();
     }
 
+    /**
+     * @return Collection<int, Step>
+     */
+    private function orderedSteps(Course $course): Collection
+    {
+        $course->loadMissing(['lessons.steps']);
+
+        return $course->lessons
+            ->sortBy('order')
+            ->flatMap(fn ($lesson) => $lesson->steps->sortBy('order'))
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, Step>
+     */
+    private function orderedEligibleSteps(Course $course): Collection
+    {
+        return $this->orderedSteps($course)
+            ->filter(fn (Step $step): bool => $step->material_type !== 'test')
+            ->values();
+    }
+
+    private function completeStepsUpTo(Course $course, Authenticatable $user, Step $targetStep): void
+    {
+        // Include tests in iteration so a test target still stops the cascade.
+        foreach ($this->orderedSteps($course) as $step) {
+            if ($step->material_type !== 'test') {
+                $step->complete($user);
+            }
+
+            if ($step->is($targetStep)) {
+                break;
+            }
+        }
+    }
+
     private function findStepByPlayerReference(Course $course, string $location): ?Step
     {
         $location = trim($location);
@@ -267,18 +312,52 @@ final class ScormProgressService
             return null;
         }
 
-        $exact = $course->steps()->where('player_slide_id', $location)->first();
+        $steps = $this->orderedSteps($course);
+        $locationSegment = $this->extractPlayerSlideSegment($location);
+
+        $exact = $steps->first(fn (Step $step): bool => $step->player_slide_id === $location);
         if ($exact instanceof Step) {
             return $exact;
         }
 
-        $matchingStep = $course->steps()
-            ->whereNotNull('player_slide_id')
-            ->get()
-            ->first(fn (Step $step): bool => $step->player_slide_id !== null
-                && (str_contains($location, $step->player_slide_id)
-                    || str_contains($step->player_slide_id, $location)));
+        if ($locationSegment !== null) {
+            $segmentMatch = $steps->first(
+                fn (Step $step): bool => $step->player_slide_id === $locationSegment,
+            );
+            if ($segmentMatch instanceof Step) {
+                return $segmentMatch;
+            }
+        }
 
-        return $matchingStep instanceof Step ? $matchingStep : null;
+        // Prefer the furthest course-ordered match when multiple player_slide_id values
+        // fuzzy-match the same location (e.g. prefix overlaps like "mod" vs "mod-two").
+        $furthestMatch = null;
+
+        foreach ($steps as $step) {
+            if ($step->player_slide_id === null || $step->player_slide_id === '') {
+                continue;
+            }
+
+            if (
+                str_contains($location, $step->player_slide_id)
+                || str_contains($step->player_slide_id, $location)
+            ) {
+                $furthestMatch = $step;
+            }
+        }
+
+        return $furthestMatch instanceof Step ? $furthestMatch : null;
+    }
+
+    private function extractPlayerSlideSegment(string $location): ?string
+    {
+        if (! str_contains($location, '_player.') && ! str_contains($location, '.')) {
+            return null;
+        }
+
+        $parts = explode('.', $location);
+        $last = end($parts);
+
+        return $last !== '' ? $last : null;
     }
 }

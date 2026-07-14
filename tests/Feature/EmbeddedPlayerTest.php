@@ -129,6 +129,323 @@ test('scorm commit marks step by player slide id and bulk completes on passed st
         ->exists())->toBeTrue();
 });
 
+test('scorm commit marks step by articulate storyline bookmark format', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm-storyline-bookmark@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $presentationStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'player_slide_id' => '6MJxGqrUPQe',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $this->actingAs($user);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'lesson_location' => '_player.6MZDyRg6qdt.6MJxGqrUPQe',
+        'lesson_status' => 'incomplete',
+    ])->assertSuccessful();
+
+    expect(StepUser::query()
+        ->where('user_id', $user->id)
+        ->where('step_id', $presentationStep->id)
+        ->whereNotNull('completed_at')
+        ->exists())->toBeTrue();
+});
+
+test('scorm commit completes prior storyline steps when a later slide is reached', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm-storyline-cascade@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $firstStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'player_slide_id' => 'first-slide',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $secondStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 1,
+        'player_slide_id' => 'second-slide',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $this->actingAs($user);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'lesson_location' => '_player.session.second-slide',
+        'lesson_status' => 'incomplete',
+    ])->assertSuccessful();
+
+    expect(StepUser::query()
+        ->where('user_id', $user->id)
+        ->whereIn('step_id', [$firstStep->id, $secondStep->id])
+        ->whereNotNull('completed_at')
+        ->count())->toBe(2);
+});
+
+test('scorm commit location matching resolves furthest step when player_slide_id values overlap', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm-location-prefix-overlap@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    // Prefix of later slide id — fuzzy str_contains would also match this earlier step.
+    $firstStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'player_slide_id' => 'mod',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $secondStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 1,
+        'player_slide_id' => 'mod-two',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $this->actingAs($user);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'lesson_location' => 'path/mod-two/index.html',
+        'lesson_status' => 'incomplete',
+    ])->assertSuccessful();
+
+    expect(StepUser::query()
+        ->where('user_id', $user->id)
+        ->whereIn('step_id', [$firstStep->id, $secondStep->id])
+        ->whereNotNull('completed_at')
+        ->count())->toBe(2);
+});
+
+test('scorm commit marks furthest step from storyline load tracker style suspend data', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm-storyline-load-tracker@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $firstStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'player_slide_id' => '5yZFhFvQaCN',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $secondStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 1,
+        'player_slide_id' => '6MJxGqrUPQe',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $this->actingAs($user);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'suspend_data' => '_player.session1.5yZFhFvQaCN|_player.session1.6MJxGqrUPQe',
+        'lesson_status' => 'incomplete',
+    ])->assertSuccessful();
+
+    expect(StepUser::query()
+        ->where('user_id', $user->id)
+        ->whereIn('step_id', [$firstStep->id, $secondStep->id])
+        ->whereNotNull('completed_at')
+        ->count())->toBe(2);
+});
+
+test('html5 embedded player completion percentage uses step count not lesson count', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'html5-step-progress@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Html5,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $firstStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $lastStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 1,
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    StepUser::query()->create([
+        'user_id' => $user->id,
+        'step_id' => $firstStep->id,
+        'completed_at' => now(),
+    ]);
+
+    expect((float) $course->fresh()->getCompletionPercentageForUser($user->id))->toBe(50.0);
+
+    StepUser::query()->create([
+        'user_id' => $user->id,
+        'step_id' => $lastStep->id,
+        'completed_at' => now(),
+    ]);
+
+    expect((float) $course->fresh()->getCompletionPercentageForUser($user->id))->toBe(100.0);
+});
+
+test('embedded player completion percentage is based on completed modules', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'embedded-module-progress@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+    ]);
+    $firstLesson = Lesson::factory()->create(['course_id' => $course->id, 'order' => 1]);
+    $secondLesson = Lesson::factory()->create(['course_id' => $course->id, 'order' => 2]);
+    $firstStep = Step::factory()->create([
+        'lesson_id' => $firstLesson->id,
+        'order' => 0,
+        'player_slide_id' => 'module-one',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $secondStep = Step::factory()->create([
+        'lesson_id' => $secondLesson->id,
+        'order' => 0,
+        'player_slide_id' => 'module-two',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    StepUser::query()->create([
+        'user_id' => $user->id,
+        'step_id' => $firstStep->id,
+        'completed_at' => now(),
+    ]);
+
+    expect((float) $course->fresh()->getCompletionPercentageForUser($user->id))->toBe(50.0);
+
+    StepUser::query()->create([
+        'user_id' => $user->id,
+        'step_id' => $secondStep->id,
+        'completed_at' => now(),
+    ]);
+
+    expect((float) $course->fresh()->getCompletionPercentageForUser($user->id))->toBe(100.0);
+});
+
+test('embedded player completion percentage ignores lessons with only test steps', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'embedded-test-only-lesson-progress@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+    ]);
+    $contentLesson = Lesson::factory()->create(['course_id' => $course->id, 'order' => 1]);
+    $testOnlyLesson = Lesson::factory()->create(['course_id' => $course->id, 'order' => 2]);
+    $contentStep = Step::factory()->create([
+        'lesson_id' => $contentLesson->id,
+        'order' => 0,
+        'player_slide_id' => 'module-one',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $test = Test::query()->create(['name' => 'Quiz']);
+    Step::factory()->create([
+        'lesson_id' => $testOnlyLesson->id,
+        'order' => 0,
+        'material_type' => 'test',
+        'material_id' => $test->id,
+    ]);
+
+    StepUser::query()->create([
+        'user_id' => $user->id,
+        'step_id' => $contentStep->id,
+        'completed_at' => now(),
+    ]);
+
+    $course = $course->fresh();
+
+    expect((float) $course->getCompletionPercentageForUser($user->id))->toBe(100.0)
+        ->and(app(ScormProgressService::class)->courseCompletedByUser($course, $user))->toBeTrue();
+});
+
 test('scorm commit rejects html5 progress flags for scorm 1.2 courses', function () {
     config(['filament-lms.user_model' => TestUser::class]);
 
@@ -279,6 +596,70 @@ test('scorm commit does not bulk complete test steps', function () {
         ->where('step_id', $testStep->id)
         ->whereNotNull('completed_at')
         ->exists())->toBeFalse();
+});
+
+test('scorm commit location matching a test step does not complete later content steps', function () {
+    config(['filament-lms.user_model' => TestUser::class]);
+
+    $user = TestUser::query()->create([
+        'name' => 'Learner',
+        'first_name' => 'Learner',
+        'last_name' => 'User',
+        'email' => 'scorm-test-location@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $course = Course::factory()->create([
+        'embedded_player' => true,
+        'completion_mode' => CompletionMode::Scorm12,
+        'is_private' => false,
+    ]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $firstStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 0,
+        'player_slide_id' => 'content-before',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+    $test = Test::query()->create(['name' => 'Quiz']);
+    $testStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 1,
+        'player_slide_id' => 'test-slide',
+        'material_type' => 'test',
+        'material_id' => $test->id,
+    ]);
+    $laterStep = Step::factory()->create([
+        'lesson_id' => $lesson->id,
+        'order' => 2,
+        'player_slide_id' => 'content-after',
+        'material_type' => null,
+        'material_id' => null,
+    ]);
+
+    $this->actingAs($user);
+
+    $this->postJson(route('filament-lms.scorm-commit.store', ['course' => $course]), [
+        'lesson_location' => 'test-slide',
+        'lesson_status' => 'incomplete',
+    ])->assertSuccessful();
+
+    expect(StepUser::query()
+        ->where('user_id', $user->id)
+        ->where('step_id', $firstStep->id)
+        ->whereNotNull('completed_at')
+        ->exists())->toBeTrue()
+        ->and(StepUser::query()
+            ->where('user_id', $user->id)
+            ->where('step_id', $testStep->id)
+            ->whereNotNull('completed_at')
+            ->exists())->toBeFalse()
+        ->and(StepUser::query()
+            ->where('user_id', $user->id)
+            ->where('step_id', $laterStep->id)
+            ->whereNotNull('completed_at')
+            ->exists())->toBeFalse();
 });
 
 test('html5 record started creates launch step progress row', function () {

@@ -428,6 +428,14 @@ final class Course extends Model implements HasMedia
 
     public function getCompletionPercentageForUser($userId, ?int $evaluationPrimaryCourseId = null): float
     {
+        if (
+            $this->isEmbeddedPlayer()
+            && $this->completionMode() === CompletionMode::Scorm12
+            && $evaluationPrimaryCourseId === null
+        ) {
+            return $this->getEmbeddedPlayerCompletionPercentageForUser($userId);
+        }
+
         // Use eager-loaded steps when available to avoid N+1 queries on dashboard
         $steps = $this->relationLoaded('steps') ? $this->steps : $this->steps()->get();
 
@@ -452,6 +460,42 @@ final class Course extends Model implements HasMedia
         $completedStepUsers = $this->completedStepIdsForUser($steps, $userId, $evaluationPrimaryCourseId);
 
         return $completedStepUsers->count() / $steps->count() * 100;
+    }
+
+    private function getEmbeddedPlayerCompletionPercentageForUser(int|string $userId): float
+    {
+        $lessons = $this->relationLoaded('lessons')
+            ? $this->lessons
+            : $this->lessons()->with('steps')->get();
+
+        // Only lessons with non-test steps are trackable; test-only lessons are never
+        // marked complete and must not inflate the denominator below 100%.
+        $lastTrackableSteps = $lessons
+            ->map(function (Lesson $lesson): ?Step {
+                $steps = $lesson->relationLoaded('steps')
+                    ? $lesson->steps
+                    : $lesson->steps()->get();
+
+                $eligibleSteps = $steps
+                    ->filter(fn (Step $step): bool => $step->material_type !== 'test')
+                    ->sortBy('order')
+                    ->values();
+
+                return $eligibleSteps->isEmpty() ? null : $eligibleSteps->last();
+            })
+            ->filter();
+
+        if ($lastTrackableSteps->isEmpty()) {
+            return 0;
+        }
+
+        $completedLessons = StepUser::query()
+            ->where('user_id', $userId)
+            ->whereIn('step_id', $lastTrackableSteps->pluck('id'))
+            ->whereNotNull('completed_at')
+            ->count();
+
+        return ($completedLessons / $lastTrackableSteps->count()) * 100;
     }
 
     public function certificateUrl(): string

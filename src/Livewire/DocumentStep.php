@@ -4,7 +4,6 @@ namespace Tapp\FilamentLms\Livewire;
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
-use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Services\ScormProgressService;
@@ -26,7 +25,6 @@ class DocumentStep extends Component
         $course = $step->lesson->course;
         $user = Auth::user();
         if ($course->isEmbeddedPlayer()
-            && $course->completionMode() === CompletionMode::Html5
             && $user !== null
             && $course->launchStep()?->is($step)) {
             app(ScormProgressService::class)->recordStarted($course, $user);

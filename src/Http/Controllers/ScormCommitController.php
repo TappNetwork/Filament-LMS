@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Services\ScormProgressService;
@@ -32,6 +33,18 @@ final class ScormCommitController extends Controller
             'initialized' => ['nullable', 'boolean'],
             'finished' => ['nullable', 'boolean'],
         ]);
+
+        if (config('filament-lms.debug_scorm_commits', false)) {
+            Log::debug('SCORM commit received', [
+                'course_id' => $course->id,
+                'user_id' => $user->getAuthIdentifier(),
+                'lesson_status' => $validated['lesson_status'] ?? null,
+                'lesson_location' => $validated['lesson_location'] ?? null,
+                'suspend_data_length' => isset($validated['suspend_data']) ? mb_strlen((string) $validated['suspend_data']) : 0,
+                'initialized' => $validated['initialized'] ?? null,
+                'finished' => $validated['finished'] ?? null,
+            ]);
+        }
 
         $service = app(ScormProgressService::class);
         $isHtml5Mode = $course->completionMode() === CompletionMode::Html5;

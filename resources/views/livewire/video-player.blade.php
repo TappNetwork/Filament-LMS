@@ -1,8 +1,8 @@
 <div>
     <div class="vidstack-player-custom" wire:ignore id="target"></div>
     <p class="text-sm text-gray-600 text-center mt-2">
-        Click to play/pause • Double click for fullscreen
-    </p> 
+        Tap to play/pause
+    </p>
 </div>
 
 @assets
@@ -17,8 +17,10 @@
     }
 
     @if (! auth()->user()->is_admin)
-    .vds-controls {
-        display: none;
+    /* Keep play/fullscreen controls; hide seek UI so learners cannot skip ahead. */
+    .vidstack-player-custom .vds-seek-button,
+    .vidstack-player-custom .vds-time-slider {
+        display: none !important;
     }
     @endif
 </style>
@@ -39,6 +41,7 @@ const player = await VidstackPlayer.create({
      playsInline: true,
      layout: new VidstackPlayerLayout({
         disableTimeSlider: true,
+        noScrubGesture: {{ auth()->user()->is_admin ? 'false' : 'true' }},
      }),
  });
 

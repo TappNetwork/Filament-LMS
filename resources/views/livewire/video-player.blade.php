@@ -13,17 +13,35 @@
     .vidstack-player-custom {
         display: block;
         width: min(100%, calc(60vh * 16 / 9));
-        aspect-ratio: 16 / 9;
-        height: auto;
         margin: 0 auto;
-        overflow: hidden;
-        position: relative;
     }
 
-    .vidstack-player-custom media-player,
-    .vidstack-player-custom .vds-video-layout {
+    .vidstack-player-custom media-player {
         width: 100%;
-        height: 100%;
+        aspect-ratio: 16 / 9;
+        contain: layout;
+        overflow: visible;
+    }
+
+    /*
+     * On mobile, the YouTube iframe paints above HTML overlays, so our Vidstack
+     * play button stacks on top of YouTube's native one. Until playback starts,
+     * hide Vidstack chrome/blocker so the learner only sees YouTube's play.
+     * After start, Vidstack controls take over (YouTube embed controls stay off).
+     */
+    .vidstack-player-custom media-player:not([data-started]) .vds-blocker,
+    .vidstack-player-custom media-player:not([data-started]) .vds-controls,
+    .vidstack-player-custom media-player:not([data-started]) .vds-gestures,
+    .vidstack-player-custom media-player:not([data-started]) .vds-buffering-indicator {
+        display: none !important;
+        pointer-events: none !important;
+    }
+
+    /* Vidstack small layout hangs the bottom bar slightly outside the player; keep it in frame. */
+    .vidstack-player-custom .vds-video-layout[data-sm] .vds-controls-group:nth-last-child(2),
+    .vidstack-player-custom .vds-video-layout[data-sm] .vds-controls-group:last-child {
+        margin-bottom: 0 !important;
+        margin-top: 0 !important;
     }
 
     @if (! auth()->user()->is_admin)

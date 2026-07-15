@@ -11,9 +11,19 @@
 
 <style>
     .vidstack-player-custom {
-        height: 60vh;
-        max-width: calc(60vh * 16/9);
+        display: block;
+        width: min(100%, calc(60vh * 16 / 9));
+        aspect-ratio: 16 / 9;
+        height: auto;
         margin: 0 auto;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .vidstack-player-custom media-player,
+    .vidstack-player-custom .vds-video-layout {
+        width: 100%;
+        height: 100%;
     }
 
     @if (! auth()->user()->is_admin)

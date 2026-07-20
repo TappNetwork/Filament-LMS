@@ -65,11 +65,7 @@ class CertificateController extends Controller
             ['course' => $course, 'user' => Auth::id()]
         );
 
-        $pdf = Browsershot::url($url)
-            ->waitUntilNetworkIdle()
-            ->showBackground()
-            ->landscape()
-            ->pdf();
+        $pdf = $this->browsershot($url)->pdf();
 
         $filename = Str::slug($course->name).'-'.Str::slug(Auth::user()->name).'-certificate-'.now()->toDateString().'.pdf';
 
@@ -79,5 +75,14 @@ class CertificateController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename='.$filename,
         ]);
+    }
+
+    public function browsershot(string $url): Browsershot
+    {
+        return Browsershot::url($url)
+            ->noSandbox()
+            ->waitUntilNetworkIdle()
+            ->showBackground()
+            ->landscape();
     }
 }

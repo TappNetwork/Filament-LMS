@@ -332,6 +332,51 @@ Set it to `true` to enable top navigation on the LMS dashboard (courses list pag
 
 Use to display or not the `Exit LMS` link on top bar.
 
+## SCORM / Common Cartridge Import
+
+Admin users can import SCORM 1.2 or Articulate Storyline / Rise ZIP packages from the Courses list via **Import SCORM Package**. Packages are processed in the background and create the corresponding course, lessons, and steps.
+
+### Upload size limits
+
+Configure max ZIP size and Livewire temporary upload timeout under `common_cartridge_import` in `config/filament-lms.php`:
+
+```php
+'common_cartridge_import' => [
+    'storage_disk' => 'local', // Must be a local filesystem disk (ZipArchive needs a path)
+    'storage_directory' => 'filament-lms/cartridge-imports',
+    'max_upload_size_kb' => 512000, // ~500 MB
+    'max_upload_time_minutes' => 10,
+],
+```
+
+Also ensure `php.ini` `upload_max_filesize` and `post_max_size` meet or exceed your max upload size when using the default Filament file upload.
+
+### Chunked (multipart) uploads with Uppy
+
+Large SCORM packages often exceed server's request limit when uploaded in a single request. To use chunked uploads instead:
+
+1. Install the optional [spykapps/filament-uppy-upload](https://github.com/SpykApp/uppy-upload-plugin) package:
+
+```bash
+composer require spykapps/filament-uppy-upload
+php artisan filament:assets
+```
+
+2. Enable multipart upload in `config/filament-lms.php`:
+
+```php
+'common_cartridge_import' => [
+    // ...
+    'multipart_upload' => [
+        'enabled' => true,
+        // Chunk size in bytes (5MB works well with Cloudflare)
+        'chunk_size' => 5 * 1024 * 1024,
+    ],
+],
+```
+
+When `multipart_upload.enabled` is `true` **and** `spykapps/filament-uppy-upload` is installed, the Import SCORM Package action uses Uppy’s chunked uploader. Otherwise it falls back to Filament’s standard `FileUpload`.
+
 ## Certificate Customization
 
 The LMS package generates PDF certificates when users complete courses. You can customize the appearance and content of certificates using the following configuration options:

@@ -193,6 +193,17 @@ return [
         'max_upload_size_kb' => 512000,
         // Livewire temporary upload timeout in minutes for large SCORM packages.
         'max_upload_time_minutes' => 10,
+        /*
+        | Chunked (multipart) SCORM ZIP uploads via spykapps/filament-uppy-upload.
+        | When enabled and that package is installed, the Import SCORM Package action uses
+        | Uppy instead of Filament FileUpload so large packages stay under Cloudflare's
+        | ~100MB request limit. Requires: composer require spykapps/filament-uppy-upload
+        */
+        'multipart_upload' => [
+            'enabled' => false,
+            // Chunk size in bytes (5MB works well with Cloudflare).
+            'chunk_size' => 5 * 1024 * 1024,
+        ],
     ],
 
     // Optional path to Node binary for Articulate slide JSON extraction

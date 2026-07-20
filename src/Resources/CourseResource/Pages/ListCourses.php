@@ -5,11 +5,11 @@ namespace Tapp\FilamentLms\Resources\CourseResource\Pages;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Jobs\ImportCourseFromCsv;
 use Tapp\FilamentLms\Resources\CourseResource;
@@ -88,23 +88,12 @@ class ListCourses extends ListRecords
                 ->label('Import SCORM Package')
                 ->icon('heroicon-o-archive-box-arrow-down')
                 ->schema([
-                    FileUpload::make('file')
-                        ->label('ZIP package')
-                        ->required()
-                        ->storeFiles(false)
-                        ->acceptedFileTypes([
-                            'application/zip',
-                            'application/x-zip-compressed',
-                            'application/octet-stream',
-                        ])
-                        ->rules(['mimes:zip'])
-                        ->maxSize($maxUploadSizeKb)
-                        ->helperText('Upload a SCORM 1.2 or Articulate Storyline / Rise ZIP export. Large packages may take a minute to upload.'),
+                    $this->scormPackageUploadField($maxUploadSizeKb),
                 ])
                 ->action(function (array $data, CartridgeImportStarter $importStarter): void {
-                    $file = $importStarter->resolveUploadedFile($data['file'] ?? null);
+                    $absolutePath = $importStarter->stageUploadedCartridge($data['file'] ?? null);
 
-                    if ($file === null) {
+                    if ($absolutePath === null) {
                         Notification::make()
                             ->title('Import failed')
                             ->body('Could not read the uploaded file.')
@@ -114,24 +103,6 @@ class ListCourses extends ListRecords
                         return;
                     }
 
-                    $directory = (string) config('filament-lms.common_cartridge_import.storage_directory', 'filament-lms/cartridge-imports');
-                    $storedPath = $file->storeAs(
-                        $directory,
-                        Str::uuid().'.zip',
-                        'local'
-                    );
-
-                    if ($storedPath === false) {
-                        Notification::make()
-                            ->title('Import failed')
-                            ->body('Could not store the uploaded file.')
-                            ->danger()
-                            ->send();
-
-                        return;
-                    }
-
-                    $absolutePath = Storage::disk('local')->path($storedPath);
                     $userId = auth()->id();
 
                     if ($userId === null) {
@@ -158,5 +129,47 @@ class ListCourses extends ListRecords
                 }),
             CreateAction::make(),
         ];
+    }
+
+    protected function scormPackageUploadField(int $maxUploadSizeKb): Field
+    {
+        $helperText = 'Upload a SCORM 1.2 or Articulate Storyline / Rise ZIP export. Large packages may take a minute to upload.';
+        $acceptedFileTypes = [
+            'application/zip',
+            'application/x-zip-compressed',
+            'application/octet-stream',
+        ];
+
+        if (CartridgeImportStarter::usesMultipartUpload()) {
+            /** @var class-string<Field> $uppyUploadClass */
+            $uppyUploadClass = 'SpykApp\\UppyUpload\\Forms\\Components\\UppyUpload';
+            $importStarter = app(CartridgeImportStarter::class);
+            $chunkSize = (int) config('filament-lms.common_cartridge_import.multipart_upload.chunk_size', 5 * 1024 * 1024);
+
+            return $uppyUploadClass::make('file')
+                ->label('ZIP package')
+                ->required()
+                ->disk($importStarter->storageDisk())
+                ->directory($importStarter->storageDirectory())
+                ->acceptedFileTypes($acceptedFileTypes)
+                ->maxFileSize($maxUploadSizeKb * 1024)
+                ->chunkSize($chunkSize)
+                ->single()
+                ->webcam(false)
+                ->screenCapture(false)
+                ->audio(false)
+                ->imageEditor(false)
+                ->note($helperText)
+                ->helperText($helperText);
+        }
+
+        return FileUpload::make('file')
+            ->label('ZIP package')
+            ->required()
+            ->storeFiles(false)
+            ->acceptedFileTypes($acceptedFileTypes)
+            ->rules(['mimes:zip'])
+            ->maxSize($maxUploadSizeKb)
+            ->helperText($helperText);
     }
 }

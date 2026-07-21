@@ -215,3 +215,9 @@ parameters:
 			identifier: property.nonObject
 			count: 1
 			path: src/Resources/TestResource/Pages/EditTest.php
+
+		-
+			message: '#^Call to static method make\(\) on an unknown class SpykApp\\UppyUpload\\Forms\\Components\\UppyUpload\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Resources/CourseResource/Pages/ListCourses.php

@@ -42,14 +42,17 @@ final class CartridgeImportStarter
     /**
      * Stage an uploaded SCORM ZIP and return its absolute filesystem path.
      *
-     * With multipart upload enabled, the file is already on the staging disk and
-     * $file is a relative storage path (or array of paths) from Uppy.
-     * Otherwise $file is a Filament/Livewire temporary upload.
+     * Always stores under a UUID filename so concurrent imports of identically
+     * named packages cannot overwrite each other before the queued job runs.
+     *
+     * With multipart upload enabled, $file is a relative storage path (or array
+     * of paths) from Uppy and is moved to a unique name. Otherwise $file is a
+     * Filament/Livewire temporary upload that is stored as a unique ZIP.
      */
     public function stageUploadedCartridge(mixed $file): ?string
     {
         if (self::usesMultipartUpload()) {
-            return $this->absolutePathFromStoredRelativePath($file);
+            return $this->stageMultipartCartridge($file);
         }
 
         $uploadedFile = $this->resolveUploadedFile($file);
@@ -71,6 +74,48 @@ final class CartridgeImportStarter
         }
 
         return Storage::disk($disk)->path($storedPath);
+    }
+
+    /**
+     * Move an Uppy-uploaded ZIP to a UUID filename under the staging directory.
+     */
+    public function stageMultipartCartridge(mixed $file): ?string
+    {
+        if (is_array($file)) {
+            $file = Arr::first($file);
+        }
+
+        if (! is_string($file) || $file === '') {
+            return null;
+        }
+
+        $disk = $this->storageDisk();
+        $storage = Storage::disk($disk);
+        $uniqueRelativePath = rtrim($this->storageDirectory(), '/').'/'.Str::uuid().'.zip';
+
+        if ($storage->exists($file)) {
+            if ($file === $uniqueRelativePath) {
+                return $storage->path($file);
+            }
+
+            if (! $storage->move($file, $uniqueRelativePath)) {
+                return null;
+            }
+
+            return $storage->path($uniqueRelativePath);
+        }
+
+        if (! is_file($file)) {
+            return null;
+        }
+
+        $contents = file_get_contents($file);
+
+        if ($contents === false || ! $storage->put($uniqueRelativePath, $contents)) {
+            return null;
+        }
+
+        return $storage->path($uniqueRelativePath);
     }
 
     /**

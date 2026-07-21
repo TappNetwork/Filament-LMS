@@ -131,7 +131,41 @@ test('stage uploaded cartridge stores livewire upload when multipart is disabled
 
     expect($absolutePath)->not->toBeNull()
         ->and(is_file($absolutePath))->toBeTrue()
-        ->and(str_ends_with($absolutePath, '.zip'))->toBeTrue();
+        ->and(str_ends_with($absolutePath, '.zip'))->toBeTrue()
+        ->and(basename($absolutePath))->toMatch('/^[0-9a-f-]{36}\.zip$/i');
 
     @unlink($absolutePath);
+});
+
+test('stage multipart cartridge renames uppy upload to a unique uuid zip', function () {
+    $starter = app(CartridgeImportStarter::class);
+    $disk = $starter->storageDisk();
+    $sourceRelativePath = $starter->storageDirectory().'/same-package-name.zip';
+
+    Storage::disk($disk)->put($sourceRelativePath, file_get_contents(__DIR__.'/../fixtures/common-cartridge.zip'));
+
+    $firstPath = $starter->stageMultipartCartridge($sourceRelativePath);
+
+    expect($firstPath)->not->toBeNull()
+        ->and(is_file($firstPath))->toBeTrue()
+        ->and(basename($firstPath))->toMatch('/^[0-9a-f-]{36}\.zip$/i')
+        ->and(Storage::disk($disk)->exists($sourceRelativePath))->toBeFalse();
+
+    $secondSource = $starter->storageDirectory().'/same-package-name.zip';
+    Storage::disk($disk)->put($secondSource, file_get_contents(__DIR__.'/../fixtures/common-cartridge.zip'));
+
+    $secondPath = $starter->stageMultipartCartridge([$secondSource]);
+
+    expect($secondPath)->not->toBeNull()
+        ->and($secondPath)->not->toBe($firstPath)
+        ->and(is_file($firstPath))->toBeTrue()
+        ->and(is_file($secondPath))->toBeTrue()
+        ->and(basename($secondPath))->toMatch('/^[0-9a-f-]{36}\.zip$/i');
+
+    @unlink($firstPath);
+    @unlink($secondPath);
+});
+
+test('stage multipart cartridge returns null for missing uppy path', function () {
+    expect(app(CartridgeImportStarter::class)->stageMultipartCartridge('missing-uppy-upload.zip'))->toBeNull();
 });

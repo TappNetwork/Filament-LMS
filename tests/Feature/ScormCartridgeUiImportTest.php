@@ -167,5 +167,29 @@ test('stage multipart cartridge renames uppy upload to a unique uuid zip', funct
 });
 
 test('stage multipart cartridge returns null for missing uppy path', function () {
-    expect(app(CartridgeImportStarter::class)->stageMultipartCartridge('missing-uppy-upload.zip'))->toBeNull();
+    $starter = app(CartridgeImportStarter::class);
+
+    expect($starter->stageMultipartCartridge('missing-uppy-upload.zip'))->toBeNull()
+        ->and($starter->stageMultipartCartridge($starter->storageDirectory().'/missing-uppy-upload.zip'))->toBeNull();
+});
+
+test('staging path resolution rejects absolute paths and path traversal', function () {
+    $starter = app(CartridgeImportStarter::class);
+    $disk = $starter->storageDisk();
+    $outsidePath = storage_path('app/outside-scorm-staging.zip');
+
+    file_put_contents($outsidePath, file_get_contents(__DIR__.'/../fixtures/common-cartridge.zip'));
+
+    $traversalRelative = $starter->storageDirectory().'/../outside-scorm-staging.zip';
+
+    expect($starter->absolutePathFromStoredRelativePath($outsidePath))->toBeNull()
+        ->and($starter->absolutePathFromStoredRelativePath('/etc/passwd'))->toBeNull()
+        ->and($starter->absolutePathFromStoredRelativePath($traversalRelative))->toBeNull()
+        ->and($starter->stageMultipartCartridge($outsidePath))->toBeNull()
+        ->and($starter->stageMultipartCartridge('/etc/passwd'))->toBeNull()
+        ->and($starter->stageMultipartCartridge($traversalRelative))->toBeNull()
+        ->and($starter->validatedStagingRelativePath('other-directory/package.zip'))->toBeNull();
+
+    @unlink($outsidePath);
+    Storage::disk($disk)->delete($traversalRelative);
 });

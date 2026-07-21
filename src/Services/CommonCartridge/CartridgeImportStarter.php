@@ -78,40 +78,26 @@ final class CartridgeImportStarter
 
     /**
      * Move an Uppy-uploaded ZIP to a UUID filename under the staging directory.
+     *
+     * Only accepts disk-relative paths that resolve under the configured staging
+     * directory — never arbitrary filesystem paths from form state.
      */
     public function stageMultipartCartridge(mixed $file): ?string
     {
-        if (is_array($file)) {
-            $file = Arr::first($file);
-        }
+        $sourceRelativePath = $this->validatedStagingRelativePath($file);
 
-        if (! is_string($file) || $file === '') {
+        if ($sourceRelativePath === null) {
             return null;
         }
 
-        $disk = $this->storageDisk();
-        $storage = Storage::disk($disk);
+        $storage = Storage::disk($this->storageDisk());
         $uniqueRelativePath = rtrim($this->storageDirectory(), '/').'/'.Str::uuid().'.zip';
 
-        if ($storage->exists($file)) {
-            if ($file === $uniqueRelativePath) {
-                return $storage->path($file);
-            }
-
-            if (! $storage->move($file, $uniqueRelativePath)) {
-                return null;
-            }
-
-            return $storage->path($uniqueRelativePath);
+        if ($sourceRelativePath === $uniqueRelativePath) {
+            return $storage->path($sourceRelativePath);
         }
 
-        if (! is_file($file)) {
-            return null;
-        }
-
-        $contents = file_get_contents($file);
-
-        if ($contents === false || ! $storage->put($uniqueRelativePath, $contents)) {
+        if (! $storage->move($sourceRelativePath, $uniqueRelativePath)) {
             return null;
         }
 
@@ -120,29 +106,19 @@ final class CartridgeImportStarter
 
     /**
      * Resolve a relative storage path (from Uppy) to an absolute filesystem path.
+     *
+     * Rejects absolute paths and anything that does not resolve under the
+     * configured SCORM staging disk/directory.
      */
     public function absolutePathFromStoredRelativePath(mixed $file): ?string
     {
-        if (is_array($file)) {
-            $file = Arr::first($file);
-        }
+        $relativePath = $this->validatedStagingRelativePath($file);
 
-        if (! is_string($file) || $file === '') {
+        if ($relativePath === null) {
             return null;
         }
 
-        if (is_file($file)) {
-            return $file;
-        }
-
-        $disk = $this->storageDisk();
-        $storage = Storage::disk($disk);
-
-        if (! $storage->exists($file)) {
-            return null;
-        }
-
-        return $storage->path($file);
+        return Storage::disk($this->storageDisk())->path($relativePath);
     }
 
     /**
@@ -189,5 +165,74 @@ final class CartridgeImportStarter
     public function storageDirectory(): string
     {
         return (string) config('filament-lms.common_cartridge_import.storage_directory', 'filament-lms/cartridge-imports');
+    }
+
+    /**
+     * Return a disk-relative path only when it exists under the SCORM staging directory.
+     */
+    public function validatedStagingRelativePath(mixed $file): ?string
+    {
+        if (is_array($file)) {
+            $file = Arr::first($file);
+        }
+
+        if (! is_string($file) || $file === '') {
+            return null;
+        }
+
+        if ($this->isAbsolutePath($file) || str_contains($file, "\0")) {
+            return null;
+        }
+
+        $normalized = ltrim(str_replace('\\', '/', $file), '/');
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        foreach (explode('/', $normalized) as $segment) {
+            if ($segment === '..') {
+                return null;
+            }
+        }
+
+        $directory = trim(str_replace('\\', '/', $this->storageDirectory()), '/');
+
+        if ($directory === '' || ! str_starts_with($normalized, $directory.'/')) {
+            return null;
+        }
+
+        $storage = Storage::disk($this->storageDisk());
+
+        if (! $storage->exists($normalized)) {
+            return null;
+        }
+
+        $absolutePath = $storage->path($normalized);
+        $stagingRoot = $storage->path($directory);
+
+        $realFile = realpath($absolutePath);
+        $realRoot = realpath($stagingRoot);
+
+        if ($realFile === false || $realRoot === false || ! is_file($realFile)) {
+            return null;
+        }
+
+        $realRootPrefix = rtrim($realRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+
+        if (! str_starts_with($realFile, $realRootPrefix)) {
+            return null;
+        }
+
+        return $normalized;
+    }
+
+    private function isAbsolutePath(string $path): bool
+    {
+        if (str_starts_with($path, '/') || str_starts_with($path, '\\')) {
+            return true;
+        }
+
+        return (bool) preg_match('/^[A-Za-z]:[\\\\\\/]/', $path);
     }
 }

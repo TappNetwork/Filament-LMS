@@ -11,6 +11,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Str;
+use SpykApp\UppyUpload\Forms\Components\UppyUpload;
 use Tapp\FilamentLms\Jobs\ImportCourseFromCsv;
 use Tapp\FilamentLms\Resources\CourseResource;
 use Tapp\FilamentLms\Services\CommonCartridge\CartridgeImportStarter;
@@ -141,26 +142,7 @@ class ListCourses extends ListRecords
         ];
 
         if (CartridgeImportStarter::usesMultipartUpload()) {
-            /** @var class-string<Field> $uppyUploadClass */
-            $uppyUploadClass = 'SpykApp\\UppyUpload\\Forms\\Components\\UppyUpload';
-            $importStarter = app(CartridgeImportStarter::class);
-            $chunkSize = (int) config('filament-lms.common_cartridge_import.multipart_upload.chunk_size', 5 * 1024 * 1024);
-
-            return $uppyUploadClass::make('file')
-                ->label('ZIP package')
-                ->required()
-                ->disk($importStarter->storageDisk())
-                ->directory($importStarter->storageDirectory())
-                ->acceptedFileTypes($acceptedFileTypes)
-                ->maxFileSize($maxUploadSizeKb * 1024)
-                ->chunkSize($chunkSize)
-                ->single()
-                ->webcam(false)
-                ->screenCapture(false)
-                ->audio(false)
-                ->imageEditor(false)
-                ->note($helperText)
-                ->helperText($helperText);
+            return $this->makeUppyScormPackageUploadField($maxUploadSizeKb, $helperText, $acceptedFileTypes);
         }
 
         return FileUpload::make('file')
@@ -170,6 +152,33 @@ class ListCourses extends ListRecords
             ->acceptedFileTypes($acceptedFileTypes)
             ->rules(['mimes:zip'])
             ->maxSize($maxUploadSizeKb)
+            ->helperText($helperText);
+    }
+
+    /**
+     * Build the Uppy chunked upload field (optional spykapps/filament-uppy-upload).
+     *
+     * @param  list<string>  $acceptedFileTypes
+     */
+    protected function makeUppyScormPackageUploadField(int $maxUploadSizeKb, string $helperText, array $acceptedFileTypes): Field
+    {
+        $importStarter = app(CartridgeImportStarter::class);
+        $chunkSize = (int) config('filament-lms.common_cartridge_import.multipart_upload.chunk_size', 5 * 1024 * 1024);
+
+        return UppyUpload::make('file')
+            ->label('ZIP package')
+            ->required()
+            ->disk($importStarter->storageDisk())
+            ->directory($importStarter->storageDirectory())
+            ->acceptedFileTypes($acceptedFileTypes)
+            ->maxFileSize($maxUploadSizeKb * 1024)
+            ->chunkSize($chunkSize)
+            ->single()
+            ->webcam(false)
+            ->screenCapture(false)
+            ->audio(false)
+            ->imageEditor(false)
+            ->note($helperText)
             ->helperText($helperText);
     }
 }

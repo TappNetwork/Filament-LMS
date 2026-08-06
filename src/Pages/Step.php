@@ -3,7 +3,11 @@
 namespace Tapp\FilamentLms\Pages;
 
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
+use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Notifications\Notification;
+use Filament\Pages\Enums\SubNavigationPosition;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,11 +17,13 @@ use Livewire\Attributes\On;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Enums\CompletionMode;
+use Tapp\FilamentLms\Enums\CourseContext;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step as StepModel;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Services\ScormProgressService;
+use Tapp\FilamentLms\Support\CourseStepNavigation;
 
 class Step extends Page
 {
@@ -36,6 +42,27 @@ class Step extends Page
     public StepModel $step;
 
     public ?int $evaluationPrimaryCourseId = null;
+
+    /**
+     * @return array<NavigationGroup | NavigationItem>
+     */
+    public function getSubNavigation(): array
+    {
+        if (! CourseContext::fromConfig()->usesSubNavigation()) {
+            return [];
+        }
+
+        return CourseStepNavigation::groupsForCourse($this->course);
+    }
+
+    public static function getSubNavigationPosition(): SubNavigationPosition
+    {
+        if (CourseContext::fromConfig()->usesSubNavigation()) {
+            return SubNavigationPosition::Start;
+        }
+
+        return Filament::getSubNavigationPosition();
+    }
 
     public function mount($courseSlug, $lessonSlug, $stepSlug)
     {

@@ -30,6 +30,29 @@ return [
     'show_exit_lms_link' => true,
     'exit_lms_label' => 'Exit LMS',
 
+    // Match Filament panel sidebarCollapsibleOnDesktop(). Default false preserves historic layout.
+    'sidebar_collapsible_on_desktop' => false,
+
+    /*
+    | Primary LMS panel navigation.
+    |
+    | mode:
+    |   - native: "Courses" item (+ LmsNavigation hooks); on course pages the main sidebar
+    |     becomes the lesson/step tree when course_context is replace_sidebar (default).
+    |   - mirror_panel: primary nav from another Filament panel (mirror_panel_id), e.g. "app".
+    |     The LMS entry is normalized to lms_item_label and the LMS dashboard URL.
+    |
+    | course_context:
+    |   - replace_sidebar: current behavior — main sidebar swaps to lessons/steps inside a course.
+    |   - sub_navigation: keep primary nav; show lessons/steps via page getSubNavigation().
+    */
+    'navigation' => [
+        'mode' => 'native',
+        'mirror_panel_id' => null,
+        'course_context' => 'replace_sidebar',
+        'lms_item_label' => 'LMS',
+    ],
+
     // If true, users only see courses they are assigned to via lms_course_user. If false, all courses are visible.
     'restrict_course_visibility' => false,
 

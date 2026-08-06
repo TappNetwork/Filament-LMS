@@ -55,12 +55,18 @@
     border: 0;
 }
 
-/* Embedded player: hide Filament sidebar and use full width */
-body.lms-embedded-player .fi-sidebar {
+/*
+ * Embedded player (SCORM/HTML5): keep course content fluid.
+ * With sidebarCollapsibleOnDesktop() (body.fi-body-has-sidebar-collapsible-on-desktop),
+ * keep the Filament sidebar so the icon rail and expand/collapse work.
+ * Without it, hide the sidebar — SCORM has no course sub-nav, so a full
+ * expanded sidebar would leave an empty gutter beside the player.
+ */
+body.lms-embedded-player:not(.fi-body-has-sidebar-collapsible-on-desktop) .fi-sidebar {
     display: none !important;
 }
 
-body.lms-embedded-player .fi-main-ctn {
+body.lms-embedded-player:not(.fi-body-has-sidebar-collapsible-on-desktop) .fi-main-ctn {
     margin-inline-start: 0 !important;
 }
 

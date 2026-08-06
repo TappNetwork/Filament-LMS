@@ -7,8 +7,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationBuilder;
-use Filament\Navigation\NavigationGroup;
-use Filament\Navigation\NavigationItem;
+use Filament\Navigation\NavigationManager;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Facades\FilamentView;
@@ -22,16 +21,13 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Tapp\FilamentLms\Concerns\HasTopbarNavigation;
-use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
-use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step;
-use Tapp\FilamentLms\Services\CourseEvaluationService;
+use Tapp\FilamentLms\Support\CourseStepNavigation;
+use Tapp\FilamentLms\Support\LmsPrimaryNavigation;
 
 class LmsPanelProvider extends PanelProvider
 {
@@ -67,7 +63,12 @@ class LmsPanelProvider extends PanelProvider
                 return;
             }
 
-            if ($this->currentCourseSlug() !== null) {
+            // NavigationManager is a container singleton constructed for whichever
+            // panel was current first. Drop a stale app/admin instance so LMS
+            // getNavigation() does not evaluate foreign Resource::getUrl() closures.
+            app()->forgetInstance(NavigationManager::class);
+
+            if (CourseStepNavigation::currentCourseSlug() !== null) {
                 $panel = Filament::getPanel('lms');
                 $panel->topNavigation(false);
             }
@@ -91,6 +92,10 @@ class LmsPanelProvider extends PanelProvider
             ->darkMode(false)
             ->login();
 
+        if (config('filament-lms.sidebar_collapsible_on_desktop')) {
+            $panel->sidebarCollapsibleOnDesktop();
+        }
+
         // Add tenancy support if enabled
         if (config('filament-lms.tenancy.enabled')) {
             $tenantModel = config('filament-lms.tenancy.model');
@@ -108,7 +113,7 @@ class LmsPanelProvider extends PanelProvider
             //     fn (): View => view('usersnap'),
             // )
             ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
-                return $this->navigationItems($builder);
+                return LmsPrimaryNavigation::apply($builder);
             })
             ->colors(config('filament-lms.colors', []))
             ->discoverResources(in: app_path('Filament/Lms/Resources'), for: 'App\\Filament\\Lms\\Resources')
@@ -140,77 +145,6 @@ class LmsPanelProvider extends PanelProvider
             ]);
     }
 
-    public function navigationItems(NavigationBuilder $builder): NavigationBuilder
-    {
-        // Only modify navigation for the LMS panel
-        if (Filament::getCurrentOrDefaultPanel()->getId() !== 'lms') {
-            return $builder;
-        }
-
-        $hookedNavigationItems = LmsNavigation::getNavigation('lms');
-
-        $courseSlug = $this->currentCourseSlug();
-
-        if ($courseSlug !== null) {
-            $course = Course::where('slug', $courseSlug)->firstOrFail();
-
-            if ($course->isEmbeddedPlayer()) {
-                $builder->groups([]);
-
-                return $builder;
-            }
-
-            $evaluationService = app(CourseEvaluationService::class);
-            $evaluationPrimaryCourseId = $evaluationService->evaluationPrimaryCourseIdFromRequest();
-            $stepUrlParameters = $evaluationPrimaryCourseId !== null && $evaluationService->isEvaluationCourse($course)
-                ? ['primaryCourse' => $evaluationPrimaryCourseId]
-                : [];
-
-            $navigationGroups = $course->lessons->map(function ($lesson) use ($stepUrlParameters) {
-                /** @var Lesson $lesson */
-                return NavigationGroup::make($lesson->name)
-                    ->collapsed(fn (): bool => ! $lesson->isActive())
-                    // ->collapsible(true)
-                    ->items($lesson->steps->map(function ($step) use ($stepUrlParameters) {
-                        /** @var Models\Step $step */
-                        return NavigationItem::make($step->name)
-                            ->icon(fn (): string => $step->completed_at ? 'heroicon-o-check-circle' : '')
-                            ->isActiveWhen(fn (): bool => $step->isActive())
-                            ->url(function () use ($step, $stepUrlParameters): string {
-                                $user = auth()->user();
-                                if (! $user instanceof FilamentLmsUserInterface) {
-                                    return '';
-                                }
-
-                                return $user->canAccessStep($step) ? Step::getUrlForStep($step, $stepUrlParameters) : '';
-                            });
-                    })->toArray());
-            })->toArray();
-
-            $navigationGroups[] = NavigationGroup::make('Course Completed')
-                ->collapsed(fn (): bool => ! request()->routeIs(CourseCompleted::getRouteName()))
-                ->collapsible(true)
-                ->items([
-                    NavigationItem::make('Certificate')
-                        ->icon('heroicon-o-trophy')
-                        ->url(fn (): string => CourseCompleted::getUrl([$course->slug]))
-                        ->isActiveWhen(fn (): bool => request()->routeIs(CourseCompleted::getRouteName())),
-                ]);
-
-            $builder->groups($navigationGroups);
-
-            return $builder;
-        }
-
-        return $builder->items([
-            ...$hookedNavigationItems,
-            NavigationItem::make('Courses')
-                ->icon('heroicon-o-academic-cap')
-                ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
-                ->url(fn (): string => Dashboard::getUrl()),
-        ]);
-    }
-
     private function csrfMiddleware(): string
     {
         if (class_exists(PreventRequestForgery::class)) {
@@ -220,34 +154,21 @@ class LmsPanelProvider extends PanelProvider
         return 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken';
     }
 
-    private function currentCourseSlug(): ?string
-    {
-        $courseSlug = Route::current()?->parameter('courseSlug')
-            ?? request()->route('courseSlug')
-            ?? request()->route()?->parameter('courseSlug');
-
-        return is_string($courseSlug) && $courseSlug !== '' ? $courseSlug : null;
-    }
-
     private function renderCourseTopbarNavigation(): ?View
     {
         if (Filament::getCurrentOrDefaultPanel()->getId() !== 'lms') {
             return null;
         }
 
-        if ($this->currentCourseSlug() === null) {
+        if (CourseStepNavigation::currentCourseSlug() === null) {
             return null;
         }
 
-        $hookedNavigationItems = LmsNavigation::getNavigation('lms');
+        $topNavigation = LmsPrimaryNavigation::topbarItems();
 
-        $topNavigation = [
-            ...$hookedNavigationItems,
-            NavigationItem::make('Courses')
-                ->icon('heroicon-o-academic-cap')
-                ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
-                ->url(fn (): string => Dashboard::getUrl()),
-        ];
+        if ($topNavigation === []) {
+            return null;
+        }
 
         $navigation = $this->buildTopbarNavigation($topNavigation, collect());
 

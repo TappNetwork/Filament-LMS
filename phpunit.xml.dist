@@ -11,6 +11,7 @@
     failOnWarning="true"
     failOnRisky="true"
     failOnEmptyTestSuite="true"
+    failOnPhpunitWarning="false"
     beStrictAboutOutputDuringTests="true"
     cacheDirectory=".phpunit.cache"
     backupStaticProperties="false"

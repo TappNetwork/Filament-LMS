@@ -332,6 +332,50 @@ Set it to `true` to enable top navigation on the LMS dashboard (courses list pag
 
 Use to display or not the `Exit LMS` link on top bar.
 
+### sidebar_collapsible_on_desktop
+
+When `true`, enables Filament’s `sidebarCollapsibleOnDesktop()` on the LMS panel. Default is `false` (historic layout).
+
+### navigation
+
+Controls the LMS panel primary sidebar and how course lesson/step links appear. Defaults preserve the historic “Courses” item and sidebar swap inside a course.
+
+```php
+'navigation' => [
+    // native | mirror_panel
+    'mode' => 'native',
+
+    // Filament panel id to copy primary nav from when mode is mirror_panel (e.g. 'app')
+    'mirror_panel_id' => null,
+
+    // replace_sidebar | sub_navigation
+    'course_context' => 'replace_sidebar',
+
+    // Label used for the LMS entry when mirroring another panel
+    'lms_item_label' => 'LMS',
+],
+```
+
+| Setting | Behavior |
+|---|---|
+| `mode=native` (default) | Primary nav is hooked items + **Courses**. |
+| `mode=mirror_panel` | Primary nav is built from `Filament::getPanel(mirror_panel_id)->getNavigation()`. The LMS entry is normalized to `lms_item_label` and the LMS dashboard URL. |
+| `course_context=replace_sidebar` (default) | Inside a course, the **main** sidebar becomes lessons/steps (current behavior). |
+| `course_context=sub_navigation` | Primary nav stays; lessons/steps use Filament page `getSubNavigation()` (`SubNavigationPosition::Start`). |
+
+Example for an app panel that already has an **LMS** nav item:
+
+```php
+'navigation' => [
+    'mode' => 'mirror_panel',
+    'mirror_panel_id' => 'app',
+    'course_context' => 'sub_navigation',
+    'lms_item_label' => 'LMS',
+],
+'sidebar_collapsible_on_desktop' => true,
+'show_exit_lms_link' => false,
+```
+
 ## SCORM / Common Cartridge Import
 
 Admin users can import SCORM 1.2 or Articulate Storyline / Rise ZIP packages from the Courses list via **Import SCORM Package**. Packages are processed in the background and create the corresponding course, lessons, and steps.

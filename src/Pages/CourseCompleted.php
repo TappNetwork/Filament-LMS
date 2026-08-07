@@ -6,14 +6,20 @@ namespace Tapp\FilamentLms\Pages;
 
 use BackedEnum;
 use Exception;
+use Filament\Facades\Filament;
+use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
+use Filament\Pages\Enums\SubNavigationPosition;
 use Filament\Pages\Page;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Concerns\CourseLayout;
+use Tapp\FilamentLms\Enums\CourseContext;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
+use Tapp\FilamentLms\Support\CourseStepNavigation;
 
 final class CourseCompleted extends Page
 {
@@ -44,6 +50,31 @@ final class CourseCompleted extends Page
     protected static ?string $slug = '{courseSlug}/completed';
 
     protected static ?string $title = 'Course Completed';
+
+    /**
+     * @return array<NavigationGroup | NavigationItem>
+     */
+    public function getSubNavigation(): array
+    {
+        if (! CourseContext::fromConfig()->usesSubNavigation()) {
+            return [];
+        }
+
+        if (! $this->course instanceof Course) {
+            return [];
+        }
+
+        return CourseStepNavigation::groupsForCourse($this->course);
+    }
+
+    public static function getSubNavigationPosition(): SubNavigationPosition
+    {
+        if (CourseContext::fromConfig()->usesSubNavigation()) {
+            return SubNavigationPosition::Start;
+        }
+
+        return Filament::getSubNavigationPosition();
+    }
 
     public function mount($courseSlug)
     {

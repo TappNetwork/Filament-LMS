@@ -5,6 +5,7 @@ namespace Tapp\FilamentLms\Concerns;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\View\View;
+use Tapp\FilamentLms\Enums\CourseContext;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 
 trait CourseLayout
@@ -12,8 +13,12 @@ trait CourseLayout
     public function registerCourseLayout(): void
     {
         if (! $this->course->isEmbeddedPlayer()) {
+            $courseNameHook = CourseContext::fromConfig()->usesSubNavigation()
+                ? PanelsRenderHook::PAGE_SUB_NAVIGATION_SIDEBAR_BEFORE
+                : PanelsRenderHook::SIDEBAR_NAV_START;
+
             FilamentView::registerRenderHook(
-                PanelsRenderHook::SIDEBAR_NAV_START,
+                $courseNameHook,
                 fn (): View => view('filament-lms::components.nav-course-name', ['course' => $this->course]),
             );
         }

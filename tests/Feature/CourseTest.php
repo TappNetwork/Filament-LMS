@@ -46,7 +46,25 @@ test('course can load progress', function () {
 });
 
 test('course can generate link to current step', function () {
-    test()->markTestSkipped('Panel context not available in package tests.');
+    $user = TestUser::create([
+        'name' => 'Test User',
+        'email' => 'link-step@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $this->actingAs($user);
+
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $step = Step::factory()->create(['lesson_id' => $lesson->id]);
+
+    $url = $course->linkToCurrentStep();
+
+    expect($url)
+        ->toBeString()
+        ->toContain($course->slug)
+        ->toContain($lesson->slug)
+        ->toContain($step->slug);
 });
 
 test('course can check if completed by user', function () {

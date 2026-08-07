@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v4.7.6 - 2026-08-07
+
+### What's Changed
+
+* Bump shell-quote from 1.8.4 to 1.10.0 by @dependabot[bot] in https://github.com/TappNetwork/Filament-LMS/pull/118
+* Bump postcss from 8.5.12 to 8.5.25 by @dependabot[bot] in https://github.com/TappNetwork/Filament-LMS/pull/119
+* Add support to use navigation from another panel by @andreia in https://github.com/TappNetwork/Filament-LMS/pull/120
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v4.7.5...v4.7.6
+
 ## v4.7.5 - 2026-07-21
 
 ### What's Changed

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Mcp;
 
 use Laravel\Mcp\Server;
+use Laravel\Mcp\Server\Tool;
 use Tapp\FilamentLms\Mcp\Tools\CreateLesson;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoCourse;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoStep;
@@ -36,7 +37,7 @@ class LmsServer extends Server
     MARKDOWN;
 
     /**
-     * @var array<int, class-string<\Laravel\Mcp\Server\Tool>>
+     * @var array<int, class-string<Tool>>
      */
     protected array $tools = [
         CreateVideoCourse::class,

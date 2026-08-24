@@ -8,6 +8,7 @@ use Filament\Facades\Filament;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 use Illuminate\Validation\ValidationException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -58,7 +59,7 @@ abstract class LmsTool extends Tool
     protected function courseRules(?int $ignoreId = null, bool $creating = false): array
     {
         $awardKeys = array_keys(config('filament-lms.awards', ['default' => 'Default']));
-        $unique = fn (string $column): \Illuminate\Validation\Rules\Unique => $ignoreId === null
+        $unique = fn (string $column): Unique => $ignoreId === null
             ? Rule::unique('lms_courses', $column)
             : Rule::unique('lms_courses', $column)->ignore($ignoreId);
 

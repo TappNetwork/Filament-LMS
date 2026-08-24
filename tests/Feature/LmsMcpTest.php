@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Tests\Feature;
 
+use Laravel\Mcp\Server;
 use Tapp\FilamentLms\Mcp\LmsServer;
 use Tapp\FilamentLms\Mcp\Tools\CreateLesson;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoCourse;
@@ -22,7 +23,7 @@ use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
 
 beforeEach(function () {
-    if (! class_exists(LmsServer::class) || ! class_exists(\Laravel\Mcp\Server::class)) {
+    if (! class_exists(LmsServer::class) || ! class_exists(Server::class)) {
         $this->markTestSkipped('laravel/mcp is required to run LMS MCP tests.');
     }
 });

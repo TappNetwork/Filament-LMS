@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v4.7.7 - 2026-08-24
+
+### What's Changed
+
+* CU-868kv4cgu: list learner dashboard courses newest first by @scottgrayson in https://github.com/TappNetwork/Filament-LMS/pull/121
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v4.7.6...v4.7.7
+
 ## Unreleased
 
 ### Changed

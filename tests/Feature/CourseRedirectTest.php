@@ -267,6 +267,74 @@ test('course completed page redirects to current step when course has steps but 
     expect($allSteps->isEmpty())->toBeFalse();
 });
 
+test('dashboard lists courses newest first for authenticated users', function () {
+    config(['filament-lms.credits_enabled' => false]);
+
+    $user = TestUser::create([
+        'name' => 'Test User',
+        'email' => 'newest-first-auth@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    Auth::login($user);
+
+    $older = Course::factory()->create([
+        'name' => 'Older Public Course',
+        'slug' => 'older-public-course',
+        'external_id' => 'older_public_course',
+        'is_private' => false,
+        'created_at' => now()->subDay(),
+    ]);
+    $olderLesson = Lesson::factory()->create(['course_id' => $older->id]);
+    Step::factory()->create(['lesson_id' => $olderLesson->id]);
+
+    $newer = Course::factory()->create([
+        'name' => 'Newer Public Course',
+        'slug' => 'newer-public-course',
+        'external_id' => 'newer_public_course',
+        'is_private' => false,
+        'created_at' => now(),
+    ]);
+    $newerLesson = Lesson::factory()->create(['course_id' => $newer->id]);
+    Step::factory()->create(['lesson_id' => $newerLesson->id]);
+
+    $courses = (new Dashboard)->courses();
+
+    expect($courses->pluck('name')->all())
+        ->toBe(['Newer Public Course', 'Older Public Course']);
+});
+
+test('dashboard lists courses newest first for guests', function () {
+    config(['filament-lms.credits_enabled' => false]);
+
+    Auth::logout();
+
+    $older = Course::factory()->create([
+        'name' => 'Older Guest Course',
+        'slug' => 'older-guest-course',
+        'external_id' => 'older_guest_course',
+        'is_private' => false,
+        'created_at' => now()->subDay(),
+    ]);
+    $olderLesson = Lesson::factory()->create(['course_id' => $older->id]);
+    Step::factory()->create(['lesson_id' => $olderLesson->id]);
+
+    $newer = Course::factory()->create([
+        'name' => 'Newer Guest Course',
+        'slug' => 'newer-guest-course',
+        'external_id' => 'newer_guest_course',
+        'is_private' => false,
+        'created_at' => now(),
+    ]);
+    $newerLesson = Lesson::factory()->create(['course_id' => $newer->id]);
+    Step::factory()->create(['lesson_id' => $newerLesson->id]);
+
+    $courses = (new Dashboard)->courses();
+
+    expect($courses->pluck('name')->all())
+        ->toBe(['Newer Guest Course', 'Older Guest Course']);
+});
+
 test('dashboard only shows courses with steps for authenticated users', function () {
     // Create a user and authenticate
     $user = TestUser::create([

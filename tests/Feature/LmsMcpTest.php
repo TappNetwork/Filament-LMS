@@ -130,6 +130,14 @@ test('create_video_course rejects invalid external_id format', function () {
     expect(Course::query()->count())->toBe(0);
 });
 
+test('create_video_course prefixes auto external_id when name starts with a number', function () {
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload([
+        'name' => '101 Intro',
+    ]))->assertOk();
+
+    expect(Course::query()->first()->external_id)->toBe('course_101_intro');
+});
+
 test('optional transcript is stored on step text', function () {
     LmsServer::tool(CreateVideoCourse::class, videoCoursePayload([
         'lessons' => [
@@ -163,7 +171,8 @@ test('list_courses and get_course include lessons and steps', function () {
     $get->assertOk()
         ->assertSee('dns-cloudflare')
         ->assertSee('Getting started')
-        ->assertSee('https://www.youtube.com/embed/dQw4w9WgXcQ');
+        ->assertSee('dQw4w9WgXcQ')
+        ->assertSee('"provider": "youtube"');
 });
 
 test('update_course and delete_course work', function () {

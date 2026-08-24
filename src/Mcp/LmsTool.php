@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Mcp;
 
 use Filament\Facades\Filament;
-use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
@@ -28,29 +27,38 @@ abstract class LmsTool extends Tool
 {
     protected function authorizeWrite(Request $request): ?Response
     {
+        if ($denied = $this->ensureTenantContext()) {
+            return $denied;
+        }
+
         $user = $request->user();
 
         if ($user === null) {
             return null;
         }
 
-        if ($user instanceof FilamentUser) {
-            try {
-                $panel = Filament::getPanel('lms');
-
-                if ($user->canAccessPanel($panel)) {
-                    return null;
-                }
-            } catch (Throwable) {
-                // Panel may be unregistered in some hosts; fall through to isLmsAdmin().
-            }
-        }
-
         if (method_exists($user, 'isLmsAdmin') && $user->isLmsAdmin()) {
             return null;
         }
 
-        return Response::error('You must be able to access the LMS Filament panel to use this tool.');
+        return Response::error('You must be an LMS admin to use this tool.');
+    }
+
+    protected function ensureTenantContext(): ?Response
+    {
+        if (! config('filament-lms.tenancy.enabled')) {
+            return null;
+        }
+
+        try {
+            if (Filament::getTenant() !== null) {
+                return null;
+            }
+        } catch (Throwable) {
+            return Response::error('Tenant context is required when LMS tenancy is enabled.');
+        }
+
+        return Response::error('Tenant context is required when LMS tenancy is enabled.');
     }
 
     /**
@@ -109,7 +117,7 @@ abstract class LmsTool extends Tool
         }
 
         if (blank($request->get('external_id'))) {
-            $request->merge(['external_id' => Str::slug($name, '_')]);
+            $request->merge(['external_id' => $this->generateExternalId($name)]);
         }
     }
 
@@ -134,7 +142,7 @@ abstract class LmsTool extends Tool
             $attributes['slug'] = filled($input['slug'] ?? null) ? (string) $input['slug'] : Str::slug((string) $name);
             $attributes['external_id'] = filled($input['external_id'] ?? null)
                 ? (string) $input['external_id']
-                : Str::slug((string) $name, '_');
+                : $this->generateExternalId((string) $name);
             $attributes['award'] = $input['award'] ?? 'default';
             $attributes['completion_mode'] = $input['completion_mode'] ?? CompletionMode::Native->value;
             $attributes['is_private'] = array_key_exists('is_private', $input)
@@ -349,5 +357,16 @@ abstract class LmsTool extends Tool
         } catch (Throwable) {
             return null;
         }
+    }
+
+    protected function generateExternalId(string $name): string
+    {
+        $externalId = Str::slug($name, '_');
+
+        if ($externalId === '' || preg_match('/^[0-9]/', $externalId) === 1) {
+            $externalId = 'course_'.$externalId;
+        }
+
+        return $externalId;
     }
 }

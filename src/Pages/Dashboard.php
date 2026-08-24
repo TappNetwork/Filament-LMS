@@ -47,6 +47,7 @@ class Dashboard extends \Filament\Pages\Dashboard
             return Course::accessibleTo($user)
                 ->with(array_merge($creditEager, $stepEager, ['authEnrollment']))
                 ->withCount('lessons')
+                ->latest()
                 ->get();
         }
 
@@ -54,6 +55,7 @@ class Dashboard extends \Filament\Pages\Dashboard
             ->whereHas('steps')
             ->with(array_merge($creditEager, $stepEager))
             ->withCount('lessons')
+            ->latest()
             ->get();
     }
 

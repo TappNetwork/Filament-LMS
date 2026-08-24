@@ -285,6 +285,10 @@ abstract class TestCase extends Orchestra
             $providers[] = FilamentFormBuilderServiceProvider::class;
         }
 
+        if (class_exists(\Laravel\Mcp\Server\McpServiceProvider::class)) {
+            $providers[] = \Laravel\Mcp\Server\McpServiceProvider::class;
+        }
+
         return $providers;
     }
 }

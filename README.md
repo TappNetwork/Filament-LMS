@@ -83,6 +83,85 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
+## MCP Server
+
+The package can expose **write tools** for AI clients (Cursor, Claude Code, Claude Desktop) so a skill can create Course → Lesson → Step data. Melissa’s skill should draft titles, descriptions, and structure, then call these tools. Videos are hosted YouTube or Vimeo URLs — the package does not upload video files. Optional transcripts go on the step `text` field. New courses default to `is_private = true` (there is no draft flag).
+
+`laravel/mcp` is optional. Hosts that want MCP should install it:
+
+```bash
+composer require laravel/mcp
+```
+
+The package registers a **local stdio** server when `laravel/mcp` is present and `filament-lms.mcp.enabled` is `true` (the default):
+
+```php
+Mcp::local('filament-lms', \Tapp\FilamentLms\Mcp\LmsServer::class);
+```
+
+Start it from the host app:
+
+```bash
+php artisan mcp:start filament-lms
+```
+
+Example Cursor MCP config:
+
+```json
+{
+  "mcpServers": {
+    "filament-lms": {
+      "command": "php",
+      "args": ["artisan", "mcp:start", "filament-lms"],
+      "cwd": "/path/to/your-app"
+    }
+  }
+}
+```
+
+### Web (remote Claude) + Sanctum
+
+Do **not** auto-register `Mcp::web` from the package. Publish `routes/ai.php` in the host app and register the HTTP server there. Sanctum bearer tokens are the v1 path (no Passport):
+
+```php
+use Laravel\Mcp\Facades\Mcp;
+
+Mcp::web('/mcp/lms', \Tapp\FilamentLms\Mcp\LmsServer::class)
+    ->middleware(['auth:sanctum', 'throttle:mcp']);
+```
+
+Issue a Sanctum token for an LMS admin user and send it as `Authorization: Bearer …`. Cursor and Claude Desktop work with that header. Claude.ai custom connectors often prefer OAuth — if a token URL is rejected, that is a follow-up (Passport on the host, or Switchboard).
+
+Turn off local auto-registration with:
+
+```php
+// config/filament-lms.php
+'mcp' => [
+    'enabled' => false,
+],
+```
+
+Web requests that have `$request->user()` must be able to access the LMS Filament panel. Local stdio has no HTTP user — same trust model as tinker.
+
+### v1 tools
+
+Convenience:
+
+- `create_video_course` — `name`, `description`, optional `slug` / `external_id` / `award` / flags, and nested `lessons[]` each with `steps[]` (`name`, `video_url`, optional `text` / `is_optional`)
+
+Granular:
+
+- `list_courses` / `get_course`
+- `update_course` / `delete_course`
+- `create_lesson` / `update_lesson` / `delete_lesson`
+- `create_video_step` / `update_step` / `delete_step`
+
+Course uniqueness matches the Filament form (`name`, `slug`, `external_id` unique; `external_id` regex `^[a-z][a-z0-9_]*$`). Award defaults to `default`. Completion mode defaults to `native`. Tools return created IDs and admin/learner URLs when those routes can be resolved.
+
+### Deferred
+
+Credits, evaluations, tests/forms, documents, SCORM, course images, user assignment, Switchboard, and a package REST API are out of scope for v1.
+
 ### Tailwind CSS Setup
 
 This package uses Tailwind CSS classes in its Blade views. The configuration differs between Tailwind v3 and v4:

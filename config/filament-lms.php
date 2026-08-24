@@ -246,4 +246,19 @@ return [
     'evaluations' => [
         'enabled' => false,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | MCP server
+    |--------------------------------------------------------------------------
+    |
+    | When laravel/mcp is installed, the package registers a local stdio server
+    | named `filament-lms`. Set enabled to false to skip that auto-registration.
+    | Web (HTTP) registration stays in the host app — do not rely on the package
+    | to call Mcp::web().
+    |
+    */
+    'mcp' => [
+        'enabled' => true,
+    ],
 ];

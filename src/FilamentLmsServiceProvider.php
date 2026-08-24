@@ -129,6 +129,21 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
         $this->configureLivewireTemporaryUploadLimits();
+
+        $this->registerMcpServer();
+    }
+
+    protected function registerMcpServer(): void
+    {
+        if (! class_exists(\Laravel\Mcp\Facades\Mcp::class)) {
+            return;
+        }
+
+        if (! config('filament-lms.mcp.enabled', true)) {
+            return;
+        }
+
+        \Laravel\Mcp\Facades\Mcp::local('filament-lms', \Tapp\FilamentLms\Mcp\LmsServer::class);
     }
 
     protected function configureLivewireTemporaryUploadLimits(): void

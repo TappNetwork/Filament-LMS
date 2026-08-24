@@ -6,6 +6,7 @@ use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Laravel\Mcp\Facades\Mcp;
 use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
@@ -26,6 +27,7 @@ use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Livewire\ViewGradedEntry;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
+use Tapp\FilamentLms\Mcp\LmsServer;
 use Tapp\FilamentLms\Pages\CreateTestEntry;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider
@@ -129,6 +131,21 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
         $this->configureLivewireTemporaryUploadLimits();
+
+        $this->registerMcpServer();
+    }
+
+    protected function registerMcpServer(): void
+    {
+        if (! class_exists(Mcp::class)) {
+            return;
+        }
+
+        if (! config('filament-lms.mcp.enabled', true)) {
+            return;
+        }
+
+        Mcp::local('filament-lms', LmsServer::class);
     }
 
     protected function configureLivewireTemporaryUploadLimits(): void

@@ -10,6 +10,7 @@ use Filament\Support\SupportServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
+use Laravel\Mcp\Server\McpServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Maatwebsite\Excel\ExcelServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -283,6 +284,10 @@ abstract class TestCase extends Orchestra
         // Only add FilamentFormBuilderServiceProvider if it exists
         if (class_exists(FilamentFormBuilderServiceProvider::class)) {
             $providers[] = FilamentFormBuilderServiceProvider::class;
+        }
+
+        if (class_exists(McpServiceProvider::class)) {
+            $providers[] = McpServiceProvider::class;
         }
 
         return $providers;

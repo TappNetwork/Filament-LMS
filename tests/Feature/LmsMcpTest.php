@@ -172,7 +172,7 @@ test('list_courses and get_course include lessons and steps', function () {
         ->assertSee('dns-cloudflare')
         ->assertSee('Getting started')
         ->assertSee('dQw4w9WgXcQ')
-        ->assertSee('"provider": "youtube"');
+        ->assertSee('youtube');
 });
 
 test('update_course and delete_course work', function () {

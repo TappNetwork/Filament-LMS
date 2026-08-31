@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Tapp\FilamentLms\Jobs\RebuildUserGroupMemberships;
 use Tapp\FilamentLms\Models\UserGroup;
+use Tapp\FilamentLms\Models\UserGroupMembership;
 use Throwable;
 
 final class UserGroupMembershipSynchronizer
@@ -112,6 +113,10 @@ final class UserGroupMembershipSynchronizer
         $user = $userModel::query()->find($userId);
 
         if ($user === null) {
+            UserGroupMembership::query()
+                ->where('user_id', $userId)
+                ->delete();
+
             return;
         }
 

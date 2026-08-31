@@ -9,6 +9,7 @@ use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\UserGroup;
+use Tapp\FilamentLms\Models\UserGroupMembership;
 use Tapp\FilamentLms\Tests\Support\TestUserGroupCriteriaProvider;
 use Tapp\FilamentLms\Tests\TestUser;
 use Tapp\FilamentLms\UserGroups\CourseAccessResolver;
@@ -277,4 +278,43 @@ it('refreshes a single user against active groups', function (): void {
     app(UserGroupMembershipSynchronizer::class)->refreshUser($user->id);
 
     expect($group->fresh()->hasPublishedMembership($user->id))->toBeFalse();
+});
+
+it('clears group memberships when the user no longer exists', function (): void {
+    $user = TestUser::query()->create([
+        'name' => 'Match User',
+        'email' => 'deleted-match@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    $group = UserGroup::factory()->create([
+        'rules' => makeNameContainsRules('Match'),
+        'published_revision' => 1,
+    ]);
+
+    $inactiveGroup = UserGroup::factory()->create([
+        'rules' => makeNameContainsRules('Match'),
+        'published_revision' => 1,
+        'is_active' => false,
+    ]);
+
+    $synchronizer = app(UserGroupMembershipSynchronizer::class);
+    $synchronizer->refreshUser($user->id);
+
+    UserGroupMembership::query()->create([
+        'user_group_id' => $inactiveGroup->id,
+        'user_id' => $user->id,
+        'revision' => 1,
+        'matched_at' => now(),
+    ]);
+
+    expect(UserGroupMembership::query()->where('user_id', $user->id)->count())->toBe(2);
+
+    $userId = $user->id;
+    $user->delete();
+
+    $synchronizer->refreshUser($userId);
+
+    expect(UserGroupMembership::query()->where('user_id', $userId)->exists())->toBeFalse()
+        ->and($group->fresh()->hasPublishedMembership($userId))->toBeFalse();
 });

@@ -8,8 +8,13 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\QueryBuilder\Constraints\Constraint;
+use Filament\QueryBuilder\Forms\Components\RuleBuilder;
+use Filament\QueryBuilder\View\QueryBuilderIconAlias;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Schema;
+use Filament\Support\Facades\FilamentIcon;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\QueryBuilder;
@@ -148,6 +153,24 @@ class CourseUserGroupsRelationManager extends RelationManager
                 ->constraintPickerColumns(2)
                 ->maxRules($maxRules)
                 ->maxNestingDepth($maxNestingDepth)
+                ->schema(fn (QueryBuilder $filter): array => [
+                    Fieldset::make($source->label)
+                        ->columns(1)
+                        ->schema([
+                            RuleBuilder::make('rules')
+                                ->hiddenLabel()
+                                ->constraints($filter->getConstraints())
+                                ->blockPickerColumns($filter->getConstraintPickerColumns())
+                                ->blockPickerWidth($filter->getConstraintPickerWidth())
+                                ->maxRules($filter->getMaxRules())
+                                ->maxNestingDepth($filter->getMaxNestingDepth())
+                                ->addAction(fn (Action $action): Action => $action
+                                    ->label("Add {$source->label} rule")
+                                    ->icon(FilamentIcon::resolve(QueryBuilderIconAlias::ADD_RULE_ACTION) ?? Heroicon::Plus)
+                                    ->disabled(fn (RuleBuilder $component): bool => $component->isAtRuleLimit())
+                                    ->tooltip(fn (RuleBuilder $component): ?string => $component->getRuleLimitReachedTooltip())),
+                        ]),
+                ])
                 // Matching is applied in resolveMatchingUsersQuery() so related-model
                 // sources can use whereHas and unsaved drafts can still preview.
                 ->query(fn (Builder $query): Builder => $query)

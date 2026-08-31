@@ -1,9 +1,9 @@
 <div class="space-y-3">
     <p class="fi-ta-header-description text-sm text-gray-500 dark:text-gray-400">
         @if (count($groupOptions) > 0)
-            Add criteria rules below, click Apply filters to preview matching users, then Save as group to assign them to this course. Switch Default group to edit another saved group, or choose “New unsaved criteria” to create another.
+            Add criteria below (each source is combined with AND), click Apply filters to preview matching users, then Save as group to assign them to this course. Switch Default group to edit another saved group, or choose “New unsaved criteria” to create another.
         @else
-            Add criteria rules below, click Apply filters to preview matching users, then Save as group to assign them to this course.
+            Add criteria below (each source is combined with AND), click Apply filters to preview matching users, then Save as group to assign them to this course.
         @endif
     </p>
 

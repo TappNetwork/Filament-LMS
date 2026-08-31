@@ -83,6 +83,8 @@ class CourseUsersRelationManager extends RelationManager
                     })
                     ->schema(fn (AttachAction $action): array => [
                         $action->getRecordSelect(),
+                        Forms\Components\Hidden::make('is_explicitly_assigned')
+                            ->default(true),
                     ]),
             ])
             ->recordActions([

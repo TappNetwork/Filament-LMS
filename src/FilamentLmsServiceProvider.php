@@ -14,6 +14,7 @@ use Tapp\FilamentLibrary\Models\LibraryItem;
 use Tapp\FilamentLms\Console\Commands\BackfillCourseCompletedAt;
 use Tapp\FilamentLms\Console\Commands\BackfillEmbeddedPlayerCourses;
 use Tapp\FilamentLms\Console\Commands\ImportCartridgesCommand;
+use Tapp\FilamentLms\Console\Commands\ReconcileUserGroupMemberships;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\ImageStep;
@@ -26,7 +27,9 @@ use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Livewire\ViewGradedEntry;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
+use Tapp\FilamentLms\Observers\UserGroupMembershipUserObserver;
 use Tapp\FilamentLms\Pages\CreateTestEntry;
+use Tapp\FilamentLms\UserGroups\UserGroupCriteriaRegistry;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider
 {
@@ -65,10 +68,15 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'add_evaluation_course_id_to_lms_courses_table',
                 'add_filament_form_user_id_to_lms_step_user_table',
                 'add_evaluation_primary_course_id_to_lms_step_user_table',
+                'create_lms_user_groups_table',
+                'create_lms_course_user_group_table',
+                'create_lms_user_group_memberships_table',
+                'add_is_explicitly_assigned_to_lms_course_user_table',
             ])
             ->hasCommand(BackfillCourseCompletedAt::class)
             ->hasCommand(BackfillEmbeddedPlayerCourses::class)
             ->hasCommand(ImportCartridgesCommand::class)
+            ->hasCommand(ReconcileUserGroupMemberships::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishMigrations()
@@ -129,6 +137,24 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
         $this->configureLivewireTemporaryUploadLimits();
+        $this->registerUserGroupMembershipObserver();
+    }
+
+    protected function registerUserGroupMembershipObserver(): void
+    {
+        $registry = $this->app->make(UserGroupCriteriaRegistry::class);
+
+        if (! $registry->enabled()) {
+            return;
+        }
+
+        $userModel = config('filament-lms.user_model');
+
+        if (! is_string($userModel) || ! class_exists($userModel)) {
+            return;
+        }
+
+        $userModel::observe(UserGroupMembershipUserObserver::class);
     }
 
     protected function configureLivewireTemporaryUploadLimits(): void

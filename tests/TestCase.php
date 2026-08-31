@@ -159,7 +159,41 @@ abstract class TestCase extends Orchestra
             $table->foreignId('course_id')->constrained('lms_courses')->onDelete('cascade');
             $table->unsignedBigInteger('user_id');
             $table->timestamp('completed_at')->nullable();
+            $table->boolean('is_explicitly_assigned')->default(true);
             $table->timestamps();
+        });
+
+        $app['db']->connection()->getSchemaBuilder()->create('lms_user_groups', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->json('rules');
+            $table->unsignedSmallInteger('rules_version')->default(1);
+            $table->unsignedInteger('published_revision')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->string('sync_status', 32)->default('idle');
+            $table->text('sync_error')->nullable();
+            $table->timestamp('last_synced_at')->nullable();
+            $table->timestamps();
+        });
+
+        $app['db']->connection()->getSchemaBuilder()->create('lms_course_user_group', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('course_id')->constrained('lms_courses')->cascadeOnDelete();
+            $table->foreignId('user_group_id')->constrained('lms_user_groups')->cascadeOnDelete();
+            $table->boolean('is_default')->default(false);
+            $table->timestamps();
+            $table->unique(['course_id', 'user_group_id']);
+        });
+
+        $app['db']->connection()->getSchemaBuilder()->create('lms_user_group_memberships', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_group_id')->constrained('lms_user_groups')->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedInteger('revision');
+            $table->timestamp('matched_at')->nullable();
+            $table->timestamps();
+            $table->unique(['user_group_id', 'user_id', 'revision']);
         });
 
         // Create lms_videos table

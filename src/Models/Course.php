@@ -32,6 +32,7 @@ use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
+use Tapp\FilamentLms\UserGroups\CourseAccessResolver;
 
 /**
  * @property int $id
@@ -90,34 +91,15 @@ final class Course extends Model implements HasMedia
      */
     public function scopeAccessibleTo(Builder $query, $user): void
     {
-        $query->where(function ($q) use ($user) {
-            // Public courses - not private, accessible to everyone
-            $q->where('is_private', false)
-              // Private courses - only accessible to LMS admins or assigned users
-                ->orWhere(function ($subQ) use ($user) {
-                    $subQ->where('is_private', true)
-                        ->where(function ($adminOrAssignedQuery) use ($user) {
-                            // LMS admins can see all private courses
-                            if ($user->isLmsAdmin()) {
-                                $adminOrAssignedQuery->whereRaw('1 = 1'); // Always true for admins
-                            } else {
-                                // Non-admins can only see assigned courses
-                                $adminOrAssignedQuery->whereHas('users', function ($userQuery) use ($user) {
-                                    $userQuery->where('user_id', $user->id);
-                                });
-                            }
-                        });
-                });
-        })
-        // Only include courses that have at least one step
-            ->whereHas('steps')
-            ->when(config('filament-lms.evaluations.enabled', false), function (Builder $query): void {
-                $evaluationCourseIds = app(CourseEvaluationService::class)->lockedEvaluationCourseIds();
+        app(CourseAccessResolver::class)->scopeAccessibleTo($query, $user);
+    }
 
-                if ($evaluationCourseIds->isNotEmpty()) {
-                    $query->whereNotIn('lms_courses.id', $evaluationCourseIds);
-                }
-            });
+    /**
+     * Courses assigned to the user via lms_course_user and/or active user-group membership.
+     */
+    public function scopeAssignedToUser(Builder $query, $user): void
+    {
+        app(CourseAccessResolver::class)->scopeAssignedToUser($query, $user);
     }
 
     /**
@@ -366,7 +348,10 @@ final class Course extends Model implements HasMedia
             $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
         } else {
             try {
-                $this->users()->attach($userId, ['completed_at' => $completedAt]);
+                $this->users()->attach($userId, [
+                    'completed_at' => $completedAt,
+                    'is_explicitly_assigned' => false,
+                ]);
             } catch (UniqueConstraintViolationException) {
                 $this->users()->updateExistingPivot($userId, ['completed_at' => $completedAt]);
             }
@@ -514,8 +499,47 @@ final class Course extends Model implements HasMedia
         $userModel = config('filament-lms.user_model');
 
         return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')
-            ->withPivot('completed_at')
+            ->withPivot('completed_at', 'is_explicitly_assigned')
             ->withTimestamps();
+    }
+
+    /**
+     * Dynamic criteria groups assigned to this course.
+     *
+     * @return BelongsToMany<UserGroup, $this>
+     */
+    public function userGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(UserGroup::class, 'lms_course_user_group', 'course_id', 'user_group_id')
+            ->withPivot('is_default')
+            ->withTimestamps();
+    }
+
+    public function defaultUserGroup(): ?UserGroup
+    {
+        $default = $this->userGroups()
+            ->wherePivot('is_default', true)
+            ->orderBy('lms_user_groups.name')
+            ->first();
+
+        if ($default !== null) {
+            return $default;
+        }
+
+        return $this->userGroups()
+            ->orderBy('lms_user_groups.name')
+            ->first();
+    }
+
+    public function setDefaultUserGroup(?int $userGroupId): void
+    {
+        $this->userGroups()->newPivotQuery()->update(['is_default' => false]);
+
+        if ($userGroupId === null) {
+            return;
+        }
+
+        $this->userGroups()->updateExistingPivot($userGroupId, ['is_default' => true]);
     }
 
     /**
@@ -527,7 +551,7 @@ final class Course extends Model implements HasMedia
         $userModel = config('filament-lms.user_model');
 
         return $this->belongsToMany($userModel, 'lms_course_user', 'course_id', 'user_id')
-            ->withPivot('completed_at')
+            ->withPivot('completed_at', 'is_explicitly_assigned')
             ->withTimestamps()
             ->where('lms_course_user.user_id', Auth::id());
     }
@@ -574,31 +598,7 @@ final class Course extends Model implements HasMedia
      */
     public function canBeAccessedBy($user): bool
     {
-        if (! $user) {
-            return false;
-        }
-
-        if ($this->isEvaluationCourse()) {
-            if ($user->isLmsAdmin()) {
-                return true;
-            }
-
-            return app(CourseEvaluationService::class)->isEvaluationUnlockedForUser($this, $user)
-                && ($this->users()->where('user_id', $user->id)->exists() || ! $this->is_private);
-        }
-
-        // Public courses (not private) - accessible to everyone
-        if (! $this->is_private) {
-            return true;
-        }
-
-        // Private courses - only accessible to LMS admins or assigned users
-        if ($user->isLmsAdmin()) {
-            return true;
-        }
-
-        // Check if user is assigned to this course
-        return $this->users()->where('user_id', $user->id)->exists();
+        return app(CourseAccessResolver::class)->canAccess($this, $user);
     }
 
     /**

@@ -12,6 +12,7 @@ use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\StepUser;
 use Tapp\FilamentLms\Pages\Step as StepPage;
+use Tapp\FilamentLms\UserGroups\CourseAccessResolver;
 
 final class CourseEvaluationService
 {
@@ -177,7 +178,9 @@ final class CourseEvaluationService
         }
 
         try {
-            $evaluationCourse->users()->attach($userId);
+            $evaluationCourse->users()->attach($userId, [
+                'is_explicitly_assigned' => true,
+            ]);
         } catch (UniqueConstraintViolationException) {
             // Already assigned by a concurrent request.
         }
@@ -193,7 +196,10 @@ final class CourseEvaluationService
             return true;
         }
 
-        return $primary->users()->where('user_id', $user->id)->exists();
+        $access = app(CourseAccessResolver::class);
+
+        return $access->isExplicitlyAssigned($primary, $user)
+            || $access->belongsToAssignedGroup($primary, $user);
     }
 
     public function isEvaluationUnlockedForUser(Course $evaluationCourse, Authenticatable $user): bool

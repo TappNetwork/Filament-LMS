@@ -36,7 +36,11 @@ class AssignCoursesBulkAction extends BulkAction
                     /** @var Model&FilamentLmsUserInterface $record */
                     if (method_exists($record, 'courses')) {
                         // @phpstan-ignore-next-line - courses() method is provided by FilamentLmsUser trait
-                        $record->courses()->syncWithoutDetaching($data['courses']);
+                        $pivotData = [];
+                        foreach ($data['courses'] as $courseId) {
+                            $pivotData[$courseId] = ['is_explicitly_assigned' => true];
+                        }
+                        $record->courses()->syncWithoutDetaching($pivotData);
                     }
                 }
             })

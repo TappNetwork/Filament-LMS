@@ -25,6 +25,7 @@ use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
  * @property Carbon|null $last_synced_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property-read CourseUserGroup|null $pivot
  */
 class UserGroup extends Model
 {
@@ -55,11 +56,12 @@ class UserGroup extends Model
     }
 
     /**
-     * @return BelongsToMany<Course, $this>
+     * @return BelongsToMany<Course, $this, CourseUserGroup>
      */
     public function courses(): BelongsToMany
     {
         return $this->belongsToMany(Course::class, 'lms_course_user_group', 'user_group_id', 'course_id')
+            ->using(CourseUserGroup::class)
             ->withPivot('is_default')
             ->withTimestamps();
     }

@@ -506,11 +506,12 @@ final class Course extends Model implements HasMedia
     /**
      * Dynamic criteria groups assigned to this course.
      *
-     * @return BelongsToMany<UserGroup, $this>
+     * @return BelongsToMany<UserGroup, $this, CourseUserGroup>
      */
     public function userGroups(): BelongsToMany
     {
         return $this->belongsToMany(UserGroup::class, 'lms_course_user_group', 'course_id', 'user_group_id')
+            ->using(CourseUserGroup::class)
             ->withPivot('is_default')
             ->withTimestamps();
     }

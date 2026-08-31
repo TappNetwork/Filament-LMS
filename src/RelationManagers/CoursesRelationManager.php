@@ -14,6 +14,7 @@ use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\UserGroups\CourseAccessResolver;
 use Tapp\FilamentLms\UserGroups\UserGroupCriteriaRegistry;
@@ -67,7 +68,7 @@ class CoursesRelationManager extends RelationManager
                     }),
                 TextColumn::make('assigned_at')
                     ->label('Assigned At')
-                    ->getStateUsing(fn (Course $record) => $this->coursePivot($record)?->created_at)
+                    ->getStateUsing(fn (Course $record) => $this->coursePivot($record)?->getAttribute('created_at'))
                     ->dateTime()
                     ->sortable(query: function (Builder $query, string $direction): Builder {
                         return $query
@@ -135,9 +136,17 @@ class CoursesRelationManager extends RelationManager
             ]);
     }
 
-    protected function coursePivot(Course $record): mixed
+    protected function coursePivot(Course $record): ?Pivot
     {
-        return $record->users->firstWhere('id', $this->getOwnerRecord()->getKey())?->pivot;
+        $assignedUser = $record->users->firstWhere('id', $this->getOwnerRecord()->getKey());
+
+        if ($assignedUser === null || ! $assignedUser->relationLoaded('pivot')) {
+            return null;
+        }
+
+        $pivot = $assignedUser->getRelation('pivot');
+
+        return $pivot instanceof Pivot ? $pivot : null;
     }
 
     protected function hasManualAssignment(Model $record): bool

@@ -50,21 +50,15 @@ final class UserGroupCriteriaRegistry
         $keyed = [];
 
         foreach ($sources as $key => $source) {
-            if (! $source instanceof CriteriaSource) {
-                throw new InvalidArgumentException('Each criteria source must be an instance of '.CriteriaSource::class);
-            }
-
-            $sourceKey = is_string($key) ? $key : $source->key;
-
-            if ($sourceKey !== $source->key) {
+            if ($key !== $source->key) {
                 throw new InvalidArgumentException("Criteria source key mismatch for [{$source->key}].");
             }
 
-            if (isset($keyed[$sourceKey])) {
-                throw new InvalidArgumentException("Duplicate criteria source key [{$sourceKey}].");
+            if (isset($keyed[$key])) {
+                throw new InvalidArgumentException("Duplicate criteria source key [{$key}].");
             }
 
-            $keyed[$sourceKey] = $source;
+            $keyed[$key] = $source;
         }
 
         return $keyed;

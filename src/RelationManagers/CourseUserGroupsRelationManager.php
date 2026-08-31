@@ -80,7 +80,7 @@ class CourseUserGroupsRelationManager extends RelationManager
                 Action::make('saveGroup')
                     ->label(fn (): string => $this->resolvedActiveGroupId() !== null ? 'Update group' : 'Save as group')
                     ->color('primary')
-                    ->form([
+                    ->schema([
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255)
@@ -142,8 +142,6 @@ class CourseUserGroupsRelationManager extends RelationManager
     protected function criteriaFilters(): array
     {
         $registry = app(UserGroupCriteriaRegistry::class);
-        $maxRules = (int) config('filament-lms.user_groups.max_rules', 100);
-        $maxNestingDepth = (int) config('filament-lms.user_groups.max_nesting_depth', 10);
         $filters = [];
 
         foreach ($registry->sources() as $source) {
@@ -151,8 +149,6 @@ class CourseUserGroupsRelationManager extends RelationManager
                 ->label($source->label)
                 ->constraints($this->freshConstraints($source))
                 ->constraintPickerColumns(2)
-                ->maxRules($maxRules)
-                ->maxNestingDepth($maxNestingDepth)
                 ->schema(fn (QueryBuilder $filter): array => [
                     Fieldset::make($source->label)
                         ->columns(1)
@@ -162,13 +158,9 @@ class CourseUserGroupsRelationManager extends RelationManager
                                 ->constraints($filter->getConstraints())
                                 ->blockPickerColumns($filter->getConstraintPickerColumns())
                                 ->blockPickerWidth($filter->getConstraintPickerWidth())
-                                ->maxRules($filter->getMaxRules())
-                                ->maxNestingDepth($filter->getMaxNestingDepth())
                                 ->addAction(fn (Action $action): Action => $action
                                     ->label("Add {$source->label} rule")
-                                    ->icon(FilamentIcon::resolve(QueryBuilderIconAlias::ADD_RULE_ACTION) ?? Heroicon::Plus)
-                                    ->disabled(fn (RuleBuilder $component): bool => $component->isAtRuleLimit())
-                                    ->tooltip(fn (RuleBuilder $component): ?string => $component->getRuleLimitReachedTooltip())),
+                                    ->icon(FilamentIcon::resolve(QueryBuilderIconAlias::ADD_RULE_ACTION) ?? Heroicon::Plus)),
                         ]),
                 ])
                 // Matching is applied in resolveMatchingUsersQuery() so related-model

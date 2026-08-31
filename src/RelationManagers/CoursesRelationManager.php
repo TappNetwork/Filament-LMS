@@ -155,7 +155,13 @@ class CoursesRelationManager extends RelationManager
             return false;
         }
 
-        return $this->coursePivot($record) !== null;
+        $pivot = $this->coursePivot($record);
+
+        if ($pivot === null) {
+            return false;
+        }
+
+        return (int) $pivot->getAttribute('is_explicitly_assigned') === 1;
     }
 
     protected function assignmentSourceLabel(Course $record): string

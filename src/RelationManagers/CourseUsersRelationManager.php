@@ -14,6 +14,8 @@ use Filament\Tables;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class CourseUsersRelationManager extends RelationManager
 {
@@ -66,6 +68,7 @@ class CourseUsersRelationManager extends RelationManager
             ->filters([
                 //
             ])
+            ->checkIfRecordIsSelectableUsing(fn (Model $record): bool => $this->hasManualAssignment($record))
             ->headerActions([
                 AttachAction::make()
                     ->preloadRecordSelect()
@@ -89,7 +92,8 @@ class CourseUsersRelationManager extends RelationManager
             ])
             ->recordActions([
                 ActionGroup::make([
-                    DetachAction::make(),
+                    DetachAction::make()
+                        ->visible(fn (Model $record): bool => $this->hasManualAssignment($record)),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
@@ -97,6 +101,21 @@ class CourseUsersRelationManager extends RelationManager
                     DetachBulkAction::make(),
                 ]),
             ]);
+    }
+
+    protected function hasManualAssignment(Model $record): bool
+    {
+        if (! $record->relationLoaded('pivot')) {
+            return false;
+        }
+
+        $pivot = $record->getRelation('pivot');
+
+        if (! $pivot instanceof Pivot) {
+            return false;
+        }
+
+        return (int) $pivot->getAttribute('is_explicitly_assigned') === 1;
     }
 
     /**

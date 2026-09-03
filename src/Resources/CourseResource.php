@@ -27,6 +27,7 @@ use Tapp\FilamentLms\Concerns\HasLmsSlug;
 use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\CreditCategory;
+use Tapp\FilamentLms\RelationManagers\CourseUserGroupsRelationManager;
 use Tapp\FilamentLms\RelationManagers\CourseUsersRelationManager;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\CreateCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
@@ -287,6 +288,7 @@ class CourseResource extends Resource
         return [
             LessonsRelationManager::make(),
             CourseUsersRelationManager::make(),
+            CourseUserGroupsRelationManager::make(),
         ];
     }
 

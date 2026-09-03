@@ -67,6 +67,30 @@ return [
         'email',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Dynamic user groups
+    |--------------------------------------------------------------------------
+    |
+    | Assign courses to users by criteria instead of attaching individuals.
+    | Set criteria_provider to a class implementing
+    | Tapp\FilamentLms\UserGroups\Contracts\UserGroupCriteriaProvider.
+    | When null, the "Assigned User Groups" tab is hidden.
+    |
+    */
+    'user_groups' => [
+        'criteria_provider' => null,
+        'max_rules' => 100,
+        'max_nesting_depth' => 10,
+        'sync_queue' => true,
+        'refresh_on_user_save' => true,
+        'display_columns' => [
+            'name',
+            'email',
+        ],
+        'search_columns' => null,
+    ],
+
     // Course search columns for relation managers
     'course_search_columns' => [
         'name',

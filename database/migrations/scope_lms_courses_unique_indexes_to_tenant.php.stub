@@ -1,0 +1,100 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Tapp\FilamentLms\Helpers\TenantHelper;
+
+return new class extends Migration
+{
+    /**
+     * @var list<string>
+     */
+    private array $columns = ['name', 'slug', 'external_id'];
+
+    public function up(): void
+    {
+        if (! $this->shouldScopeUniqueIndexes()) {
+            return;
+        }
+
+        $tenantColumn = TenantHelper::getTenantColumnName();
+        $drop = [];
+        $add = [];
+
+        foreach ($this->columns as $column) {
+            if (Schema::hasIndex('lms_courses', [$column], 'unique')) {
+                $drop[] = $column;
+            }
+
+            if (! Schema::hasIndex('lms_courses', [$tenantColumn, $column], 'unique')) {
+                $add[] = $column;
+            }
+        }
+
+        if ($drop !== []) {
+            Schema::table('lms_courses', function (Blueprint $table) use ($drop): void {
+                foreach ($drop as $column) {
+                    $table->dropUnique([$column]);
+                }
+            });
+        }
+
+        if ($add !== []) {
+            Schema::table('lms_courses', function (Blueprint $table) use ($add, $tenantColumn): void {
+                foreach ($add as $column) {
+                    $table->unique([$tenantColumn, $column]);
+                }
+            });
+        }
+    }
+
+    public function down(): void
+    {
+        if (! $this->shouldScopeUniqueIndexes()) {
+            return;
+        }
+
+        $tenantColumn = TenantHelper::getTenantColumnName();
+        $drop = [];
+        $add = [];
+
+        foreach ($this->columns as $column) {
+            if (Schema::hasIndex('lms_courses', [$tenantColumn, $column], 'unique')) {
+                $drop[] = $column;
+            }
+
+            if (! Schema::hasIndex('lms_courses', [$column], 'unique')) {
+                $add[] = $column;
+            }
+        }
+
+        if ($drop !== []) {
+            Schema::table('lms_courses', function (Blueprint $table) use ($drop, $tenantColumn): void {
+                foreach ($drop as $column) {
+                    $table->dropUnique([$tenantColumn, $column]);
+                }
+            });
+        }
+
+        if ($add !== []) {
+            Schema::table('lms_courses', function (Blueprint $table) use ($add): void {
+                foreach ($add as $column) {
+                    $table->unique($column);
+                }
+            });
+        }
+    }
+
+    private function shouldScopeUniqueIndexes(): bool
+    {
+        if (! config('filament-lms.tenancy.enabled')) {
+            return false;
+        }
+
+        $tenantColumn = TenantHelper::getTenantColumnName();
+
+        return Schema::hasTable('lms_courses')
+            && Schema::hasColumn('lms_courses', $tenantColumn);
+    }
+};

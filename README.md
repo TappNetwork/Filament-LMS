@@ -423,7 +423,33 @@ When `multipart_upload.enabled` is `true` **and** `spykapps/filament-uppy-upload
 
 ## Certificate Customization
 
-The LMS package generates PDF certificates when users complete courses. You can customize the appearance and content of certificates using the following configuration options:
+The LMS package generates PDF certificates when users complete courses. You can customize the appearance and content of certificates using the following configuration options.
+
+### Optional certificate-builder templates
+
+Install [tapp/filament-certificate-builder](https://github.com/TappNetwork/filament-certificate-builder) and enable the integration to assign a custom template per course. When a course has no template (or the package is not installed), the existing award Blade certificate is used.
+
+```bash
+composer require tapp/filament-certificate-builder
+php artisan vendor:publish --tag=filament-lms-migrations
+php artisan migrate
+```
+
+```php
+// config/filament-lms.php
+'integrations' => [
+    'certificate_builder' => [
+        'enabled' => true,
+        'token_set' => 'course',
+        // Point this at your host CertificateTemplateResource if you do not register the package resource.
+        'template_resource' => \Tapp\FilamentCertificateBuilder\Filament\Resources\CertificateTemplates\CertificateTemplateResource::class,
+    ],
+],
+```
+
+Add a matching `course` token set in `config/certificate-builder.php`. LMS resolves tokens with context `['course' => $course, 'user' => $user]` and keeps the `filament-lms::certificates.show` / `filament-lms::certificates.download` routes.
+
+On **Edit Course**, **Create Certificate Template** creates a template for that token set, sets `certificate_template_id` on the course, and redirects to the designer. When the course already has a template, the action is **Edit Certificate Template** and opens the designer for that template.
 
 ### certificate_logo
 

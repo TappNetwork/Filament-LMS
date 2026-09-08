@@ -41,6 +41,7 @@ use Tapp\FilamentLms\UserGroups\CourseAccessResolver;
  * @property string $external_id
  * @property string|null $image
  * @property string|null $award
+ * @property int|null $certificate_template_id
  * @property array $award_content
  * @property string|null $description
  * @property int|null $required_test_percentage
@@ -108,6 +109,17 @@ final class Course extends Model implements HasMedia
     public function evaluationCourse(): BelongsTo
     {
         return $this->belongsTo(self::class, 'evaluation_course_id');
+    }
+
+    /**
+     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     */
+    public function certificateTemplate(): BelongsTo
+    {
+        /** @var class-string<\Illuminate\Database\Eloquent\Model> $related */
+        $related = 'Tapp\\FilamentCertificateBuilder\\Models\\CertificateTemplate';
+
+        return $this->belongsTo($related, 'certificate_template_id');
     }
 
     public function hasEvaluation(): bool

@@ -34,6 +34,7 @@ use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\ListCourses;
 use Tapp\FilamentLms\Resources\CourseResource\RelationManagers\LessonsRelationManager;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
+use Tapp\FilamentLms\Support\CertificateBuilder;
 
 class CourseResource extends Resource
 {
@@ -130,6 +131,22 @@ class CourseResource extends Resource
                         return null;
                     })
                     ->helperText('Form must be saved before previewing.'),
+                Select::make('certificate_template_id')
+                    ->label('Certificate Template')
+                    ->helperText('Optional custom layout. Leave blank to use the award certificate.')
+                    ->options(function (): array {
+                        $model = CertificateBuilder::TEMPLATE_MODEL;
+
+                        return $model::query()
+                            ->where('token_set', CertificateBuilder::tokenSet())
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
+                            ->all();
+                    })
+                    ->searchable()
+                    ->preload()
+                    ->nullable()
+                    ->visible(fn (): bool => CertificateBuilder::enabled()),
                 Checkbox::make('embedded_player')
                     ->label('Embedded player mode')
                     ->helperText('Hides LMS step sidebar and uses the SCORM/HTML5 package as the primary navigation.'),

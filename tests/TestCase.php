@@ -102,6 +102,7 @@ abstract class TestCase extends Orchestra
             $table->string('external_id')->unique();
             $table->text('image')->nullable();
             $table->string('award')->nullable();
+            $table->unsignedBigInteger('certificate_template_id')->nullable()->index();
             $table->text('description')->nullable();
             $table->unsignedTinyInteger('required_test_percentage')->nullable();
             $table->boolean('is_private')->default(false);

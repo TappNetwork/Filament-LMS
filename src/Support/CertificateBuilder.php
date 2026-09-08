@@ -40,7 +40,7 @@ final class CertificateBuilder
             && $user->can('update', $course) === true;
     }
 
-    public static function assignedTemplateId(Course $course): int|string|null
+    public static function assignedTemplateId(Course $course): ?int
     {
         $templateId = $course->certificate_template_id;
 
@@ -50,7 +50,7 @@ final class CertificateBuilder
 
         $exists = self::TEMPLATE_MODEL::query()->whereKey($templateId)->exists();
 
-        return $exists ? $templateId : null;
+        return $exists ? (int) $templateId : null;
     }
 
     public static function templateEditUrl(Course $course): ?string

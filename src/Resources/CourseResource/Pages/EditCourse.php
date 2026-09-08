@@ -22,13 +22,13 @@ class EditCourse extends EditRecord
                 ->icon('heroicon-o-document-duplicate')
                 ->visible(fn (): bool => CertificateBuilder::canCreateTemplate(
                     auth()->user(),
-                    $this->getRecord(),
+                    $this->courseRecord(),
                 ))
                 ->schema([
                     TextInput::make('name')
                         ->required()
                         ->maxLength(255)
-                        ->default(fn (): string => $this->getRecord()->name.' Certificate'),
+                        ->default(fn (): string => $this->courseRecord()->name.' Certificate'),
                 ])
                 ->action(function (array $data): void {
                     $this->createAndAssociateCertificateTemplate((string) $data['name']);
@@ -36,10 +36,10 @@ class EditCourse extends EditRecord
             Action::make('edit_certificate_template')
                 ->label('Edit Certificate Template')
                 ->icon('heroicon-o-pencil-square')
-                ->url(fn (): string => CertificateBuilder::templateEditUrl($this->getRecord()) ?? '#')
+                ->url(fn (): string => CertificateBuilder::templateEditUrl($this->courseRecord()) ?? '#')
                 ->visible(fn (): bool => CertificateBuilder::canEditTemplate(
                     auth()->user(),
-                    $this->getRecord(),
+                    $this->courseRecord(),
                 )),
             DeleteAction::make(),
         ];
@@ -63,9 +63,7 @@ class EditCourse extends EditRecord
             'layout' => $layout,
         ]);
 
-        /** @var Course $course */
-        $course = $this->getRecord();
-        $course->update([
+        $this->courseRecord()->update([
             'certificate_template_id' => $template->getKey(),
         ]);
 
@@ -74,5 +72,13 @@ class EditCourse extends EditRecord
         if ($resource !== null) {
             $this->redirect($resource::getUrl('edit', ['record' => $template]));
         }
+    }
+
+    private function courseRecord(): Course
+    {
+        /** @var Course $course */
+        $course = $this->getRecord();
+
+        return $course;
     }
 }

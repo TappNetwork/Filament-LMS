@@ -31,6 +31,7 @@ use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
+use Tapp\FilamentLms\Support\CertificateBuilder;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
 use Tapp\FilamentLms\UserGroups\CourseAccessResolver;
 
@@ -111,15 +112,9 @@ final class Course extends Model implements HasMedia
         return $this->belongsTo(self::class, 'evaluation_course_id');
     }
 
-    /**
-     * @return BelongsTo<Model, $this>
-     */
     public function certificateTemplate(): BelongsTo
     {
-        /** @var class-string<Model> $related */
-        $related = 'Tapp\\FilamentCertificateBuilder\\Models\\CertificateTemplate';
-
-        return $this->belongsTo($related, 'certificate_template_id');
+        return $this->belongsTo(CertificateBuilder::TEMPLATE_MODEL, 'certificate_template_id');
     }
 
     public function hasEvaluation(): bool

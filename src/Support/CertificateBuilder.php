@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Support;
 
+use Illuminate\Support\Facades\Gate;
 use Tapp\FilamentLms\Models\Course;
 
 final class CertificateBuilder
@@ -35,9 +36,28 @@ final class CertificateBuilder
     public static function canManageTemplates(?object $user, Course $course): bool
     {
         return self::enabled()
-            && $user !== null
-            && method_exists($user, 'can')
-            && $user->can('update', $course) === true;
+            && self::userCanUpdateCourse($user, $course);
+    }
+
+    public static function userCanUpdateCourse(?object $user, Course $course): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        $policy = Gate::getPolicyFor($course);
+
+        if ($policy === null) {
+            return true;
+        }
+
+        $policyClass = is_object($policy) ? $policy::class : $policy;
+
+        if (! method_exists($policyClass, 'update')) {
+            return true;
+        }
+
+        return method_exists($user, 'can') && $user->can('update', $course) === true;
     }
 
     public static function assignedTemplateId(Course $course): ?int

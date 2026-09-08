@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Tapp\FilamentCertificateBuilder\Filament\Resources\CertificateTemplates\CertificateTemplateResource;
 
 return [
     'theme' => 'default',
@@ -195,7 +196,7 @@ return [
             'token_set' => 'course',
 
             // Filament resource used after creating a template from Edit Course.
-            'template_resource' => \Tapp\FilamentCertificateBuilder\Filament\Resources\CertificateTemplates\CertificateTemplateResource::class,
+            'template_resource' => CertificateTemplateResource::class,
         ],
     ],
 

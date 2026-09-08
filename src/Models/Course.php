@@ -112,11 +112,11 @@ final class Course extends Model implements HasMedia
     }
 
     /**
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function certificateTemplate(): BelongsTo
     {
-        /** @var class-string<\Illuminate\Database\Eloquent\Model> $related */
+        /** @var class-string<Model> $related */
         $related = 'Tapp\\FilamentCertificateBuilder\\Models\\CertificateTemplate';
 
         return $this->belongsTo($related, 'certificate_template_id');

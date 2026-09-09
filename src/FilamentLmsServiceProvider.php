@@ -14,6 +14,7 @@ use Tapp\FilamentLibrary\Models\LibraryItem;
 use Tapp\FilamentLms\Console\Commands\BackfillCourseCompletedAt;
 use Tapp\FilamentLms\Console\Commands\BackfillEmbeddedPlayerCourses;
 use Tapp\FilamentLms\Console\Commands\ImportCartridgesCommand;
+use Tapp\FilamentLms\Console\Commands\MigrateAwardsToCertificateTemplatesCommand;
 use Tapp\FilamentLms\Console\Commands\ReconcileUserGroupMemberships;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
@@ -77,6 +78,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             ->hasCommand(BackfillCourseCompletedAt::class)
             ->hasCommand(BackfillEmbeddedPlayerCourses::class)
             ->hasCommand(ImportCartridgesCommand::class)
+            ->hasCommand(MigrateAwardsToCertificateTemplatesCommand::class)
             ->hasCommand(ReconcileUserGroupMemberships::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command

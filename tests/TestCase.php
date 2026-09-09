@@ -113,6 +113,14 @@ abstract class TestCase extends Orchestra
             $table->softDeletes();
         });
 
+        $app['db']->connection()->getSchemaBuilder()->create('certificate_templates', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('token_set')->default('default')->index();
+            $table->json('layout')->nullable();
+            $table->timestamps();
+        });
+
         // Create lms_lessons table
         $app['db']->connection()->getSchemaBuilder()->create('lms_lessons', function (Blueprint $table) {
             $table->id();

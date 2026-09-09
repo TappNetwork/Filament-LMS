@@ -451,6 +451,16 @@ Add a matching `course` token set in `config/certificate-builder.php`. LMS resol
 
 On **Edit Course**, **Create Certificate Template** creates a template for that token set, sets `certificate_template_id` on the course, and redirects to the designer. When the course already has a template, the action is **Edit Certificate Template** and opens the designer for that template.
 
+Migrate existing award Blade certificates into builder templates (logos and copy only; layouts are not pixel-perfect):
+
+```bash
+php artisan filament-lms:migrate-awards-to-templates --dry-run
+php artisan filament-lms:migrate-awards-to-templates
+php artisan filament-lms:migrate-awards-to-templates --award=safb
+```
+
+The command reads `config('filament-lms.awards')` plus any `award` values already stored on courses, creates one template per award from the matching `filament-lms::certificates.{award}` view, and assigns it to courses that do not already have a `certificate_template_id`. Background/header images are skipped; `<img>` logos and static text are applied to the default builder layout. Use `--force` to refresh those layouts and reassign courses that already have a template.
+
 ### certificate_logo
 
 Specify a custom logo to display on certificates. If not set, it falls back to the `brand_logo` setting.

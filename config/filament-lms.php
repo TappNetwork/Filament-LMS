@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Tapp\FilamentCertificateBuilder\Filament\Resources\CertificateTemplates\CertificateTemplateResource;
 
 return [
     'theme' => 'default',
@@ -185,6 +186,17 @@ return [
 
             // Max rows returned when searching library files or links on the Step form.
             'material_select_limit' => 200,
+        ],
+
+        'certificate_builder' => [
+            // When true (and tapp/filament-certificate-builder is installed), courses may use a custom template.
+            'enabled' => false,
+
+            // Token set key from config/certificate-builder.php used for new course templates.
+            'token_set' => 'course',
+
+            // Filament resource used after creating a template from Edit Course.
+            'template_resource' => CertificateTemplateResource::class,
         ],
     ],
 

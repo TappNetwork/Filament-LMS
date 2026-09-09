@@ -51,39 +51,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (! $this->shouldScopeUniqueIndexes()) {
-            return;
-        }
-
-        $tenantColumn = TenantHelper::getTenantColumnName();
-        $drop = [];
-        $add = [];
-
-        foreach ($this->columns as $column) {
-            if (Schema::hasIndex('lms_courses', [$tenantColumn, $column], 'unique')) {
-                $drop[] = $column;
-            }
-
-            if (! Schema::hasIndex('lms_courses', [$column], 'unique')) {
-                $add[] = $column;
-            }
-        }
-
-        if ($drop !== []) {
-            Schema::table('lms_courses', function (Blueprint $table) use ($drop, $tenantColumn): void {
-                foreach ($drop as $column) {
-                    $table->dropUnique([$tenantColumn, $column]);
-                }
-            });
-        }
-
-        if ($add !== []) {
-            Schema::table('lms_courses', function (Blueprint $table) use ($add): void {
-                foreach ($add as $column) {
-                    $table->unique($column);
-                }
-            });
-        }
+        // Do not restore global unique indexes. After this migration runs,
+        // two tenants may share a name, slug, or external_id; rolling back
+        // would drop tenant-scoped constraints and can fail to recreate globals.
     }
 
     private function shouldScopeUniqueIndexes(): bool

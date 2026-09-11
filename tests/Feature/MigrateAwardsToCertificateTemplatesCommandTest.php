@@ -26,10 +26,10 @@ function seedAwardLogo(string $relativePath): string
     return $absolute;
 }
 
-it('fails when the certificate builder is not enabled', function () {
-    $this->artisan('filament-lms:migrate-awards-to-templates')
-        ->expectsOutputToContain('Certificate builder is not enabled')
-        ->assertFailed();
+it('fails when the certificate builder is not installed', function () {
+    $this->artisan('filament-lms:upgrade-awards')
+        ->expectsOutputToContain('Certificate builder is not installed')
+        ->assertExitCode(1);
 });
 
 it('creates a template per award and assigns untemplated courses', function () {
@@ -42,6 +42,7 @@ it('creates a template per award and assigns untemplated courses', function () {
 
     publishAwardFixture('decan', 'custom-award.blade.php');
     seedAwardLogo('img/DE_DHSS-logo-red-wide.png');
+    seedAwardLogo('img/header-green.jpg');
 
     $defaultCourse = Course::factory()->create([
         'name' => 'Default Award Course',
@@ -55,11 +56,16 @@ it('creates a template per award and assigns untemplated courses', function () {
         'award' => 'decan',
         'certificate_template_id' => null,
     ]);
-    $alreadyAssigned = Course::factory()->create([
+    $customTemplate = FakeCertificateTemplate::query()->create([
+        'name' => 'Hand Built Template',
+        'token_set' => 'course',
+        'layout' => ['elements' => []],
+    ]);
+    $alreadyAssigned = Course::factory()->withoutCertificateTemplate()->create([
         'name' => 'Already Assigned Course',
         'external_id' => 'already_assigned_course',
         'award' => 'decan',
-        'certificate_template_id' => 99,
+        'certificate_template_id' => $customTemplate->id,
     ]);
 
     $summary = app(MigrateAwardsToCertificateTemplates::class)->handle(
@@ -77,13 +83,21 @@ it('creates a template per award and assigns untemplated courses', function () {
         ->and($defaultTemplate)->not->toBeNull()
         ->and($decanTemplate)->not->toBeNull()
         ->and($decanTemplate->token_set)->toBe('course')
-        ->and($decanTemplate->layout['elements'])->toContain(
-            ['id' => 'certifying_line', 'type' => 'text', 'text' => 'AWARDED TO:', 'visible' => true],
-        )
+        ->and($decanTemplate->layout['signature_count'])->toBe(0)
+        ->and($decanTemplate->layout['border']['style'])->toBe('gradient')
+        ->and($decanTemplate->layout['border']['gradient'])->toBe('linear-gradient(to right, #a3e635, #0ea5e9, #67e8f9)')
+        ->and(collect($decanTemplate->layout['elements'])->firstWhere('id', 'certifying_line'))
+        ->toMatchArray(['text' => 'AWARDED TO:', 'visible' => true])
+        ->and(collect($decanTemplate->layout['elements'])->firstWhere('id', 'recipient_name_display'))
+        ->toMatchArray(['bind' => 'recipient_name', 'visible' => false])
+        ->and(collect($decanTemplate->layout['elements'])->pluck('type'))->not->toContain('signature')
+        ->and($decanTemplate->layout['header']['enabled'])->toBeTrue()
+        ->and($decanTemplate->layout['header']['title_bind'])->toBe('course_name')
         ->and($decanTemplate->getFirstMedia('logo_1'))->not->toBeNull()
+        ->and($decanTemplate->getFirstMedia('header'))->not->toBeNull()
         ->and($defaultCourse->refresh()->certificate_template_id)->toBe($defaultTemplate->id)
         ->and($decanCourse->refresh()->certificate_template_id)->toBe($decanTemplate->id)
-        ->and($alreadyAssigned->refresh()->certificate_template_id)->toBe(99);
+        ->and($alreadyAssigned->refresh()->certificate_template_id)->toBe($customTemplate->id);
 });
 
 it('is idempotent', function () {
@@ -110,9 +124,9 @@ it('is idempotent', function () {
         layoutClass: FakeCertificateLayout::class,
     );
 
-    expect(FakeCertificateTemplate::query()->count())->toBe(1)
+    expect(FakeCertificateTemplate::query()->count())->toBe(2)
         ->and($second['templates_created'])->toBe(0)
-        ->and($second['templates_reused'])->toBe(1)
+        ->and($second['templates_reused'])->toBe(2)
         ->and($second['courses_updated'])->toBe(0);
 });
 
@@ -133,7 +147,7 @@ it('does not write during a dry run', function () {
         layoutClass: FakeCertificateLayout::class,
     );
 
-    expect($summary['templates_created'])->toBe(1)
+    expect($summary['templates_created'])->toBe(2)
         ->and($summary['courses_updated'])->toBe(1)
         ->and(FakeCertificateTemplate::query()->count())->toBe(0)
         ->and($course->refresh()->certificate_template_id)->toBeNull();
@@ -181,11 +195,17 @@ it('reassigns existing templates when forced', function () {
         'layout' => ['elements' => []],
     ]);
 
-    $course = Course::factory()->create([
+    $customTemplate = FakeCertificateTemplate::query()->create([
+        'name' => 'Hand Built Template',
+        'token_set' => 'course',
+        'layout' => ['elements' => []],
+    ]);
+
+    $course = Course::factory()->withoutCertificateTemplate()->create([
         'name' => 'Force Reassign Course',
         'external_id' => 'force_reassign_course',
         'award' => 'decan',
-        'certificate_template_id' => 99,
+        'certificate_template_id' => $customTemplate->id,
     ]);
 
     app(MigrateAwardsToCertificateTemplates::class)->handle(
@@ -194,8 +214,31 @@ it('reassigns existing templates when forced', function () {
         layoutClass: FakeCertificateLayout::class,
     );
 
-    expect(FakeCertificateTemplate::query()->count())->toBe(1)
+    expect(FakeCertificateTemplate::query()->count())->toBe(3)
         ->and($existing->refresh()->token_set)->toBe('course')
         ->and($existing->layout['elements'])->not->toBeEmpty()
-        ->and($course->refresh()->certificate_template_id)->toBe($existing->id);
+        ->and($course->refresh()->certificate_template_id)->toBe($customTemplate->id);
+});
+
+it('assigns courses with a null award to the default template', function () {
+    config(['filament-lms.awards' => [
+        'default' => 'Default',
+    ]]);
+
+    $course = Course::factory()->withoutCertificateTemplate()->create([
+        'name' => 'Orphan Award Course',
+        'external_id' => 'orphan_award_course',
+        'award' => null,
+    ]);
+
+    app(MigrateAwardsToCertificateTemplates::class)->handle(
+        templateClass: FakeCertificateTemplate::class,
+        layoutClass: FakeCertificateLayout::class,
+    );
+
+    $template = FakeCertificateTemplate::query()->where('name', 'Default Certificate')->first();
+
+    expect($template)->not->toBeNull()
+        ->and($course->refresh()->certificate_template_id)->toBe($template->id)
+        ->and(app(MigrateAwardsToCertificateTemplates::class)->unverifiedCourseIds(FakeCertificateTemplate::class))->toBe([]);
 });

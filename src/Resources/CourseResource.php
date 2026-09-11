@@ -116,24 +116,9 @@ class CourseResource extends Resource
                     ->maxValue(100)
                     ->default(0)
                     ->nullable(),
-                Select::make('award')
-                    ->options(config('filament-lms.awards'))
-                    ->required()
-                    ->hint(function ($record) {
-                        // @phpstan-ignore-next-line
-                        if ($record && $record->id) {
-                            // @phpstan-ignore-next-line
-                            $link = route('filament-lms::certificates.show', ['course' => $record->id, 'user' => auth()->id()]);
-
-                            return new HtmlString("<a rel='noopener noreferrer' target='_blank' href='{$link}'>Click to Preview</a>");
-                        }
-
-                        return null;
-                    })
-                    ->helperText('Form must be saved before previewing.'),
                 Select::make('certificate_template_id')
                     ->label('Certificate Template')
-                    ->helperText('Optional custom layout. Leave blank to use the award certificate.')
+                    ->helperText('Required. Form must be saved before previewing.')
                     ->options(function (): array {
                         $model = CertificateBuilder::TEMPLATE_MODEL;
 
@@ -143,9 +128,19 @@ class CourseResource extends Resource
                             ->pluck('name', 'id')
                             ->all();
                     })
+                    ->default(fn (): ?int => CertificateBuilder::defaultTemplateId())
+                    ->hint(function (?Course $record) {
+                        if ($record && $record->id) {
+                            $link = route('filament-lms::certificates.show', ['course' => $record->id, 'user' => auth()->id()]);
+
+                            return new HtmlString("<a rel='noopener noreferrer' target='_blank' href='{$link}'>Click to Preview</a>");
+                        }
+
+                        return null;
+                    })
                     ->searchable()
                     ->preload()
-                    ->nullable()
+                    ->required()
                     ->visible(fn (): bool => CertificateBuilder::enabled()),
                 Checkbox::make('embedded_player')
                     ->label('Embedded player mode')

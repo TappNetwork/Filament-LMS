@@ -41,9 +41,7 @@ use Tapp\FilamentLms\UserGroups\CourseAccessResolver;
  * @property string $slug
  * @property string $external_id
  * @property string|null $image
- * @property string|null $award
  * @property int|null $certificate_template_id
- * @property array $award_content
  * @property string|null $description
  * @property int|null $required_test_percentage
  * @property bool $is_private
@@ -68,7 +66,6 @@ final class Course extends Model implements HasMedia
     protected $table = 'lms_courses';
 
     protected $casts = [
-        'award_content' => 'array',
         'is_private' => 'boolean',
         'embedded_player' => 'boolean',
         'completion_mode' => CompletionMode::class,

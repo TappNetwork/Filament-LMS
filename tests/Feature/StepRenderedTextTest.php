@@ -11,7 +11,7 @@ beforeEach(function () {
         'name' => 'Test Course',
         'slug' => 'test-course',
         'external_id' => 'test_course',
-        'award' => 'default',
+        'certificate_template_id' => null,
     ]);
     $this->lesson = Lesson::query()->create([
         'course_id' => $this->course->id,

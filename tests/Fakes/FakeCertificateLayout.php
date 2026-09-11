@@ -17,6 +17,18 @@ final class FakeCertificateLayout
             'signature_count' => 2,
             'elements' => [
                 [
+                    'id' => 'recipient_name_display',
+                    'type' => 'text',
+                    'bind' => 'recipient_name',
+                    'visible' => true,
+                ],
+                [
+                    'id' => 'recipient_name',
+                    'type' => 'text',
+                    'bind' => 'recipient_name',
+                    'visible' => true,
+                ],
+                [
                     'id' => 'certifying_line',
                     'type' => 'text',
                     'text' => 'This certifies that',

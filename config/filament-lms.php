@@ -22,9 +22,6 @@ return [
 
     'vite_theme' => '',
     'colors' => [],
-    'awards' => [
-        'default' => 'Default',
-    ],
     // Enable top navigation on the LMS dashboard (courses list page).
     // Note: This only affects the dashboard. Course pages always use sidebar navigation.
     'top_navigation' => false,
@@ -189,8 +186,8 @@ return [
         ],
 
         'certificate_builder' => [
-            // When true (and tapp/filament-certificate-builder is installed), courses may use a custom template.
-            'enabled' => false,
+            // Required for course certificates. The builder package must be installed.
+            'enabled' => true,
 
             // Token set key from config/certificate-builder.php used for new course templates.
             'token_set' => 'course',

@@ -16,6 +16,7 @@ use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Test;
+use Tapp\FilamentLms\Support\CertificateBuilder;
 
 final class CommonCartridgeImportService
 {
@@ -156,16 +157,13 @@ final class CommonCartridgeImportService
         $externalId = $this->uniqueCourseColumn(Str::slug($manifest->courseTitle, '_'), 'external_id', $tenantId);
         $name = $this->uniqueCourseColumn($manifest->courseTitle, 'name', $tenantId);
 
-        $awards = config('filament-lms.awards', ['default' => 'Default']);
-        $defaultAward = array_key_first($awards);
-
         $data = [
             'name' => $name,
             'slug' => $slug,
             'external_id' => $externalId,
             'description' => $manifest->courseDescription,
             'is_private' => false,
-            'award' => $defaultAward,
+            'certificate_template_id' => CertificateBuilder::defaultTemplateId(),
         ];
 
         if (config('filament-lms.tenancy.enabled') && $tenantId !== null) {

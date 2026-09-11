@@ -31,5 +31,6 @@ final class FakeCertificateTemplate extends Model implements HasMedia
         $this->addMediaCollection('logo_1')->singleFile();
         $this->addMediaCollection('logo_2')->singleFile();
         $this->addMediaCollection('logo_3')->singleFile();
+        $this->addMediaCollection('header')->singleFile();
     }
 }

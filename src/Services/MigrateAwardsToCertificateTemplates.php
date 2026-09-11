@@ -6,6 +6,7 @@ namespace Tapp\FilamentLms\Services;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Support\AwardCertificateBlueprint;
@@ -51,6 +52,20 @@ final class MigrateAwardsToCertificateTemplates
             throw new RuntimeException('Certificate builder is not installed.');
         }
 
+        if (! Schema::hasColumn('lms_courses', 'award')) {
+            return [
+                'templates_created' => 0,
+                'templates_reused' => 0,
+                'courses_updated' => 0,
+                'logos_attached' => 0,
+                'awards' => [],
+            ];
+        }
+
+        if (! Schema::hasColumn('lms_courses', 'certificate_template_id')) {
+            throw new RuntimeException('lms_courses.certificate_template_id is missing. Publish and run filament-lms migrations first.');
+        }
+
         $tokenSet = CertificateBuilder::tokenSet();
         $summary = [
             'templates_created' => 0,
@@ -68,7 +83,7 @@ final class MigrateAwardsToCertificateTemplates
 
             $created = $existing === null;
             $logoCount = 0;
-            $courseCount = $this->coursesToUpdate($awardKey, $force)->count();
+            $courseCount = $this->coursesToUpdate($awardKey, $templateClass)->count();
 
             if (! $dryRun) {
                 $template = $existing ?? $templateClass::query()->create([
@@ -84,8 +99,9 @@ final class MigrateAwardsToCertificateTemplates
                     ]);
                 }
 
-                $logoCount = $this->attachLogos($template, $blueprint, $force);
-                $courseCount = $this->coursesToUpdate($awardKey, $force)->update([
+                $logoCount = $this->attachLogos($template, $blueprint, $force)
+                    + $this->attachHeader($template, $blueprint, $force);
+                $courseCount = $this->coursesToUpdate($awardKey, $templateClass)->update([
                     'certificate_template_id' => $template->getKey(),
                 ]);
             }
@@ -103,23 +119,89 @@ final class MigrateAwardsToCertificateTemplates
             ];
         }
 
+        if ($award === null) {
+            $orphanCount = $this->assignCoursesWithoutAward($templateClass, $layoutClass, $tokenSet, $dryRun);
+            $summary['courses_updated'] += $orphanCount;
+        }
+
         return $summary;
     }
 
     /**
+     * @param  class-string<Model>  $templateClass
+     * @return list<int|string>
+     */
+    public function unverifiedCourseIds(?string $templateClass = null): array
+    {
+        $templateClass ??= CertificateBuilder::TEMPLATE_MODEL;
+
+        return $this->coursesMissingTemplate($templateClass)
+            ->pluck('id')
+            ->all();
+    }
+
+    /**
+     * @param  class-string<Model>  $templateClass
      * @return Builder<Course>
      */
-    private function coursesToUpdate(string $awardKey, bool $force): Builder
+    private function coursesToUpdate(string $awardKey, string $templateClass): Builder
     {
-        $query = Course::query()
-            ->withoutTenantScope()
+        return $this->coursesMissingTemplate($templateClass)
             ->where('award', $awardKey);
+    }
 
-        if (! $force) {
-            $query->whereNull('certificate_template_id');
+    /**
+     * @param  class-string<Model>  $templateClass
+     * @return Builder<Course>
+     */
+    private function coursesMissingTemplate(string $templateClass): Builder
+    {
+        return Course::query()
+            ->withoutTenantScope()
+            ->where(function (Builder $query) use ($templateClass): void {
+                $query->whereNull('certificate_template_id')
+                    ->orWhereNotIn('certificate_template_id', $templateClass::query()->select('id'));
+            });
+    }
+
+    /**
+     * @param  class-string<Model>  $templateClass
+     * @param  class-string|null  $layoutClass
+     */
+    private function assignCoursesWithoutAward(
+        string $templateClass,
+        ?string $layoutClass,
+        string $tokenSet,
+        bool $dryRun,
+    ): int {
+        $query = $this->coursesMissingTemplate($templateClass)
+            ->where(function (Builder $query): void {
+                $query->whereNull('award')
+                    ->orWhere('award', '');
+            });
+
+        $count = $query->count();
+
+        if ($dryRun || $count === 0) {
+            return $count;
         }
 
-        return $query;
+        $template = $templateClass::query()
+            ->where('name', 'Default Certificate')
+            ->first();
+
+        if ($template === null) {
+            $blueprint = $this->blueprints->make('default');
+            $template = $templateClass::query()->create([
+                'name' => $blueprint->templateName,
+                'token_set' => $tokenSet,
+                'layout' => $this->layoutFor($blueprint, $layoutClass, $tokenSet),
+            ]);
+        }
+
+        return $query->update([
+            'certificate_template_id' => $template->getKey(),
+        ]);
     }
 
     /**
@@ -172,5 +254,28 @@ final class MigrateAwardsToCertificateTemplates
         }
 
         return $attached;
+    }
+
+    private function attachHeader(Model $template, AwardCertificateBlueprint $blueprint, bool $force): int
+    {
+        if ($blueprint->headerImagePath === null || ! method_exists($template, 'addMedia')) {
+            return 0;
+        }
+
+        $absolutePath = $this->blueprints->resolveLogoAbsolutePath($blueprint->headerImagePath);
+
+        if ($absolutePath === null) {
+            return 0;
+        }
+
+        if (! $force && method_exists($template, 'getFirstMedia') && $template->getFirstMedia('header') !== null) {
+            return 0;
+        }
+
+        $template->addMedia($absolutePath)
+            ->preservingOriginal()
+            ->toMediaCollection('header');
+
+        return 1;
     }
 }

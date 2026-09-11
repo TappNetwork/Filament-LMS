@@ -1,0 +1,55 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Tapp\FilamentLms\Services\MigrateAwardsToCertificateTemplates;
+use Tapp\FilamentLms\Support\CertificateBuilder;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        if (! Schema::hasColumn('lms_courses', 'award')) {
+            return;
+        }
+
+        if (! CertificateBuilder::enabled()) {
+            throw new RuntimeException('tapp/filament-certificate-builder must be installed before dropping lms_courses.award. See UPGRADING.md.');
+        }
+
+        app(MigrateAwardsToCertificateTemplates::class)->handle();
+
+        $unverified = app(MigrateAwardsToCertificateTemplates::class)->unverifiedCourseIds();
+
+        if ($unverified !== []) {
+            throw new RuntimeException(
+                'Cannot drop lms_courses.award while courses lack a certificate template (ids: '.implode(', ', $unverified).'). Run php artisan filament-lms:upgrade-awards.',
+            );
+        }
+
+        $hasForeignKey = collect(Schema::getForeignKeys('lms_courses'))
+            ->contains(fn (array $foreignKey): bool => in_array('certificate_template_id', $foreignKey['columns'], true));
+
+        if ($hasForeignKey) {
+            Schema::table('lms_courses', function (Blueprint $table): void {
+                $table->dropForeign(['certificate_template_id']);
+            });
+        }
+
+        Schema::table('lms_courses', function (Blueprint $table): void {
+            $table->unsignedBigInteger('certificate_template_id')->nullable(false)->change();
+        });
+
+        Schema::table('lms_courses', function (Blueprint $table): void {
+            $table->foreign('certificate_template_id')
+                ->references('id')
+                ->on('certificate_templates')
+                ->restrictOnDelete();
+        });
+
+        Schema::table('lms_courses', function (Blueprint $table): void {
+            $table->dropColumn('award');
+        });
+    }
+};

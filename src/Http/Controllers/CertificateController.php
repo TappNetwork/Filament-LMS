@@ -2,7 +2,6 @@
 
 namespace Tapp\FilamentLms\Http\Controllers;
 
-use Carbon\Carbon;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -41,22 +40,11 @@ class CertificateController extends Controller
 
         $builderView = $this->builderCertificateView($course, $user);
 
-        if ($builderView !== null) {
-            return $builderView;
+        if ($builderView === null) {
+            abort(404);
         }
 
-        $view = 'filament-lms::certificates.'.$course->award;
-
-        if (! view()->exists($view)) {
-            $view = 'filament-lms::certificates.default';
-        }
-
-        $completedAt = $course->completedByUserAt($userId) ?? now();
-
-        return view($view)
-            ->with('dateEarned', $completedAt ? Carbon::parse($completedAt)->format(('F j, Y')) : null)
-            ->with('user', $user)
-            ->with('course', $course);
+        return $builderView;
     }
 
     public function download(Course $course): StreamedResponse

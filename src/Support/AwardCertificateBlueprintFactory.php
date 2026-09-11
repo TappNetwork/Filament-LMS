@@ -30,6 +30,7 @@ final class AwardCertificateBlueprintFactory
             ->all();
 
         $keys = array_values(array_unique([
+            'default',
             ...$configured,
             ...array_map(strval(...), $used),
         ]));
@@ -54,6 +55,10 @@ final class AwardCertificateBlueprintFactory
             completedLine: $copy['completed_line'],
             description: $copy['description'],
             includeCourseName: $this->includesCourseName($source),
+            includeSignatures: $this->includesSignatures($source),
+            border: $this->borderFrom($source),
+            header: $this->headerFrom($source),
+            headerImagePath: $this->headerImagePath($source),
         );
     }
 
@@ -393,6 +398,145 @@ final class AwardCertificateBlueprintFactory
 
         return str_contains($source, '$course->name')
             || str_contains($source, '$course[\'name\']');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function borderFrom(?string $source): array
+    {
+        $border = [
+            'style' => 'double',
+            'color' => '#a1a1aa',
+            'width' => 8,
+            'inner_color' => '#d4d4d8',
+            'inner_width' => 4,
+            'inner_inset' => 10,
+            'gradient' => '',
+        ];
+
+        if (! is_string($source) || $source === '') {
+            return $border;
+        }
+
+        if (preg_match('/bg-linear-to-r\s+from-([a-z0-9-]+)\s+via-([a-z0-9-]+)\s+to-([a-z0-9-]+)/', $source, $matches) === 1) {
+            $from = $this->tailwindColor($matches[1]);
+            $via = $this->tailwindColor($matches[2]);
+            $to = $this->tailwindColor($matches[3]);
+
+            if ($from !== null && $via !== null && $to !== null) {
+                return [
+                    ...$border,
+                    'style' => 'gradient',
+                    'width' => 6,
+                    'color' => $from,
+                    'gradient' => 'linear-gradient(to right, '.$from.', '.$via.', '.$to.')',
+                ];
+            }
+        }
+
+        if (preg_match('/\bstyle\s*=\s*[\'"][^\'"]*background:\s*(#[0-9a-fA-F]{3,6})\b/', $source, $matches) === 1) {
+            return [
+                ...$border,
+                'style' => 'solid',
+                'color' => $matches[1],
+                'width' => 6,
+            ];
+        }
+
+        return $border;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function headerFrom(?string $source): array
+    {
+        $header = [
+            'enabled' => false,
+            'height' => 220,
+            'background_color' => '',
+            'background_size' => 'cover',
+            'background_position' => 'center',
+            'title_bind' => '',
+            'title' => '',
+            'title_color' => '#ffffff',
+            'title_size' => 36,
+            'title_transform' => 'none',
+            'subtitle' => '',
+            'subtitle_color' => '#111827',
+            'subtitle_size' => 28,
+        ];
+
+        if (! is_string($source) || $source === '' || $this->headerImagePath($source) === null) {
+            return $header;
+        }
+
+        $header['enabled'] = true;
+
+        if (preg_match('/background-size\s*:\s*([^;]+)/i', $source, $matches) === 1) {
+            $header['background_size'] = trim($matches[1]);
+        }
+
+        if (preg_match('/background-position\s*:\s*([^;]+)/i', $source, $matches) === 1) {
+            $header['background_position'] = trim($matches[1]);
+        }
+
+        if (preg_match('/background-color\s*:\s*(#[0-9a-fA-F]{3,6})/i', $source, $matches) === 1) {
+            $header['background_color'] = $matches[1];
+        }
+
+        if (preg_match('/min-height\s*:\s*(\d+)px/i', $source, $matches) === 1) {
+            $header['height'] = max(40, (int) $matches[1]);
+        }
+
+        if (str_contains($source, '$course->name') || str_contains($source, '$course[\'name\']')) {
+            $header['title_bind'] = 'course_name';
+            $header['title_transform'] = str_contains($source, 'uppercase') ? 'uppercase' : 'none';
+        }
+
+        if (preg_match('/__\(\s*[\'"]CERTIFICATE OF COMPLETION[\'"]\s*\)/', $source) === 1) {
+            $header['subtitle'] = 'CERTIFICATE OF COMPLETION';
+        }
+
+        return $header;
+    }
+
+    private function headerImagePath(?string $source): ?string
+    {
+        if (! is_string($source) || $source === '') {
+            return null;
+        }
+
+        return $this->backgroundAssetPaths($source)[0] ?? null;
+    }
+
+    private function tailwindColor(string $token): ?string
+    {
+        return match ($token) {
+            'lime-400' => '#a3e635',
+            'sky-500' => '#0ea5e9',
+            'cyan-300' => '#67e8f9',
+            'red-400' => '#f87171',
+            'red-500' => '#ef4444',
+            'red-300' => '#fca5a5',
+            'zinc-400' => '#a1a1aa',
+            'zinc-300' => '#d4d4d8',
+            default => null,
+        };
+    }
+
+    private function includesSignatures(?string $source): bool
+    {
+        if (! is_string($source) || $source === '') {
+            return false;
+        }
+
+        if (str_contains($source, 'filament-lms.certificate_show_signatures')) {
+            return (bool) config('filament-lms.certificate_show_signatures', false);
+        }
+
+        return (bool) preg_match('/signature/i', $source);
     }
 
     /**

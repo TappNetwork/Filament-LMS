@@ -17,14 +17,41 @@ final class CertificateBuilder
 
     public static function enabled(): bool
     {
-        return (bool) config('filament-lms.integrations.certificate_builder.enabled', false)
-            && class_exists(self::TEMPLATE_MODEL);
+        return class_exists(self::TEMPLATE_MODEL);
     }
 
     public static function canCreateTemplate(?object $user, Course $course): bool
     {
-        return self::canManageTemplates($user, $course)
-            && self::assignedTemplateId($course) === null;
+        return self::canManageTemplates($user, $course);
+    }
+
+    public static function defaultTemplateId(): ?int
+    {
+        if (! class_exists(self::TEMPLATE_MODEL)) {
+            return null;
+        }
+
+        $tokenSet = self::tokenSet();
+        $query = self::TEMPLATE_MODEL::query()->where('token_set', $tokenSet);
+        $template = (clone $query)->where('name', 'Default Certificate')->first()
+            ?? $query->orderBy('name')->first();
+
+        if ($template !== null) {
+            return (int) $template->getKey();
+        }
+
+        $layoutClass = self::LAYOUT_CLASS;
+        $layout = class_exists($layoutClass) && method_exists($layoutClass, 'default')
+            ? $layoutClass::default($tokenSet)
+            : [];
+
+        $created = self::TEMPLATE_MODEL::query()->create([
+            'name' => 'Default Certificate',
+            'token_set' => $tokenSet,
+            'layout' => is_array($layout) ? $layout : [],
+        ]);
+
+        return (int) $created->getKey();
     }
 
     public static function canEditTemplate(?object $user, Course $course): bool

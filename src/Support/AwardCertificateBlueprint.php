@@ -8,6 +8,8 @@ final readonly class AwardCertificateBlueprint
 {
     /**
      * @param  list<string>  $logoPaths
+     * @param  array<string, mixed>  $border
+     * @param  array<string, mixed>  $header
      */
     public function __construct(
         public string $key,
@@ -18,5 +20,9 @@ final readonly class AwardCertificateBlueprint
         public string $completedLine,
         public string $description,
         public bool $includeCourseName,
+        public bool $includeSignatures,
+        public array $border,
+        public array $header,
+        public ?string $headerImagePath,
     ) {}
 }

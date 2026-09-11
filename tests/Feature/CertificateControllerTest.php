@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use Tapp\FilamentLms\Models\Course;
-use Tapp\FilamentLms\Models\Lesson;
-use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Support\CertificateBuilder;
 use Tapp\FilamentLms\Tests\TestUser;
 
@@ -15,29 +13,22 @@ beforeEach(function () {
     ]);
 });
 
-it('renders the default award certificate when no template is assigned', function () {
+it('returns not found when the course has no certificate template', function () {
     $user = TestUser::query()->create([
         'name' => 'Jane Doe',
         'email' => 'jane-cert@example.com',
         'password' => bcrypt('password'),
     ]);
 
-    $course = Course::factory()->create([
+    $course = Course::factory()->withoutCertificateTemplate()->create([
         'name' => 'Intro to CHW',
-        'award' => 'default',
     ]);
-
-    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
-    Step::factory()->create(['lesson_id' => $lesson->id]);
 
     $course->users()->attach($user->id, ['completed_at' => now()]);
 
     $this->actingAs($user)
         ->get(route('filament-lms::certificates.show', ['course' => $course->id, 'user' => $user->id]))
-        ->assertSuccessful()
-        ->assertSee('CERTIFICATE', false)
-        ->assertSee('Intro to CHW', false)
-        ->assertSee('Jane Doe', false);
+        ->assertNotFound();
 });
 
 it('forbids download when the user has not completed the course', function () {
@@ -47,22 +38,20 @@ it('forbids download when the user has not completed the course', function () {
         'password' => bcrypt('password'),
     ]);
 
-    $course = Course::factory()->create(['award' => 'default']);
+    $course = Course::factory()->withoutCertificateTemplate()->create();
 
     $this->actingAs($user)
         ->get(route('filament-lms::certificates.download', $course))
         ->assertForbidden();
 });
 
-it('does not expose the create certificate template action when the builder is disabled', function () {
-    config(['filament-lms.integrations.certificate_builder.enabled' => false]);
-
+it('does not expose template actions when the builder package is missing', function () {
     $user = TestUser::query()->create([
         'name' => 'Pat Admin',
         'email' => 'pat-admin-cert@example.com',
         'password' => bcrypt('password'),
     ]);
-    $course = Course::factory()->create(['award' => 'default']);
+    $course = Course::factory()->withoutCertificateTemplate()->create();
 
     expect(CertificateBuilder::enabled())->toBeFalse()
         ->and(CertificateBuilder::canCreateTemplate($user, $course))->toBeFalse()

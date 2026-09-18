@@ -172,7 +172,7 @@ final class CourseCompleted extends Page
 
     public function downloadCertificate()
     {
-        return response()->download(route('certificates.download', [auth()->user()->id, $this->course->id]));
+        return response()->download(route('filament-lms::certificates.download', [$this->course->id]));
     }
 
     /**

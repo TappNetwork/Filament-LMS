@@ -5,6 +5,7 @@ namespace Tapp\FilamentLms\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Support\CertificateBuilder;
 
 class CourseFactory extends Factory
 {
@@ -23,8 +24,15 @@ class CourseFactory extends Factory
             'name' => $name,
             'slug' => $slug,
             'external_id' => $externalId,
-            'award' => 'default',
+            'certificate_template_id' => CertificateBuilder::defaultTemplateId(),
             'description' => $this->faker->sentence(),
         ];
+    }
+
+    public function withoutCertificateTemplate(): static
+    {
+        return $this->state([
+            'certificate_template_id' => null,
+        ]);
     }
 }

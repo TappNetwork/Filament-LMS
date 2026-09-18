@@ -313,9 +313,7 @@ return [
     
     'vite_theme' => '',
     'colors' => [],
-    'awards' => [
-        'Default' => 'default',
-    ],
+    // awards was removed. Course certificates use certificate_template_id.
     'top_navigation' => false,
     'show_exit_lms_link' => true,
 ];
@@ -423,7 +421,32 @@ When `multipart_upload.enabled` is `true` **and** `spykapps/filament-uppy-upload
 
 ## Certificate Customization
 
-The LMS package generates PDF certificates when users complete courses. You can customize the appearance and content of certificates using the following configuration options:
+The LMS package generates PDF certificates when users complete courses. You can customize the appearance and content of certificates using the following configuration options.
+
+### Certificate-builder templates
+
+Course certificates require [tapp/filament-certificate-builder](https://github.com/TappNetwork/filament-certificate-builder). See [UPGRADING.md](UPGRADING.md) to convert legacy `award` Blades.
+
+```bash
+composer require tapp/filament-certificate-builder
+php artisan vendor:publish --tag=filament-lms-migrations
+php artisan migrate
+```
+
+```php
+// config/filament-lms.php
+'integrations' => [
+    'certificate_builder' => [
+        'enabled' => true,
+        'token_set' => 'course',
+        'template_resource' => \Tapp\FilamentCertificateBuilder\Filament\Resources\CertificateTemplates\CertificateTemplateResource::class,
+    ],
+],
+```
+
+Add a matching `course` token set in `config/certificate-builder.php`. LMS resolves tokens with context `['course' => $course, 'user' => $user]` on `filament-lms::certificates.show` / `filament-lms::certificates.download`. A course without a template returns 404.
+
+On **Edit Course**, **Create Certificate Template** creates a template for that token set, sets `certificate_template_id`, and opens the designer. **Edit Certificate Template** opens the assigned template.
 
 ### certificate_logo
 

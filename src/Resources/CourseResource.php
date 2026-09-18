@@ -34,6 +34,7 @@ use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\ListCourses;
 use Tapp\FilamentLms\Resources\CourseResource\RelationManagers\LessonsRelationManager;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
+use Tapp\FilamentLms\Support\CertificateBuilder;
 
 class CourseResource extends Resource
 {
@@ -115,13 +116,21 @@ class CourseResource extends Resource
                     ->maxValue(100)
                     ->default(0)
                     ->nullable(),
-                Select::make('award')
-                    ->options(config('filament-lms.awards'))
-                    ->required()
-                    ->hint(function ($record) {
-                        // @phpstan-ignore-next-line
+                Select::make('certificate_template_id')
+                    ->label('Certificate Template')
+                    ->helperText('Required. Form must be saved before previewing.')
+                    ->options(function (): array {
+                        $model = CertificateBuilder::TEMPLATE_MODEL;
+
+                        return $model::query()
+                            ->where('token_set', CertificateBuilder::tokenSet())
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
+                            ->all();
+                    })
+                    ->default(fn (): ?int => CertificateBuilder::defaultTemplateId())
+                    ->hint(function (?Course $record) {
                         if ($record && $record->id) {
-                            // @phpstan-ignore-next-line
                             $link = route('filament-lms::certificates.show', ['course' => $record->id, 'user' => auth()->id()]);
 
                             return new HtmlString("<a rel='noopener noreferrer' target='_blank' href='{$link}'>Click to Preview</a>");
@@ -129,7 +138,10 @@ class CourseResource extends Resource
 
                         return null;
                     })
-                    ->helperText('Form must be saved before previewing.'),
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->visible(fn (): bool => CertificateBuilder::enabled()),
                 Checkbox::make('embedded_player')
                     ->label('Embedded player mode')
                     ->helperText('Hides LMS step sidebar and uses the SCORM/HTML5 package as the primary navigation.'),

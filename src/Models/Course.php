@@ -31,6 +31,7 @@ use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
+use Tapp\FilamentLms\Support\CertificateBuilder;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
 use Tapp\FilamentLms\UserGroups\CourseAccessResolver;
 
@@ -40,8 +41,7 @@ use Tapp\FilamentLms\UserGroups\CourseAccessResolver;
  * @property string $slug
  * @property string $external_id
  * @property string|null $image
- * @property string|null $award
- * @property array $award_content
+ * @property int|null $certificate_template_id
  * @property string|null $description
  * @property int|null $required_test_percentage
  * @property bool $is_private
@@ -66,7 +66,6 @@ final class Course extends Model implements HasMedia
     protected $table = 'lms_courses';
 
     protected $casts = [
-        'award_content' => 'array',
         'is_private' => 'boolean',
         'embedded_player' => 'boolean',
         'completion_mode' => CompletionMode::class,
@@ -108,6 +107,11 @@ final class Course extends Model implements HasMedia
     public function evaluationCourse(): BelongsTo
     {
         return $this->belongsTo(self::class, 'evaluation_course_id');
+    }
+
+    public function certificateTemplate(): BelongsTo
+    {
+        return $this->belongsTo(CertificateBuilder::TEMPLATE_MODEL, 'certificate_template_id');
     }
 
     public function hasEvaluation(): bool

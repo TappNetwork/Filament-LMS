@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        if (Schema::hasColumn('lms_courses', 'certificate_template_id')) {
+            return;
+        }
+
+        Schema::table('lms_courses', function (Blueprint $table) {
+            $table->unsignedBigInteger('certificate_template_id')
+                ->nullable()
+                ->after('award')
+                ->index();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('lms_courses', function (Blueprint $table) {
+            $table->dropIndex(['certificate_template_id']);
+            $table->dropColumn('certificate_template_id');
+        });
+    }
+};

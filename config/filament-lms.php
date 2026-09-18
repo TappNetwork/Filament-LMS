@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Tapp\FilamentCertificateBuilder\Filament\Resources\CertificateTemplates\CertificateTemplateResource;
 
 return [
     'theme' => 'default',
@@ -21,9 +22,6 @@ return [
 
     'vite_theme' => '',
     'colors' => [],
-    'awards' => [
-        'default' => 'Default',
-    ],
     // Enable top navigation on the LMS dashboard (courses list page).
     // Note: This only affects the dashboard. Course pages always use sidebar navigation.
     'top_navigation' => false,
@@ -185,6 +183,17 @@ return [
 
             // Max rows returned when searching library files or links on the Step form.
             'material_select_limit' => 200,
+        ],
+
+        'certificate_builder' => [
+            // Required for course certificates. The builder package must be installed.
+            'enabled' => true,
+
+            // Token set key from config/certificate-builder.php used for new course templates.
+            'token_set' => 'course',
+
+            // Filament resource used after creating a template from Edit Course.
+            'template_resource' => CertificateTemplateResource::class,
         ],
     ],
 

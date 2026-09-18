@@ -40,3 +40,7 @@ parameters:
             message: '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::(getFirstMedia|getSecureUrl)\(\)#'
             paths:
                 - src/Livewire/LibraryFileStep.php
+                - src/Livewire/LibraryLinkStep.php
+        # Optional filament-certificate-builder integration
+        - '#Class Tapp\\FilamentCertificateBuilder\\#'
+        - '#unknown class Tapp\\FilamentCertificateBuilder\\#'

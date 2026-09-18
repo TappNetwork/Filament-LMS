@@ -74,6 +74,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
                 'create_lms_course_user_group_table',
                 'create_lms_user_group_memberships_table',
                 'add_is_explicitly_assigned_to_lms_course_user_table',
+                'scope_lms_courses_unique_indexes_to_tenant',
                 'add_certificate_template_id_to_lms_courses_table',
                 'drop_award_from_lms_courses_table',
             ])

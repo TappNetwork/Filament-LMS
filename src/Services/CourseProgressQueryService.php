@@ -2,10 +2,12 @@
 
 namespace Tapp\FilamentLms\Services;
 
+use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Tapp\FilamentLms\Helpers\TenantHelper;
 
 class CourseProgressQueryService
 {
@@ -46,8 +48,17 @@ class CourseProgressQueryService
             ->select('lms_step_user.user_id')
             ->selectRaw('l.course_id')
             ->join('lms_steps as s', 's.id', '=', 'lms_step_user.step_id')
-            ->join('lms_lessons as l', 'l.id', '=', 's.lesson_id')
-            ->distinct();
+            ->join('lms_lessons as l', 'l.id', '=', 's.lesson_id');
+
+        $tenantKey = self::currentTenantKey();
+
+        if ($tenantKey !== null) {
+            $column = TenantHelper::getTenantColumnName();
+            $participants->join('lms_courses as tenant_courses', 'tenant_courses.id', '=', 'l.course_id')
+                ->where("tenant_courses.{$column}", $tenantKey);
+        }
+
+        $participants->distinct();
 
         $select = array_merge(
             [
@@ -72,7 +83,7 @@ class CourseProgressQueryService
             ['lms_courses.id', 'lms_courses.name']
         );
 
-        return DB::table(DB::raw('('.$participants->toSql().') as participants'))
+        $query = DB::table(DB::raw('('.$participants->toSql().') as participants'))
             ->mergeBindings($participants)
             ->leftJoin('lms_course_user', function ($join): void {
                 $join->on('lms_course_user.user_id', '=', 'participants.user_id')
@@ -90,6 +101,51 @@ class CourseProgressQueryService
             ->groupBy($groupBy)
             ->orderBy('users.id', 'asc')
             ->orderBy('lms_courses.id', 'asc');
+
+        self::constrainCoursesToCurrentTenant($query, 'lms_courses');
+
+        return $query;
+    }
+
+    /**
+     * User emails for the report filter, limited to people who appear in the (tenant-scoped) report.
+     *
+     * @return array<int|string, string>
+     */
+    public static function reportUserFilterOptions(): array
+    {
+        return DB::query()
+            ->fromSub(self::buildQuery(), 'report')
+            ->orderBy('user_email')
+            ->pluck('user_email', 'user_id')
+            ->all();
+    }
+
+    /**
+     * @param  QueryBuilder  $query
+     */
+    private static function constrainCoursesToCurrentTenant($query, string $coursesAlias): void
+    {
+        $tenantKey = self::currentTenantKey();
+
+        if ($tenantKey === null) {
+            return;
+        }
+
+        $column = TenantHelper::getTenantColumnName();
+
+        $query->where("{$coursesAlias}.{$column}", $tenantKey);
+    }
+
+    private static function currentTenantKey(): mixed
+    {
+        if (! Config::get('filament-lms.tenancy.enabled')) {
+            return null;
+        }
+
+        $tenant = Filament::getTenant();
+
+        return $tenant?->getKey();
     }
 
     /**

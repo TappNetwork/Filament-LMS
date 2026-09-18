@@ -16,6 +16,7 @@ use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Services\VideoUrlService;
+use Tapp\FilamentLms\Support\CertificateBuilder;
 
 class CourseStepsImport implements ToCollection, WithHeadingRow
 {
@@ -74,6 +75,7 @@ class CourseStepsImport implements ToCollection, WithHeadingRow
             'name' => $this->courseName,
             'slug' => Str::slug($this->courseName),
             'external_id' => Str::slug($this->courseName, '_'),
+            'certificate_template_id' => CertificateBuilder::defaultTemplateId(),
         ]);
 
         $lessonOrder = 0;

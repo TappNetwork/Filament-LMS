@@ -52,16 +52,6 @@ final class MigrateAwardsToCertificateTemplates
             throw new RuntimeException('Certificate builder is not installed.');
         }
 
-        if (! Schema::hasColumn('lms_courses', 'award')) {
-            return [
-                'templates_created' => 0,
-                'templates_reused' => 0,
-                'courses_updated' => 0,
-                'logos_attached' => 0,
-                'awards' => [],
-            ];
-        }
-
         if (! Schema::hasColumn('lms_courses', 'certificate_template_id')) {
             throw new RuntimeException('lms_courses.certificate_template_id is missing. Publish and run filament-lms migrations first.');
         }
@@ -77,9 +67,7 @@ final class MigrateAwardsToCertificateTemplates
 
         foreach ($this->blueprints->awardKeys($award) as $awardKey) {
             $blueprint = $this->blueprints->make($awardKey);
-            $existing = $templateClass::query()
-                ->where('name', $blueprint->templateName)
-                ->first();
+            $existing = $this->findTemplate($templateClass, $blueprint->templateName, $tokenSet);
 
             $created = $existing === null;
             $logoCount = 0;
@@ -146,8 +134,13 @@ final class MigrateAwardsToCertificateTemplates
      */
     private function coursesToUpdate(string $awardKey, string $templateClass): Builder
     {
-        return $this->coursesMissingTemplate($templateClass)
-            ->where('award', $awardKey);
+        $query = $this->coursesMissingTemplate($templateClass);
+
+        if (! Schema::hasColumn('lms_courses', 'award')) {
+            return $query->whereRaw('0 = 1');
+        }
+
+        return $query->where('award', $awardKey);
     }
 
     /**
@@ -174,6 +167,10 @@ final class MigrateAwardsToCertificateTemplates
         string $tokenSet,
         bool $dryRun,
     ): int {
+        if (! Schema::hasColumn('lms_courses', 'award')) {
+            return 0;
+        }
+
         $query = $this->coursesMissingTemplate($templateClass)
             ->where(function (Builder $query): void {
                 $query->whereNull('award')
@@ -186,9 +183,7 @@ final class MigrateAwardsToCertificateTemplates
             return $count;
         }
 
-        $template = $templateClass::query()
-            ->where('name', 'Default Certificate')
-            ->first();
+        $template = $this->findTemplate($templateClass, 'Default Certificate', $tokenSet);
 
         if ($template === null) {
             $blueprint = $this->blueprints->make('default');
@@ -202,6 +197,17 @@ final class MigrateAwardsToCertificateTemplates
         return $query->update([
             'certificate_template_id' => $template->getKey(),
         ]);
+    }
+
+    /**
+     * @param  class-string<Model>  $templateClass
+     */
+    private function findTemplate(string $templateClass, string $name, string $tokenSet): ?Model
+    {
+        return $templateClass::query()
+            ->where('name', $name)
+            ->where('token_set', $tokenSet)
+            ->first();
     }
 
     /**

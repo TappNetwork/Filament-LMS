@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Support;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Models\Course;
 use Throwable;
@@ -21,13 +22,15 @@ final class AwardCertificateBlueprintFactory
         }
 
         $configured = array_keys($this->configuredAwards());
-        $used = $this->courseQuery()
-            ->whereNotNull('award')
-            ->where('award', '!=', '')
-            ->distinct()
-            ->orderBy('award')
-            ->pluck('award')
-            ->all();
+        $used = Schema::hasColumn('lms_courses', 'award')
+            ? $this->courseQuery()
+                ->whereNotNull('award')
+                ->where('award', '!=', '')
+                ->distinct()
+                ->orderBy('award')
+                ->pluck('award')
+                ->all()
+            : [];
 
         $keys = array_values(array_unique([
             'default',

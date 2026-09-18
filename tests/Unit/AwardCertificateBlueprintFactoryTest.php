@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Support\AwardCertificateBlueprintFactory;
 
@@ -38,6 +40,19 @@ it('limits discovery to an explicit award key', function () {
     ]]);
 
     expect(app(AwardCertificateBlueprintFactory::class)->awardKeys('safb'))->toBe(['safb']);
+});
+
+it('discovers configured awards after the award column is dropped', function () {
+    config(['filament-lms.awards' => [
+        'default' => 'Default',
+        'safb' => 'Safe Arms For Babies',
+    ]]);
+
+    Schema::table('lms_courses', function (Blueprint $table) {
+        $table->dropColumn('award');
+    });
+
+    expect(app(AwardCertificateBlueprintFactory::class)->awardKeys())->toBe(['default', 'safb']);
 });
 
 it('extracts logos and copy from a custom award blade', function () {

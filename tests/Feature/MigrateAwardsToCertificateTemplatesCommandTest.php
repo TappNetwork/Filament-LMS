@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Services\MigrateAwardsToCertificateTemplates;
 use Tapp\FilamentLms\Tests\Fakes\FakeCertificateLayout;
@@ -182,7 +184,74 @@ it('can migrate a single award key', function () {
         ->and($decanCourse->refresh()->certificate_template_id)->not->toBeNull();
 });
 
-it('reassigns existing templates when forced', function () {
+it('does not reuse a same-named template from another token set', function () {
+    config(['filament-lms.awards' => [
+        'decan' => 'Delaware Contraceptive Access Network',
+    ]]);
+
+    $foreign = FakeCertificateTemplate::query()->create([
+        'name' => 'Delaware Contraceptive Access Network Certificate',
+        'token_set' => 'training',
+        'layout' => ['elements' => []],
+    ]);
+
+    $course = Course::factory()->withoutCertificateTemplate()->create([
+        'name' => 'Decan Token Set Course',
+        'external_id' => 'decan_token_set_course',
+        'award' => 'decan',
+    ]);
+
+    $summary = app(MigrateAwardsToCertificateTemplates::class)->handle(
+        templateClass: FakeCertificateTemplate::class,
+        layoutClass: FakeCertificateLayout::class,
+    );
+
+    $migrated = FakeCertificateTemplate::query()
+        ->where('name', 'Delaware Contraceptive Access Network Certificate')
+        ->where('token_set', 'course')
+        ->first();
+
+    expect($summary['templates_created'])->toBe(2)
+        ->and($foreign->refresh()->token_set)->toBe('training')
+        ->and($migrated)->not->toBeNull()
+        ->and($migrated->id)->not->toBe($foreign->id)
+        ->and($course->refresh()->certificate_template_id)->toBe($migrated->id);
+});
+
+it('does not assign orphan courses to a default template from another token set', function () {
+    config(['filament-lms.awards' => [
+        'default' => 'Default',
+    ]]);
+
+    $foreign = FakeCertificateTemplate::query()->create([
+        'name' => 'Default Certificate',
+        'token_set' => 'training',
+        'layout' => ['elements' => []],
+    ]);
+
+    $course = Course::factory()->withoutCertificateTemplate()->create([
+        'name' => 'Orphan Token Set Course',
+        'external_id' => 'orphan_token_set_course',
+        'award' => null,
+    ]);
+
+    app(MigrateAwardsToCertificateTemplates::class)->handle(
+        templateClass: FakeCertificateTemplate::class,
+        layoutClass: FakeCertificateLayout::class,
+    );
+
+    $migrated = FakeCertificateTemplate::query()
+        ->where('name', 'Default Certificate')
+        ->where('token_set', 'course')
+        ->first();
+
+    expect($foreign->refresh()->token_set)->toBe('training')
+        ->and($migrated)->not->toBeNull()
+        ->and($migrated->id)->not->toBe($foreign->id)
+        ->and($course->refresh()->certificate_template_id)->toBe($migrated->id);
+});
+
+it('recreates layouts for matching token set templates when forced', function () {
     config(['filament-lms.awards' => [
         'decan' => 'Delaware Contraceptive Access Network',
     ]]);
@@ -190,6 +259,12 @@ it('reassigns existing templates when forced', function () {
     publishAwardFixture('decan', 'custom-award.blade.php');
 
     $existing = FakeCertificateTemplate::query()->create([
+        'name' => 'Delaware Contraceptive Access Network Certificate',
+        'token_set' => 'course',
+        'layout' => ['elements' => []],
+    ]);
+
+    $foreign = FakeCertificateTemplate::query()->create([
         'name' => 'Delaware Contraceptive Access Network Certificate',
         'token_set' => 'training',
         'layout' => ['elements' => []],
@@ -214,10 +289,41 @@ it('reassigns existing templates when forced', function () {
         layoutClass: FakeCertificateLayout::class,
     );
 
-    expect(FakeCertificateTemplate::query()->count())->toBe(3)
+    expect(FakeCertificateTemplate::query()->count())->toBe(4)
         ->and($existing->refresh()->token_set)->toBe('course')
         ->and($existing->layout['elements'])->not->toBeEmpty()
+        ->and($foreign->refresh()->token_set)->toBe('training')
+        ->and($foreign->layout['elements'])->toBe([])
         ->and($course->refresh()->certificate_template_id)->toBe($customTemplate->id);
+});
+
+it('refreshes migrated layouts when forced after the award column is dropped', function () {
+    config(['filament-lms.awards' => [
+        'decan' => 'Delaware Contraceptive Access Network',
+    ]]);
+
+    publishAwardFixture('decan', 'custom-award.blade.php');
+
+    $existing = FakeCertificateTemplate::query()->create([
+        'name' => 'Delaware Contraceptive Access Network Certificate',
+        'token_set' => 'course',
+        'layout' => ['elements' => []],
+    ]);
+
+    Schema::table('lms_courses', function (Blueprint $table) {
+        $table->dropColumn('award');
+    });
+
+    $summary = app(MigrateAwardsToCertificateTemplates::class)->handle(
+        force: true,
+        templateClass: FakeCertificateTemplate::class,
+        layoutClass: FakeCertificateLayout::class,
+    );
+
+    expect($summary['templates_reused'])->toBe(1)
+        ->and($summary['awards'])->not->toBeEmpty()
+        ->and(collect($summary['awards'])->pluck('award'))->toContain('decan')
+        ->and($existing->refresh()->layout['elements'])->not->toBeEmpty();
 });
 
 it('assigns courses with a null award to the default template', function () {

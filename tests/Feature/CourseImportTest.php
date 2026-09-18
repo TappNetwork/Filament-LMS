@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Tapp\FilamentLms\Imports\CourseStepsImport;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Support\CertificateBuilder;
 use Tapp\FilamentLms\Tests\TestUser;
 
 beforeEach(function () {
@@ -22,6 +23,7 @@ test('course steps import format a creates course lessons steps and videos', fun
     $course = Course::where('name', 'Imported Course')->first();
     expect($course)->not->toBeNull();
     expect($course->slug)->toBe('imported-course');
+    expect($course->certificate_template_id)->toBe(CertificateBuilder::defaultTemplateId());
 
     $lessons = $course->lessons()->orderBy('order')->get();
     expect($lessons)->toHaveCount(2);
@@ -50,6 +52,23 @@ test('course steps import format a falls back to course name when lesson name is
     expect($lessons)->toHaveCount(1);
     expect($lessons->first()->name)->toBe('My Course');
     expect($lessons->first()->slug)->toBe('my-course');
+});
+
+test('course steps import assigns the default certificate template', function () {
+    $templateIdOnCreate = null;
+    $templateIdWasSet = false;
+
+    Course::creating(function (Course $course) use (&$templateIdOnCreate, &$templateIdWasSet): void {
+        $templateIdWasSet = array_key_exists('certificate_template_id', $course->getAttributes());
+        $templateIdOnCreate = $course->certificate_template_id;
+    });
+
+    $path = __DIR__.'/../fixtures/course-import-format-a.csv';
+
+    Excel::import(new CourseStepsImport('Imported Course'), $path);
+
+    expect($templateIdWasSet)->toBeTrue()
+        ->and($templateIdOnCreate)->toBe(CertificateBuilder::defaultTemplateId());
 });
 
 test('course steps import format b creates course with steps and text', function () {

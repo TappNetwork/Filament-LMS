@@ -53,11 +53,7 @@ final class AwardCertificateLayoutApplier
             $layout['signature_count'] = 0;
             $elements = array_values(array_filter(
                 $elements,
-                function (mixed $element): bool {
-                    if (! is_array($element)) {
-                        return true;
-                    }
-
+                function (array $element): bool {
                     $type = $element['type'] ?? null;
                     $id = $element['id'] ?? null;
 
@@ -95,10 +91,6 @@ final class AwardCertificateLayoutApplier
         $overlappingYs = [];
 
         foreach ($elements as $element) {
-            if (! is_array($element)) {
-                continue;
-            }
-
             $id = isset($element['id']) && is_string($element['id']) ? $element['id'] : null;
             $y = (int) ($element['y'] ?? 0);
 
@@ -119,10 +111,6 @@ final class AwardCertificateLayoutApplier
             : ($headerHeight + 16) - $minOverlappingY;
 
         foreach ($elements as $index => $element) {
-            if (! is_array($element)) {
-                continue;
-            }
-
             $id = isset($element['id']) && is_string($element['id']) ? $element['id'] : null;
             $y = (int) ($element['y'] ?? 0);
 
@@ -132,7 +120,7 @@ final class AwardCertificateLayoutApplier
                 continue;
             }
 
-            if ($shift > 0 && $minOverlappingY !== null && $y >= $minOverlappingY) {
+            if ($shift > 0 && $y >= $minOverlappingY) {
                 $elements[$index]['y'] = $y + $shift;
             }
         }
@@ -155,7 +143,7 @@ final class AwardCertificateLayoutApplier
         $indexes = [];
 
         foreach ($elements as $index => $element) {
-            if (! is_array($element) || ! ($element['visible'] ?? true)) {
+            if (! ($element['visible'] ?? true)) {
                 continue;
             }
 

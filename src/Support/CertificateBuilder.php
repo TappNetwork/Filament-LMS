@@ -41,7 +41,7 @@ final class CertificateBuilder
         }
 
         $layoutClass = self::LAYOUT_CLASS;
-        $layout = class_exists($layoutClass) && method_exists($layoutClass, 'default')
+        $layout = class_exists($layoutClass)
             ? $layoutClass::default($tokenSet)
             : [];
 

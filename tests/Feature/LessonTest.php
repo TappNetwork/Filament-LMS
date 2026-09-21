@@ -37,6 +37,20 @@ test('lesson has steps relationship', function () {
     expect($lesson->steps->first())->toBeInstanceOf(Step::class);
 });
 
+test('lesson order is scoped to the course', function () {
+    $courseA = Course::factory()->create();
+    $courseB = Course::factory()->create();
+
+    $firstOnA = Lesson::factory()->create(['course_id' => $courseA->id]);
+    $firstOnB = Lesson::factory()->create(['course_id' => $courseB->id]);
+    $secondOnA = Lesson::factory()->create(['course_id' => $courseA->id]);
+
+    expect($firstOnA->order)->toBe(1)
+        ->and($firstOnB->order)->toBe(1)
+        ->and($secondOnA->order)->toBe(2)
+        ->and($firstOnB->fresh()->order)->toBe(1);
+});
+
 test('lesson can get ordered steps', function () {
     $course = Course::factory()->create();
     $lesson = Lesson::factory()->create(['course_id' => $course->id]);

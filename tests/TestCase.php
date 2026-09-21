@@ -279,6 +279,7 @@ abstract class TestCase extends Orchestra
             MediaLibraryServiceProvider::class,
             FilamentLmsServiceProvider::class,
             LmsPanelProvider::class,
+            TestAdminPanelProvider::class,
         ];
 
         // Only add FilamentFormBuilderServiceProvider if it exists

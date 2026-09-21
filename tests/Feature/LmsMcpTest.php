@@ -172,7 +172,37 @@ test('list_courses and get_course include lessons and steps', function () {
         ->assertSee('dns-cloudflare')
         ->assertSee('Getting started')
         ->assertSee('dQw4w9WgXcQ')
-        ->assertSee('youtube');
+        ->assertSee('youtube')
+        ->assertSee('admin\/lms\/courses')
+        ->assertSee('lms\/courses\/dns-cloudflare\/getting-started');
+});
+
+test('create_video_course scopes lesson and step order to the new course', function () {
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload([
+        'name' => 'Second Course',
+        'slug' => 'second-course',
+        'external_id' => 'second_course',
+        'lessons' => [
+            [
+                'name' => 'Lesson B',
+                'steps' => [
+                    [
+                        'name' => 'Second video',
+                        'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    ],
+                ],
+            ],
+        ],
+    ]))->assertOk();
+
+    $first = Course::query()->where('slug', 'dns-cloudflare')->first();
+    $second = Course::query()->where('slug', 'second-course')->first();
+
+    expect($first->lessons()->first()->order)->toBe(1)
+        ->and($first->lessons()->first()->steps()->first()->order)->toBe(1)
+        ->and($second->lessons()->first()->order)->toBe(1)
+        ->and($second->lessons()->first()->steps()->first()->order)->toBe(1);
 });
 
 test('update_course and delete_course work', function () {
@@ -215,6 +245,14 @@ test('granular lesson and step tools create update and delete', function () {
     $lesson = Lesson::query()->first();
     expect($lesson->slug)->toBe('lesson-a')->and($lesson->order)->toBe(1);
 
+    LmsServer::tool(CreateLesson::class, [
+        'course_id' => $course->id,
+        'name' => 'Lesson Zero',
+        'order' => 1,
+    ])->assertOk();
+
+    expect(Lesson::query()->where('name', 'Lesson Zero')->first()->order)->toBe(1);
+
     LmsServer::tool(UpdateLesson::class, [
         'id' => $lesson->id,
         'name' => 'Lesson A updated',
@@ -245,5 +283,6 @@ test('granular lesson and step tools create update and delete', function () {
     expect(Step::query()->count())->toBe(0)->and(Video::query()->count())->toBe(0);
 
     LmsServer::tool(DeleteLesson::class, ['id' => $lesson->id])->assertOk();
-    expect(Lesson::query()->count())->toBe(0);
+    expect(Lesson::query()->whereKey($lesson->id)->exists())->toBeFalse()
+        ->and(Lesson::query()->where('name', 'Lesson Zero')->exists())->toBeTrue();
 });

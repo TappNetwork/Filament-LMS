@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Mcp;
 
 use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
@@ -325,14 +326,25 @@ abstract class LmsTool extends Tool
      */
     protected function courseUrls(Course $course): array
     {
+        $adminPanelId = $this->panelIdForResource(CourseResource::class);
+        $learnerPanelId = $this->panelIdForPage(StepPage::class) ?? $this->panelIdForPage(Dashboard::class);
+
         return [
-            'admin' => $this->safeUrl(fn (): string => CourseResource::getUrl('edit', ['record' => $course])),
-            'learner' => $this->safeUrl(function () use ($course): string {
+            'admin' => $this->urlOnPanel($adminPanelId, function () use ($course, $adminPanelId): string {
+                return CourseResource::getUrl(
+                    'edit',
+                    ['record' => $course],
+                    panel: $adminPanelId,
+                );
+            }),
+            'learner' => $this->urlOnPanel($learnerPanelId, function () use ($course, $learnerPanelId): string {
                 $firstStep = $course->firstStep();
 
-                return $firstStep instanceof Step
-                    ? StepPage::getUrlForStep($firstStep)
-                    : Dashboard::getUrl();
+                if ($firstStep instanceof Step) {
+                    return StepPage::getUrlForStep($firstStep);
+                }
+
+                return Dashboard::getUrl(panel: $learnerPanelId);
             }),
         ];
     }
@@ -342,21 +354,62 @@ abstract class LmsTool extends Tool
      */
     protected function stepUrls(Step $step): array
     {
+        $learnerPanelId = $this->panelIdForPage(StepPage::class);
+
         return [
-            'learner' => $this->safeUrl(fn (): string => StepPage::getUrlForStep($step)),
+            'learner' => $this->urlOnPanel(
+                $learnerPanelId,
+                fn (): string => StepPage::getUrlForStep($step),
+            ),
         ];
     }
 
     /**
      * @param  callable(): string  $callback
      */
-    protected function safeUrl(callable $callback): ?string
+    protected function urlOnPanel(?string $panelId, callable $callback): ?string
     {
+        $previous = Filament::getCurrentPanel();
+
         try {
+            if ($panelId !== null) {
+                Filament::setCurrentPanel($panelId);
+            }
+
             return $callback();
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            Log::debug('LMS MCP could not generate a Filament URL.', [
+                'panel' => $panelId,
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
             return null;
+        } finally {
+            Filament::setCurrentPanel($previous);
         }
+    }
+
+    protected function panelIdForResource(string $resourceClass): ?string
+    {
+        foreach (Filament::getPanels() as $panel) {
+            if (in_array($resourceClass, $panel->getResources(), true)) {
+                return $panel->getId();
+            }
+        }
+
+        return null;
+    }
+
+    protected function panelIdForPage(string $pageClass): ?string
+    {
+        foreach (Filament::getPanels() as $panel) {
+            if (in_array($pageClass, $panel->getPages(), true)) {
+                return $panel->getId();
+            }
+        }
+
+        return Filament::getPanel('lms', isStrict: false)?->getId();
     }
 
     protected function generateExternalId(string $name): string

@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Optional Laravel MCP server for writing Course → Lesson → video Step data (`create_video_course` plus granular tools). New courses default to private. Hosts that want MCP should `composer require laravel/mcp`.
 
+### Fixed
+
+* MCP course/step payloads now generate admin and learner Filament URLs by setting the panel that owns the resource or page (HTTP MCP requests have no current panel).
+* Lesson and step Spatie sort order is scoped to the parent course/lesson so a new course starts at order 1 instead of the global max.
+
 ## v4.7.7 - 2026-08-24
 
 ### What's Changed

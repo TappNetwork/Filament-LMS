@@ -66,5 +66,7 @@ test('image step wraps the image in the material container', function () {
     expect($html)
         ->toContain('class="step-material-container"')
         ->toContain('<img')
+        ->toContain('role="dialog"')
+        ->toContain('Tap to zoom')
         ->not->toContain('class="step-material-container rounded-lg');
 });

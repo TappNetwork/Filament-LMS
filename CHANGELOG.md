@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v5.0.1 - 2026-09-23
+
+Fix landscape image steps overflowing on mobile, and add tap-to-zoom lightbox for readable full-size previews.
+
+### What's Changed
+
+* Fix mobile image step overflow and tap-to-zoom lightbox by @johnwesely in https://github.com/TappNetwork/Filament-LMS/pull/129
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.0.0...v5.0.1
+
 ## v5.0.0 - 2026-09-18
 
 Breaking change: course certificates require certificate-builder templates. `lms_courses.award` is dropped. See UPGRADING.md.

@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Tests\Feature;
 
+use Filament\Facades\Filament;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Testing\TestResponse;
 use ReflectionMethod;
+use Tapp\FilamentLms\Helpers\TenantHelper;
 use Tapp\FilamentLms\Mcp\LmsServer;
 use Tapp\FilamentLms\Mcp\Tools\CreateLesson;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoCourse;
@@ -21,8 +25,11 @@ use Tapp\FilamentLms\Mcp\Tools\UpdateLesson;
 use Tapp\FilamentLms\Mcp\Tools\UpdateStep;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
+use Tapp\FilamentLms\Models\Scopes\TenantScope;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Tests\TestTeam;
+use Tapp\FilamentLms\Tests\TestUser;
 
 beforeEach(function () {
     if (! class_exists(LmsServer::class) || ! class_exists(Server::class)) {
@@ -323,3 +330,119 @@ test('granular lesson and step tools create update and delete', function () {
     expect(Lesson::query()->whereKey($lesson->id)->exists())->toBeFalse()
         ->and(Lesson::query()->where('name', 'Lesson Zero')->exists())->toBeTrue();
 });
+
+test('update_lesson shifts sibling order instead of duplicating', function () {
+    $course = Course::factory()->create([
+        'name' => 'Order Course',
+        'slug' => 'order-course',
+        'external_id' => 'order_course',
+    ]);
+
+    LmsServer::tool(CreateLesson::class, [
+        'course_id' => $course->id,
+        'name' => 'First',
+    ])->assertOk();
+    LmsServer::tool(CreateLesson::class, [
+        'course_id' => $course->id,
+        'name' => 'Second',
+    ])->assertOk();
+
+    $first = Lesson::query()->where('name', 'First')->first();
+    $second = Lesson::query()->where('name', 'Second')->first();
+
+    LmsServer::tool(UpdateLesson::class, [
+        'id' => $second->id,
+        'order' => 1,
+    ])->assertOk();
+
+    expect($second->fresh()->order)->toBe(1)
+        ->and($first->fresh()->order)->toBe(2);
+});
+
+test('create_video_course allows the same slug on another tenant', function () {
+    enableMcpTenancy();
+
+    $admin = new class extends TestUser
+    {
+        public function isLmsAdmin(): bool
+        {
+            return true;
+        }
+    };
+    $admin->forceFill([
+        'name' => 'Admin',
+        'email' => 'admin@example.com',
+        'password' => bcrypt('password'),
+    ])->save();
+    $this->actingAs($admin);
+
+    $teamA = TestTeam::query()->create(['name' => 'Team A']);
+    $teamB = TestTeam::query()->create(['name' => 'Team B']);
+
+    Filament::setTenant($teamA);
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+
+    Filament::setTenant($teamB);
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+
+    expect(Course::query()->withoutGlobalScopes()->where('slug', 'dns-cloudflare')->count())->toBe(2);
+
+    Filament::setTenant($teamA);
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertHasErrors();
+});
+
+function enableMcpTenancy(): void
+{
+    $schema = Schema::connection((string) config('database.default'));
+
+    if (! $schema->hasTable('teams')) {
+        $schema->create('teams', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });
+    }
+
+    foreach (['lms_courses', 'lms_lessons', 'lms_steps', 'lms_videos'] as $tableName) {
+        if (! $schema->hasColumn($tableName, 'team_id')) {
+            $schema->table($tableName, function (Blueprint $table): void {
+                $table->unsignedBigInteger('team_id')->nullable();
+            });
+        }
+    }
+
+    config([
+        'filament-lms.tenancy.enabled' => true,
+        'filament-lms.tenancy.model' => TestTeam::class,
+        'filament-lms.tenancy.relationship_name' => 'team',
+        'filament-lms.tenancy.column' => 'team_id',
+    ]);
+
+    $migration = require dirname(__DIR__, 2).'/database/migrations/scope_lms_courses_unique_indexes_to_tenant.php.stub';
+    $migration->up();
+
+    foreach ([Course::class, Lesson::class, Step::class, Video::class] as $model) {
+        $model::resolveRelationUsing(
+            TenantHelper::getTenantRelationshipName(),
+            fn ($instance) => $instance->belongsTo(TestTeam::class, TenantHelper::getTenantColumnName()),
+        );
+
+        if (! $model::hasGlobalScope('filament_lms_tenancy')) {
+            $model::addGlobalScope('filament_lms_tenancy', new TenantScope);
+        }
+
+        $model::creating(function ($instance): void {
+            $column = TenantHelper::getTenantColumnName();
+
+            if (! empty($instance->{$column})) {
+                return;
+            }
+
+            $tenant = Filament::getTenant();
+
+            if ($tenant !== null) {
+                $instance->{$column} = $tenant->getKey();
+            }
+        });
+    }
+}

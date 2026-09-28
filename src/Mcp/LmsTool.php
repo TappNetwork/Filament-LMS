@@ -14,6 +14,7 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Tapp\FilamentLms\Enums\CompletionMode;
+use Tapp\FilamentLms\Helpers\TenantHelper;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
@@ -68,9 +69,18 @@ abstract class LmsTool extends Tool
      */
     protected function courseRules(?int $ignoreId = null, bool $creating = false): array
     {
-        $unique = fn (string $column): Unique => $ignoreId === null
-            ? Rule::unique('lms_courses', $column)
-            : Rule::unique('lms_courses', $column)->ignore($ignoreId);
+        $unique = function (string $column) use ($ignoreId): Unique {
+            $table = (new Course)->getTable();
+            $rule = $ignoreId === null
+                ? Rule::unique($table, $column)
+                : Rule::unique($table, $column)->ignore($ignoreId);
+
+            if (config('filament-lms.tenancy.enabled')) {
+                $rule->where(TenantHelper::getTenantColumnName(), Filament::getTenant()?->getKey());
+            }
+
+            return $rule;
+        };
 
         return [
             'name' => [$creating ? 'required' : 'sometimes', 'string', 'max:255', $unique('name')],
@@ -243,11 +253,15 @@ abstract class LmsTool extends Tool
         return (int) $course->lessons()->max('order') + 1;
     }
 
-    protected function makeRoomForLessonOrder(Course $course, int $order): void
+    protected function makeRoomForLessonOrder(Course $course, int $order, ?int $exceptLessonId = null): void
     {
-        $course->lessons()
-            ->where('order', '>=', $order)
-            ->increment('order');
+        $query = $course->lessons()->where('order', '>=', $order);
+
+        if ($exceptLessonId !== null) {
+            $query->whereKeyNot($exceptLessonId);
+        }
+
+        $query->increment('order');
     }
 
     protected function deleteStepMaterial(Step $step): void

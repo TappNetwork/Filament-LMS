@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Mcp\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Tapp\FilamentLms\Mcp\LmsTool;
+use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 
 class UpdateLesson extends LmsTool
@@ -43,8 +45,27 @@ class UpdateLesson extends LmsTool
         ]);
 
         $lesson = Lesson::query()->findOrFail($validated['id']);
-        $lesson->update(collect($validated)->except('id')->all());
 
-        return Response::structured($this->serializeLesson($lesson->refresh()));
+        $lesson = DB::transaction(function () use ($lesson, $validated): Lesson {
+            $targetCourse = Course::query()->findOrFail(
+                (int) ($validated['course_id'] ?? $lesson->course_id),
+            );
+            $movingCourse = (int) $lesson->course_id !== (int) $targetCourse->id;
+            $changingOrder = array_key_exists('order', $validated);
+            $targetOrder = $changingOrder
+                ? (int) $validated['order']
+                : ($movingCourse ? $this->nextLessonOrder($targetCourse) : (int) $lesson->order);
+
+            if ($movingCourse || $targetOrder !== (int) $lesson->order) {
+                $this->makeRoomForLessonOrder($targetCourse, $targetOrder, $lesson->id);
+                $validated['order'] = $targetOrder;
+            }
+
+            $lesson->update(collect($validated)->except('id')->all());
+
+            return $lesson->refresh();
+        });
+
+        return Response::structured($this->serializeLesson($lesson));
     }
 }

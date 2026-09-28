@@ -37,6 +37,10 @@ abstract class LmsTool extends Tool
         $user = $request->user();
 
         if ($user === null) {
+            if ($this->isHttpMcpRequest()) {
+                return Response::error('Authentication is required to use this tool over HTTP.');
+            }
+
             return null;
         }
 
@@ -62,6 +66,28 @@ abstract class LmsTool extends Tool
         }
 
         return Response::error('Tenant context is required when LMS tenancy is enabled.');
+    }
+
+    /**
+     * Mcp::web() always attaches AddWwwAuthenticateHeader. Stdio and LmsServer::tool() do not.
+     */
+    protected function isHttpMcpRequest(): bool
+    {
+        $route = request()->route();
+
+        if ($route === null) {
+            return false;
+        }
+
+        foreach ($route->gatherMiddleware() as $middleware) {
+            $name = is_string($middleware) ? $middleware : $middleware::class;
+
+            if (str_contains($name, 'AddWwwAuthenticateHeader')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

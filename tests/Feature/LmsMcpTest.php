@@ -7,6 +7,7 @@ namespace Tapp\FilamentLms\Tests\Feature;
 use Filament\Facades\Filament;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Mcp\Facades\Mcp;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Testing\TestResponse;
 use ReflectionMethod;
@@ -390,6 +391,57 @@ test('create_video_course allows the same slug on another tenant', function () {
     Filament::setTenant($teamA);
     LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertHasErrors();
 });
+
+test('web mcp denies tools when no user is authenticated', function () {
+    Mcp::web('/mcp/lms-unsecured', LmsServer::class);
+
+    $response = $this->postJson('/mcp/lms-unsecured', mcpToolCallPayload('list_courses'), [
+        'Accept' => 'application/json, text/event-stream',
+    ]);
+
+    expect($response->getContent())->toContain('Authentication is required to use this tool over HTTP.');
+});
+
+test('web mcp allows tools for an authenticated lms admin', function () {
+    Mcp::web('/mcp/lms-secured', LmsServer::class);
+
+    $admin = new class extends TestUser
+    {
+        public function isLmsAdmin(): bool
+        {
+            return true;
+        }
+    };
+    $admin->forceFill([
+        'name' => 'Http Admin',
+        'email' => 'http-admin@example.com',
+        'password' => bcrypt('password'),
+    ])->save();
+    $this->actingAs($admin);
+
+    $response = $this->postJson('/mcp/lms-secured', mcpToolCallPayload('list_courses'), [
+        'Accept' => 'application/json, text/event-stream',
+    ]);
+
+    expect($response->getContent())->not->toContain('Authentication is required to use this tool over HTTP.')
+        ->and($response->getContent())->not->toContain('You must be an LMS admin to use this tool.');
+});
+
+/**
+ * @return array{jsonrpc: string, id: int, method: string, params: array{name: string, arguments: array<string, mixed>}}
+ */
+function mcpToolCallPayload(string $tool): array
+{
+    return [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'tools/call',
+        'params' => [
+            'name' => $tool,
+            'arguments' => [],
+        ],
+    ];
+}
 
 function enableMcpTenancy(): void
 {

@@ -4,12 +4,14 @@
         >
             <div class="mb-8 flex-1">
                 @if($this->getPreviewImage())
-                    <img 
-                        src="{{ $this->getPreviewImage() }}" 
-                        alt="Document Preview Image" 
-                        class="step-material-container rounded-lg border border-gray-300 cursor-pointer"
-                        wire:click="download"
-                    />
+                    <div class="step-material-container">
+                        <img
+                            src="{{ $this->getPreviewImage() }}"
+                            alt="Document Preview Image"
+                            class="rounded-lg border border-gray-300 cursor-pointer"
+                            wire:click="download"
+                        />
+                    </div>
                 @elseif ($document->hasScormPackage())
                     <div class="step-material-container step-material-container--interactive w-full">
                         <iframe

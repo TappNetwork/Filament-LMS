@@ -23,7 +23,7 @@ class CreateVideoStep extends LmsTool
             'lesson_id' => $schema->integer()->description('Lesson ID.')->required(),
             'name' => $schema->string()->description('Step name.')->required(),
             'video_url' => $schema->string()->description('YouTube or Vimeo URL. Converted to an embed URL.')->required(),
-            'slug' => $schema->string()->description('URL slug. Defaults to {lesson-slug}-{step-slug}.'),
+            'slug' => $schema->string()->description('URL slug. Defaults to {course-slug}-{lesson-slug}-{step-slug}.'),
             'text' => $schema->string()->description('Optional transcript or supporting text.'),
             'is_optional' => $schema->boolean()->description('Whether the step can be skipped. Defaults to false.'),
             'video_name' => $schema->string()->description('Video record name. Defaults to the step name.'),

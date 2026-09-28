@@ -22,8 +22,9 @@
 
 /* Centralized step material sizing */
 .step-material-container {
+    width: 100%;
     height: 60vh;
-    max-width: calc(60vh * 16/9);
+    max-width: min(100%, calc(60vh * 16 / 9));
     margin: 0 auto;
 }
 
@@ -174,4 +175,72 @@ body.lms-embedded-player .fi-main {
     margin: 0;
     font-size: 0.9375rem;
     line-height: 1.45;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+.lms-image-preview__trigger {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: zoom-in;
+    text-align: inherit;
+}
+
+.lms-image-preview__hint {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: rgb(107 114 128);
+    text-align: center;
+}
+
+.lms-image-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgb(15 23 42 / 0.92);
+}
+
+.lms-image-lightbox__close {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 81;
+    padding: 0.5rem 0.875rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: rgb(255 255 255);
+    color: rgb(15 23 42);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.lms-image-lightbox__scroller {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    touch-action: pan-x pan-y pinch-zoom;
+    -webkit-overflow-scrolling: touch;
+}
+
+.lms-image-lightbox__scroller img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: none;
+    margin: 2.5rem auto;
+}
+
+body.lms-image-lightbox-open {
+    overflow: hidden;
+}
+
+body.lms-image-lightbox-open .next-button {
+    visibility: hidden;
 }

@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Tapp\FilamentLms\Exports\CourseProgressExport;
@@ -193,9 +192,7 @@ class Reporting extends Page implements HasTable
 
                 SelectFilter::make('user_id')
                     ->label('User')
-                    ->options(function () {
-                        return DB::table('users')->pluck('email', 'id')->toArray();
-                    })
+                    ->options(fn (): array => CourseProgressQueryService::reportUserFilterOptions())
                     ->searchable()
                     ->attribute('user_id'),
             ])

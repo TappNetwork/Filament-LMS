@@ -1,0 +1,29 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('lms_user_group_memberships', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_group_id')->constrained('lms_user_groups')->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedInteger('revision');
+            $table->timestamp('matched_at')->nullable();
+            $table->timestamps();
+
+            $table->unique(['user_group_id', 'user_id', 'revision'], 'lms_ugm_group_user_revision_unique');
+            $table->index(['user_id', 'user_group_id', 'revision'], 'lms_ugm_user_group_revision_index');
+            $table->index(['user_group_id', 'revision'], 'lms_ugm_group_revision_index');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('lms_user_group_memberships');
+    }
+};

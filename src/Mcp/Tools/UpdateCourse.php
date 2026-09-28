@@ -15,7 +15,7 @@ class UpdateCourse extends LmsTool
 {
     protected string $name = 'update_course';
 
-    protected string $description = 'Update course fields: name, description, slug, external_id, is_private, award, required_test_percentage, embedded_player, completion_mode.';
+    protected string $description = 'Update course fields: name, description, slug, external_id, is_private, certificate_template_id, required_test_percentage, embedded_player, completion_mode.';
 
     public function schema(JsonSchema $schema): array
     {
@@ -26,7 +26,7 @@ class UpdateCourse extends LmsTool
             'slug' => $schema->string()->description('URL slug.'),
             'external_id' => $schema->string()->description('Integration ID.'),
             'is_private' => $schema->boolean()->description('Private course flag.'),
-            'award' => $schema->string()->description('Certificate award key.'),
+            'certificate_template_id' => $schema->integer()->description('Certificate template ID.'),
             'required_test_percentage' => $schema->integer()->description('Required average test score (0-100).'),
             'embedded_player' => $schema->boolean()->description('Embedded player mode.'),
             'completion_mode' => $schema->string()->description('native, scorm12, or html5.'),

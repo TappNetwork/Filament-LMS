@@ -103,6 +103,7 @@ abstract class TestCase extends Orchestra
             $table->string('external_id')->unique();
             $table->text('image')->nullable();
             $table->string('award')->nullable();
+            $table->unsignedBigInteger('certificate_template_id')->nullable()->index();
             $table->text('description')->nullable();
             $table->unsignedTinyInteger('required_test_percentage')->nullable();
             $table->boolean('is_private')->default(false);
@@ -111,6 +112,14 @@ abstract class TestCase extends Orchestra
             $table->foreignId('evaluation_course_id')->nullable()->constrained('lms_courses')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
+        });
+
+        $app['db']->connection()->getSchemaBuilder()->create('certificate_templates', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('token_set')->default('default')->index();
+            $table->json('layout')->nullable();
+            $table->timestamps();
         });
 
         // Create lms_lessons table
@@ -160,7 +169,41 @@ abstract class TestCase extends Orchestra
             $table->foreignId('course_id')->constrained('lms_courses')->onDelete('cascade');
             $table->unsignedBigInteger('user_id');
             $table->timestamp('completed_at')->nullable();
+            $table->boolean('is_explicitly_assigned')->default(true);
             $table->timestamps();
+        });
+
+        $app['db']->connection()->getSchemaBuilder()->create('lms_user_groups', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->json('rules');
+            $table->unsignedSmallInteger('rules_version')->default(1);
+            $table->unsignedInteger('published_revision')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->string('sync_status', 32)->default('idle');
+            $table->text('sync_error')->nullable();
+            $table->timestamp('last_synced_at')->nullable();
+            $table->timestamps();
+        });
+
+        $app['db']->connection()->getSchemaBuilder()->create('lms_course_user_group', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('course_id')->constrained('lms_courses')->cascadeOnDelete();
+            $table->foreignId('user_group_id')->constrained('lms_user_groups')->cascadeOnDelete();
+            $table->boolean('is_default')->default(false);
+            $table->timestamps();
+            $table->unique(['course_id', 'user_group_id']);
+        });
+
+        $app['db']->connection()->getSchemaBuilder()->create('lms_user_group_memberships', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_group_id')->constrained('lms_user_groups')->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedInteger('revision');
+            $table->timestamp('matched_at')->nullable();
+            $table->timestamps();
+            $table->unique(['user_group_id', 'user_id', 'revision']);
         });
 
         // Create lms_videos table

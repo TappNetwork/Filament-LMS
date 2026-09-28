@@ -15,6 +15,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * MCP course/step payloads now generate admin and learner Filament URLs by setting the panel that owns the resource or page (HTTP MCP requests have no current panel).
 * Lesson and step Spatie sort order is scoped to the parent course/lesson so a new course starts at order 1 instead of the global max.
+* MCP course tools use `certificate_template_id` instead of the dropped `award` column.
+* Auto-generated step slugs include the course slug so two courses can share lesson and step names.
+* `create_lesson` with an explicit order shifts later lessons instead of leaving duplicate positions.
+* `update_step` validates the video URL before writing and will not convert a non-video step.
+
+## v5.0.1 - 2026-09-23
+
+Fix landscape image steps overflowing on mobile, and add tap-to-zoom lightbox for readable full-size previews.
+
+### What's Changed
+
+* Fix mobile image step overflow and tap-to-zoom lightbox by @johnwesely in https://github.com/TappNetwork/Filament-LMS/pull/129
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.0.0...v5.0.1
+
+## v5.0.0 - 2026-09-18
+
+Breaking change: course certificates require certificate-builder templates. `lms_courses.award` is dropped. See UPGRADING.md.
+
+### What's Changed
+
+* Require course certificate templates by @johnwesely in https://github.com/TappNetwork/Filament-LMS/pull/126
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v4.8.0...v5.0.0
+
+## v4.8.0 - 2026-09-10
+
+### What's Changed
+
+* Course reporting scoped to tenant by @andreia in https://github.com/TappNetwork/Filament-LMS/pull/127
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v4.7.9...v4.8.0
+
+## v4.7.9 - 2026-09-10
+
+### What's Changed
+
+* Bump browserslist from 4.24.2 to 4.28.9 by @dependabot[bot] in https://github.com/TappNetwork/Filament-LMS/pull/124
+* Bump brace-expansion from 1.1.11 to 1.1.18 by @dependabot[bot] in https://github.com/TappNetwork/Filament-LMS/pull/125
+* Change unique course fields per tenant by @andreia in https://github.com/TappNetwork/Filament-LMS/pull/128
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v4.7.8...v4.7.9
+
+## v4.7.8 - 2026-09-03
+
+### What's Changed
+
+* Add assign user groups to course by @andreia in https://github.com/TappNetwork/Filament-LMS/pull/123
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v4.7.7...v4.7.8
 
 ## v4.7.7 - 2026-08-24
 

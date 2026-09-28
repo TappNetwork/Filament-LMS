@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Mcp\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
@@ -55,29 +57,42 @@ class UpdateStep extends LmsTool
             $this->assertUniqueStepSlug($validated['slug'], $step->id);
         }
 
-        $step->update(collect($validated)->only(['name', 'slug', 'lesson_id', 'is_optional', 'text'])->all());
+        $url = isset($validated['video_url'])
+            ? $this->resolveVideoUrl((string) $validated['video_url'])
+            : null;
 
-        if (isset($validated['video_url']) || isset($validated['video_name'])) {
-            $video = $step->material instanceof Video ? $step->material : null;
-            $url = isset($validated['video_url']) ? $this->resolveVideoUrl((string) $validated['video_url']) : $video?->url;
-
-            if ($video instanceof Video) {
-                $video->update(array_filter([
-                    'name' => $validated['video_name'] ?? null,
-                    'url' => $url,
-                ], fn (mixed $value): bool => $value !== null));
-            } elseif (isset($validated['video_url'])) {
-                $video = Video::create([
-                    'name' => $validated['video_name'] ?? $step->name,
-                    'url' => $url,
-                ]);
-                $step->update([
-                    'material_id' => $video->id,
-                    'material_type' => 'video',
-                ]);
-            }
+        if (isset($validated['video_url']) && $step->material_type !== null && $step->material_type !== 'video') {
+            throw ValidationException::withMessages([
+                'video_url' => 'This step is not a video. Create a new video step instead of changing the material type.',
+            ]);
         }
 
-        return Response::structured($this->serializeStep($step->refresh()->load('material')));
+        $step = DB::transaction(function () use ($step, $validated, $url): Step {
+            $step->update(collect($validated)->only(['name', 'slug', 'lesson_id', 'is_optional', 'text'])->all());
+
+            if (isset($validated['video_url']) || isset($validated['video_name'])) {
+                $video = $step->material instanceof Video ? $step->material : null;
+
+                if ($video instanceof Video) {
+                    $video->update(array_filter([
+                        'name' => $validated['video_name'] ?? null,
+                        'url' => $url,
+                    ], fn (mixed $value): bool => $value !== null));
+                } elseif (isset($validated['video_url'])) {
+                    $video = Video::create([
+                        'name' => $validated['video_name'] ?? $step->name,
+                        'url' => $url,
+                    ]);
+                    $step->update([
+                        'material_id' => $video->id,
+                        'material_type' => 'video',
+                    ]);
+                }
+            }
+
+            return $step->refresh()->load('material');
+        });
+
+        return Response::structured($this->serializeStep($step));
     }
 }

@@ -22,6 +22,7 @@ use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
 use Tapp\FilamentLms\Resources\CourseResource;
 use Tapp\FilamentLms\Services\VideoUrlService;
+use Tapp\FilamentLms\Support\CertificateBuilder;
 use Throwable;
 
 abstract class LmsTool extends Tool
@@ -67,7 +68,6 @@ abstract class LmsTool extends Tool
      */
     protected function courseRules(?int $ignoreId = null, bool $creating = false): array
     {
-        $awardKeys = array_keys(config('filament-lms.awards', ['default' => 'Default']));
         $unique = fn (string $column): Unique => $ignoreId === null
             ? Rule::unique('lms_courses', $column)
             : Rule::unique('lms_courses', $column)->ignore($ignoreId);
@@ -84,7 +84,7 @@ abstract class LmsTool extends Tool
                 $unique('external_id'),
             ],
             'is_private' => ['sometimes', 'boolean'],
-            'award' => ['sometimes', 'nullable', 'string', Rule::in($awardKeys)],
+            'certificate_template_id' => ['sometimes', 'nullable', 'integer'],
             'required_test_percentage' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100'],
             'embedded_player' => ['sometimes', 'boolean'],
             'completion_mode' => ['sometimes', 'nullable', 'string', Rule::enum(CompletionMode::class)],
@@ -144,7 +144,9 @@ abstract class LmsTool extends Tool
             $attributes['external_id'] = filled($input['external_id'] ?? null)
                 ? (string) $input['external_id']
                 : $this->generateExternalId((string) $name);
-            $attributes['award'] = $input['award'] ?? 'default';
+            $attributes['certificate_template_id'] = array_key_exists('certificate_template_id', $input)
+                ? $input['certificate_template_id']
+                : CertificateBuilder::defaultTemplateId();
             $attributes['completion_mode'] = $input['completion_mode'] ?? CompletionMode::Native->value;
             $attributes['is_private'] = array_key_exists('is_private', $input)
                 ? (bool) $input['is_private']
@@ -152,7 +154,7 @@ abstract class LmsTool extends Tool
             $attributes['embedded_player'] = (bool) ($input['embedded_player'] ?? false);
             $attributes['required_test_percentage'] = $input['required_test_percentage'] ?? 0;
         } else {
-            foreach (['slug', 'external_id', 'award', 'completion_mode', 'required_test_percentage'] as $field) {
+            foreach (['slug', 'external_id', 'certificate_template_id', 'completion_mode', 'required_test_percentage'] as $field) {
                 if (array_key_exists($field, $input)) {
                     $attributes[$field] = $input[$field];
                 }
@@ -191,10 +193,11 @@ abstract class LmsTool extends Tool
      */
     protected function createVideoStep(Lesson $lesson, array $input, ?int $order = null): Step
     {
+        $lesson->loadMissing('course');
         $name = trim((string) $input['name']);
         $slug = filled($input['slug'] ?? null)
             ? (string) $input['slug']
-            : $lesson->slug.'-'.Str::slug($name);
+            : $lesson->course->slug.'-'.$lesson->slug.'-'.Str::slug($name);
         $videoName = filled($input['video_name'] ?? null) ? (string) $input['video_name'] : $name;
         $url = $this->resolveVideoUrl((string) $input['video_url']);
 
@@ -240,6 +243,13 @@ abstract class LmsTool extends Tool
         return (int) $course->lessons()->max('order') + 1;
     }
 
+    protected function makeRoomForLessonOrder(Course $course, int $order): void
+    {
+        $course->lessons()
+            ->where('order', '>=', $order)
+            ->increment('order');
+    }
+
     protected function deleteStepMaterial(Step $step): void
     {
         if ($step->material_type === 'video' && $step->material_id) {
@@ -261,7 +271,7 @@ abstract class LmsTool extends Tool
             'external_id' => $course->external_id,
             'description' => $course->description,
             'is_private' => (bool) $course->is_private,
-            'award' => $course->award,
+            'certificate_template_id' => $course->certificate_template_id,
             'required_test_percentage' => $course->required_test_percentage,
             'embedded_player' => (bool) $course->embedded_player,
             'completion_mode' => $course->completionMode()->value,
@@ -409,7 +419,11 @@ abstract class LmsTool extends Tool
             }
         }
 
-        return Filament::getPanel('lms', isStrict: false)?->getId();
+        try {
+            return Filament::getPanel('lms', isStrict: false)->getId();
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     protected function generateExternalId(string $name): string

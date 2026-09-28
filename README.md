@@ -392,9 +392,7 @@ return [
     
     'vite_theme' => '',
     'colors' => [],
-    'awards' => [
-        'Default' => 'default',
-    ],
+    // awards was removed. Course certificates use certificate_template_id.
     'top_navigation' => false,
     'show_exit_lms_link' => true,
 ];
@@ -502,7 +500,32 @@ When `multipart_upload.enabled` is `true` **and** `spykapps/filament-uppy-upload
 
 ## Certificate Customization
 
-The LMS package generates PDF certificates when users complete courses. You can customize the appearance and content of certificates using the following configuration options:
+The LMS package generates PDF certificates when users complete courses. You can customize the appearance and content of certificates using the following configuration options.
+
+### Certificate-builder templates
+
+Course certificates require [tapp/filament-certificate-builder](https://github.com/TappNetwork/filament-certificate-builder). See [UPGRADING.md](UPGRADING.md) to convert legacy `award` Blades.
+
+```bash
+composer require tapp/filament-certificate-builder
+php artisan vendor:publish --tag=filament-lms-migrations
+php artisan migrate
+```
+
+```php
+// config/filament-lms.php
+'integrations' => [
+    'certificate_builder' => [
+        'enabled' => true,
+        'token_set' => 'course',
+        'template_resource' => \Tapp\FilamentCertificateBuilder\Filament\Resources\CertificateTemplates\CertificateTemplateResource::class,
+    ],
+],
+```
+
+Add a matching `course` token set in `config/certificate-builder.php`. LMS resolves tokens with context `['course' => $course, 'user' => $user]` on `filament-lms::certificates.show` / `filament-lms::certificates.download`. A course without a template returns 404.
+
+On **Edit Course**, **Create Certificate Template** creates a template for that token set, sets `certificate_template_id`, and opens the designer. **Edit Certificate Template** opens the assigned template.
 
 ### certificate_logo
 
@@ -600,6 +623,17 @@ class AuthServiceProvider extends ServiceProvider
 #### Available Gates
 - `viewLmsReporting`: Controls access to the LMS reporting page. Users must pass this Gate check to view the reporting interface.
 
+## How to Assign Multiple Users to Courses
+
+Choose the approach that fits the workflow:
+
+| Approach | Best for | Where |
+|---|---|---|
+| **Bulk action on users** | Pick specific users, then assign the same course(s) to all of them | User resource table → [Assign Courses bulk action](#user-course-management-in-filament) |
+| **Dynamic user groups** | Assign a private course by shared criteria (role, department, fields, etc.) so membership updates as user data changes | Course edit → [Assigned User Groups](#dynamic-user-groups) |
+
+You can also attach users one-by-one from a user’s **Assigned Courses** tab or a course’s **Assigned Users** tab. Bulk and group assignment both set (or imply) manual vs criteria-based access as described in those sections.
+
 ## Course Authorization
 
 ### Restricting Course Visibility
@@ -649,6 +683,131 @@ public static function table(Table $table): Table
             // ... other bulk actions ...
         ]);
 }
+```
+
+When [dynamic user groups](#dynamic-user-groups) are enabled, the Assigned Courses relation manager also lists courses the user receives through group membership (with an Assignment badge: Manual, Group, or Manual + Group). Detach only applies to manually attached courses.
+
+## Dynamic User Groups
+
+Assign private courses to users by **criteria** (Filament Query Builder rules) instead of attaching individuals one by one. Membership is rebuilt when group rules change and optionally when user records are saved.
+
+The **Assigned User Groups** tab on the course edit page is **hidden until** you configure a criteria provider.
+
+### 1. Publish and run migrations
+
+If you have not already published LMS migrations (or need the newer user-group tables):
+
+```bash
+php artisan vendor:publish --tag=filament-lms-migrations
+php artisan migrate
+```
+
+This creates `lms_user_groups`, `lms_course_user_group` (with `is_default`), `lms_user_group_memberships`, and adds `is_explicitly_assigned` on `lms_course_user` when those migrations are present.
+
+### 2. Create a criteria provider
+
+Implement `Tapp\FilamentLms\UserGroups\Contracts\UserGroupCriteriaProvider` and return allow-listed `CriteriaSource` entries. Only expose fields you intend admins to filter on.
+
+```php
+<?php
+
+namespace App\Lms;
+
+use Filament\QueryBuilder\Constraints\SelectConstraint;
+use Filament\QueryBuilder\Constraints\TextConstraint;
+use Tapp\FilamentLms\UserGroups\Contracts\UserGroupCriteriaProvider;
+use Tapp\FilamentLms\UserGroups\CriteriaSource;
+
+final class AppUserGroupCriteriaProvider implements UserGroupCriteriaProvider
+{
+    public function sources(): array
+    {
+        return [
+            // Constraints apply to the configured user model (no userRelationship).
+            'user' => new CriteriaSource(
+                key: 'user',
+                label: 'User',
+                constraints: fn (): array => [
+                    TextConstraint::make('email')->label('Email'),
+                    TextConstraint::make('first_name')->label('First name'),
+                    TextConstraint::make('last_name')->label('Last name'),
+                    SelectConstraint::make('user_type')
+                        ->label('User type')
+                        ->options([
+                            'staff' => 'Staff',
+                            'admin' => 'Admin',
+                        ])
+                        ->nullable(),
+                ],
+            ),
+
+            // Optional: filter on a relationship of the user model (AND with other sources).
+            // 'roles' => new CriteriaSource(
+            //     key: 'roles',
+            //     label: 'Role',
+            //     userRelationship: 'roles',
+            //     constraints: fn (): array => [
+            //         TextConstraint::make('name')->label('Role name'),
+            //     ],
+            // ),
+        ];
+    }
+}
+```
+
+### 3. Enable in config
+
+Publish the config if needed, then set `user_groups` in `config/filament-lms.php`:
+
+```bash
+php artisan vendor:publish --tag=filament-lms-config
+```
+
+```php
+'user_groups' => [
+    // Required to enable the feature (Assigned User Groups tab).
+    'criteria_provider' => \App\Lms\AppUserGroupCriteriaProvider::class,
+
+    // Safety limits for Query Builder trees.
+    'max_rules' => 100,
+    'max_nesting_depth' => 10,
+
+    // Queue membership rebuilds (recommended in production).
+    'sync_queue' => true,
+
+    // Refresh the user's group memberships when the user model is saved.
+    'refresh_on_user_save' => true,
+
+    // Columns shown in the matching-users preview table on the course tab.
+    // Use first_name/last_name when your users table has those columns.
+    'display_columns' => [
+        'name',
+        'email',
+    ],
+
+    // Optional override for searchable columns on that preview table.
+    'search_columns' => null,
+],
+```
+
+Leaving `criteria_provider` as `null` keeps user groups disabled.
+
+### 4. Admin workflow
+
+1. Edit a course → **Assigned User Groups**.
+2. Add Query Builder rules, click **Apply filters** to preview matching users.
+3. **Save as group** (name/description). The first group on a course becomes the **default**.
+4. Use **Default group** to switch between saved groups, update rules, or choose “New unsaved criteria” to create another.
+5. Memberships sync in the background when `sync_queue` is `true`.
+
+Private courses become accessible to users who match an active group’s published membership (in addition to manually attached users with `is_explicitly_assigned`).
+
+### 5. Reconciliation command
+
+Rebuild all active group memberships (useful after imports or if the queue fell behind):
+
+```bash
+php artisan filament-lms:reconcile-user-group-memberships
 ```
 
 ## Overriding Course Visibility

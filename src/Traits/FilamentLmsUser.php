@@ -33,7 +33,7 @@ trait FilamentLmsUser
     public function courses(): BelongsToMany
     {
         return $this->belongsToMany(Course::class, 'lms_course_user', 'user_id', 'course_id')
-            ->withPivot('completed_at')
+            ->withPivot('completed_at', 'is_explicitly_assigned')
             ->withTimestamps();
     }
 

@@ -58,7 +58,6 @@ test('create_video_course defaults new courses to private', function () {
         ->and($course->is_private)->toBeTrue()
         ->and($course->slug)->toBe('dns-cloudflare')
         ->and($course->external_id)->toBe('dns_cloudflare')
-        ->and($course->award)->toBe('default')
         ->and($course->completion_mode->value)->toBe('native');
 });
 
@@ -205,6 +204,21 @@ test('create_video_course scopes lesson and step order to the new course', funct
         ->and($second->lessons()->first()->steps()->first()->order)->toBe(1);
 });
 
+test('create_video_course allows the same lesson and step names on a second course', function () {
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload([
+        'name' => 'Second Course',
+        'slug' => 'second-course',
+        'external_id' => 'second_course',
+    ]))->assertOk();
+
+    expect(Course::query()->count())->toBe(2)
+        ->and(Step::query()->pluck('slug')->all())->toBe([
+            'dns-cloudflare-getting-started-welcome-video',
+            'second-course-getting-started-welcome-video',
+        ]);
+});
+
 test('update_course and delete_course work', function () {
     LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
     $course = Course::query()->first();
@@ -251,7 +265,8 @@ test('granular lesson and step tools create update and delete', function () {
         'order' => 1,
     ])->assertOk();
 
-    expect(Lesson::query()->where('name', 'Lesson Zero')->first()->order)->toBe(1);
+    expect(Lesson::query()->where('name', 'Lesson Zero')->first()->order)->toBe(1)
+        ->and(Lesson::query()->where('name', 'Lesson A')->first()->order)->toBe(2);
 
     LmsServer::tool(UpdateLesson::class, [
         'id' => $lesson->id,
@@ -267,9 +282,17 @@ test('granular lesson and step tools create update and delete', function () {
 
     $step = Step::query()->first();
     $video = Video::query()->first();
-    expect($step->slug)->toBe('lesson-a-step-one')
+    expect($step->slug)->toBe('manual-course-lesson-a-step-one')
         ->and($step->text)->toBe('Vimeo transcript')
         ->and($video->url)->toBe('https://player.vimeo.com/video/226053498');
+
+    LmsServer::tool(UpdateStep::class, [
+        'id' => $step->id,
+        'name' => 'Should not persist',
+        'video_url' => 'https://example.com/not-a-video',
+    ])->assertHasErrors();
+
+    expect($step->fresh()->name)->toBe('Step one');
 
     LmsServer::tool(UpdateStep::class, [
         'id' => $step->id,

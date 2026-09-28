@@ -44,15 +44,21 @@ class CreateLesson extends LmsTool
 
         $course = Course::query()->findOrFail($validated['course_id']);
         $name = trim((string) $validated['name']);
+        $explicitOrder = array_key_exists('order', $validated) && $validated['order'] !== null;
+        $order = $explicitOrder ? (int) $validated['order'] : $this->nextLessonOrder($course);
+
+        if ($explicitOrder) {
+            $this->makeRoomForLessonOrder($course, $order);
+        }
 
         $lesson = new Lesson([
             'course_id' => $course->id,
             'name' => $name,
             'slug' => filled($validated['slug'] ?? null) ? (string) $validated['slug'] : Str::slug($name),
-            'order' => $validated['order'] ?? $this->nextLessonOrder($course),
+            'order' => $order,
         ]);
 
-        if (array_key_exists('order', $validated) && $validated['order'] !== null) {
+        if ($explicitOrder) {
             $lesson->sortable['sort_when_creating'] = false;
         }
 

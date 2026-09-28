@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Tapp\FilamentCertificateBuilder\Filament\Resources\CertificateTemplates\CertificateTemplateResource;
 
 return [
     'theme' => 'default',
@@ -21,9 +22,6 @@ return [
 
     'vite_theme' => '',
     'colors' => [],
-    'awards' => [
-        'default' => 'Default',
-    ],
     // Enable top navigation on the LMS dashboard (courses list page).
     // Note: This only affects the dashboard. Course pages always use sidebar navigation.
     'top_navigation' => false,
@@ -65,6 +63,30 @@ return [
         'first_name',
         'last_name',
         'email',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dynamic user groups
+    |--------------------------------------------------------------------------
+    |
+    | Assign courses to users by criteria instead of attaching individuals.
+    | Set criteria_provider to a class implementing
+    | Tapp\FilamentLms\UserGroups\Contracts\UserGroupCriteriaProvider.
+    | When null, the "Assigned User Groups" tab is hidden.
+    |
+    */
+    'user_groups' => [
+        'criteria_provider' => null,
+        'max_rules' => 100,
+        'max_nesting_depth' => 10,
+        'sync_queue' => true,
+        'refresh_on_user_save' => true,
+        'display_columns' => [
+            'name',
+            'email',
+        ],
+        'search_columns' => null,
     ],
 
     // Course search columns for relation managers
@@ -161,6 +183,17 @@ return [
 
             // Max rows returned when searching library files or links on the Step form.
             'material_select_limit' => 200,
+        ],
+
+        'certificate_builder' => [
+            // Required for course certificates. The builder package must be installed.
+            'enabled' => true,
+
+            // Token set key from config/certificate-builder.php used for new course templates.
+            'token_set' => 'course',
+
+            // Filament resource used after creating a template from Edit Course.
+            'template_resource' => CertificateTemplateResource::class,
         ],
     ],
 

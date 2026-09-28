@@ -27,7 +27,7 @@ class CreateVideoCourse extends LmsTool
             'description' => $schema->string()->description('Course description.'),
             'slug' => $schema->string()->description('URL slug. Defaults to a slugified name.'),
             'external_id' => $schema->string()->description('Integration ID. Lowercase letters, numbers, underscores; must start with a letter. Defaults to a slugified name with underscores.'),
-            'award' => $schema->string()->description('Certificate award key. Defaults to default.'),
+            'certificate_template_id' => $schema->integer()->description('Certificate template ID. Defaults to the LMS default template when one exists.'),
             'is_private' => $schema->boolean()->description('Private courses are only visible to assigned users and LMS admins. Defaults to true.'),
             'required_test_percentage' => $schema->integer()->description('Required average test score (0-100). Defaults to 0.'),
             'embedded_player' => $schema->boolean()->description('Embedded player mode. Defaults to false.'),

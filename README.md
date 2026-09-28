@@ -85,7 +85,7 @@ class AdminPanelProvider extends PanelProvider
 
 ## MCP Server
 
-The package can expose **write tools** for AI clients (Cursor, Claude Code, Claude Desktop) so a skill can create Course → Lesson → Step data. Melissa’s skill should draft titles, descriptions, and structure, then call these tools. Videos are hosted YouTube or Vimeo URLs — the package does not upload video files. Optional transcripts go on the step `text` field. New courses default to `is_private = true` (there is no draft flag).
+The package can expose **write tools** for AI clients (Cursor, Claude Code, Claude Desktop) so a skill can create Course → Lesson → Step data. Draft titles, descriptions, and structure, then call these tools. Videos are hosted YouTube or Vimeo URLs — the package does not upload video files. Optional transcripts go on the step `text` field. New courses default to `is_private = true` (there is no draft flag).
 
 The package requires `laravel/mcp` and `laravel/sanctum`. It registers a **local stdio** server when `filament-lms.mcp.enabled` is `true` (the default):
 
@@ -123,7 +123,19 @@ php artisan migrate
 php artisan lms:mcp-token admin@example.com --server-key=your-app
 ```
 
-Issue that token only for an LMS admin (`isLmsAdmin()`). Send it as `Authorization: Bearer …`. Cursor and Claude Desktop work with that header. Claude.ai custom connectors often prefer OAuth — if a token URL is rejected, that is a follow-up (Passport on the host, or Switchboard).
+Issue that token only for an LMS admin (`isLmsAdmin()`). The command prints Claude Desktop JSON once. Send the token as `Authorization: Bearer …`.
+
+Claude Desktop: Settings → Developer → Edit Config, merge the printed `mcpServers` entry, restart, then ask to list courses (`list_courses`).
+
+Claude Code:
+
+```bash
+claude mcp add --transport http --scope user filament-lms \
+  "{APP_URL}/mcp/lms" \
+  --header "Authorization: Bearer {TOKEN}"
+```
+
+Cursor and Claude Desktop work with that header. Claude.ai custom connectors often prefer OAuth — if a token URL is rejected, that is a follow-up (Passport on the host, or Switchboard).
 
 Turn off auto-registration with:
 

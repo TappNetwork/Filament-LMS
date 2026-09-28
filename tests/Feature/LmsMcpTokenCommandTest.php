@@ -42,10 +42,10 @@ test('lms mcp token command prints claude json for an lms admin', function () {
 
     $this->artisan('lms:mcp-token', [
         'email' => 'admin@example.com',
-        '--server-key' => 'check-lms-staging',
+        '--server-key' => 'filament-lms',
     ])
         ->expectsOutputToContain('Token minted')
-        ->expectsOutputToContain('check-lms-staging')
+        ->expectsOutputToContain('filament-lms')
         ->assertSuccessful();
 
     expect(PersonalAccessToken::query()->where('name', 'lms-mcp')->exists())->toBeTrue();

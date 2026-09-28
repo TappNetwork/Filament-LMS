@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* Optional Laravel MCP server for writing Course → Lesson → video Step data (`create_video_course` plus granular tools). New courses default to private. Hosts that want MCP should `composer require laravel/mcp`.
+* Laravel MCP server for writing Course → Lesson → video Step data (`create_video_course` plus granular tools). New courses default to private.
+* HTTP MCP at `POST /mcp/lms` is registered by the package (Sanctum, `throttle:mcp`, `isLmsAdmin()`). `php artisan lms:mcp-token` mints a bearer token. Hosts still add `HasApiTokens` and run the Sanctum `personal_access_tokens` migration.
+
+### Changed
+
+* `laravel/mcp` and `laravel/sanctum` are required. Set `filament-lms.mcp.web` to `false` to unpublish `/mcp/lms`.
 
 ### Fixed
 

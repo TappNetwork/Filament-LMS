@@ -285,13 +285,14 @@ return [
     | MCP server
     |--------------------------------------------------------------------------
     |
-    | When laravel/mcp is installed, the package registers a local stdio server
-    | named `filament-lms`. Set enabled to false to skip that auto-registration.
-    | Web (HTTP) registration stays in the host app — do not rely on the package
-    | to call Mcp::web().
+    | The package registers a local stdio server named `filament-lms` and an
+    | HTTP server at POST /mcp/lms. HTTP is on by default, behind Sanctum,
+    | throttle:mcp, and isLmsAdmin(). Set web to false to unpublish the route.
+    | Set enabled to false to skip stdio registration.
     |
     */
     'mcp' => [
         'enabled' => true,
+        'web' => true,
     ],
 ];

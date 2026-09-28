@@ -87,13 +87,7 @@ class AdminPanelProvider extends PanelProvider
 
 The package can expose **write tools** for AI clients (Cursor, Claude Code, Claude Desktop) so a skill can create Course → Lesson → Step data. Melissa’s skill should draft titles, descriptions, and structure, then call these tools. Videos are hosted YouTube or Vimeo URLs — the package does not upload video files. Optional transcripts go on the step `text` field. New courses default to `is_private = true` (there is no draft flag).
 
-`laravel/mcp` is optional. Hosts that want MCP should install it:
-
-```bash
-composer require laravel/mcp
-```
-
-The package registers a **local stdio** server when `laravel/mcp` is present and `filament-lms.mcp.enabled` is `true` (the default):
+The package requires `laravel/mcp` and `laravel/sanctum`. It registers a **local stdio** server when `filament-lms.mcp.enabled` is `true` (the default):
 
 ```php
 Mcp::local('filament-lms', \Tapp\FilamentLms\Mcp\LmsServer::class);
@@ -121,23 +115,23 @@ Example Cursor MCP config:
 
 ### Web (remote Claude) + Sanctum
 
-Do **not** auto-register `Mcp::web` from the package. Publish `routes/ai.php` in the host app and register the HTTP server there. Sanctum bearer tokens are the v1 path (no Passport):
+The package registers `POST /mcp/lms` with `auth:sanctum`, `throttle:mcp`, and `isLmsAdmin()`. Host leftover: `HasApiTokens` on the user model and the Sanctum `personal_access_tokens` table.
 
-```php
-use Laravel\Mcp\Facades\Mcp;
-
-Mcp::web('/mcp/lms', \Tapp\FilamentLms\Mcp\LmsServer::class)
-    ->middleware(['auth:sanctum', 'throttle:mcp']);
+```bash
+php artisan vendor:publish --tag=sanctum-migrations
+php artisan migrate
+php artisan lms:mcp-token admin@example.com --server-key=your-app
 ```
 
-Issue a Sanctum token for an LMS admin user and send it as `Authorization: Bearer …`. Cursor and Claude Desktop work with that header. Claude.ai custom connectors often prefer OAuth — if a token URL is rejected, that is a follow-up (Passport on the host, or Switchboard).
+Issue that token only for an LMS admin (`isLmsAdmin()`). Send it as `Authorization: Bearer …`. Cursor and Claude Desktop work with that header. Claude.ai custom connectors often prefer OAuth — if a token URL is rejected, that is a follow-up (Passport on the host, or Switchboard).
 
-Turn off local auto-registration with:
+Turn off auto-registration with:
 
 ```php
 // config/filament-lms.php
 'mcp' => [
-    'enabled' => false,
+    'enabled' => false, // skip stdio
+    'web' => false, // skip POST /mcp/lms
 ],
 ```
 

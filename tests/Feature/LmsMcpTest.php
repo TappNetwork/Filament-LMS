@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Tests\Feature;
 
 use Laravel\Mcp\Server;
+use Laravel\Mcp\Server\Testing\TestResponse;
+use ReflectionMethod;
 use Tapp\FilamentLms\Mcp\LmsServer;
 use Tapp\FilamentLms\Mcp\Tools\CreateLesson;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoCourse;
@@ -27,6 +29,17 @@ beforeEach(function () {
         $this->markTestSkipped('laravel/mcp is required to run LMS MCP tests.');
     }
 });
+
+function assertMcpSeePath(TestResponse $response, string $path): void
+{
+    $method = new ReflectionMethod($response, 'content');
+    $content = $method->invoke($response);
+    $haystack = implode("\n", $content);
+    $escaped = str_replace('/', '\\/', $path);
+
+    expect(str_contains($haystack, $path) || str_contains($haystack, $escaped))
+        ->toBeTrue("Expected MCP response to include [{$path}]");
+}
 
 function videoCoursePayload(array $overrides = []): array
 {
@@ -171,9 +184,10 @@ test('list_courses and get_course include lessons and steps', function () {
         ->assertSee('dns-cloudflare')
         ->assertSee('Getting started')
         ->assertSee('dQw4w9WgXcQ')
-        ->assertSee('youtube')
-        ->assertSee('admin\/lms\/courses')
-        ->assertSee('lms\/courses\/dns-cloudflare\/getting-started');
+        ->assertSee('youtube');
+
+    assertMcpSeePath($get, 'admin/lms/courses');
+    assertMcpSeePath($get, 'lms/courses/dns-cloudflare/getting-started');
 });
 
 test('create_video_course scopes lesson and step order to the new course', function () {

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v5.1.0 - 2026-09-29
+
+Register HTTP MCP at `POST /mcp/lms` and add write tools for Course → Lesson → video Step.
+
 ### Added
 
 * Laravel MCP server for writing Course → Lesson → video Step data (`create_video_course` plus granular tools). New courses default to private.
@@ -24,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Auto-generated step slugs include the course slug so two courses can share lesson and step names.
 * `create_lesson` with an explicit order shifts later lessons instead of leaving duplicate positions.
 * `update_step` validates the video URL before writing and will not convert a non-video step.
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.0.1...v5.1.0
 
 ## v5.0.1 - 2026-09-23
 

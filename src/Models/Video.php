@@ -8,6 +8,13 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Tapp\FilamentLms\Database\Factories\VideoFactory;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $url
+ * @property string|null $description
+ * @property-read string $provider
+ */
 class Video extends Model
 {
     use BelongsToTenant;

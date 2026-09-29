@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+## v5.1.0 - 2026-09-29
+
+Register HTTP MCP at `POST /mcp/lms` and add write tools for Course → Lesson → video Step.
+
+### Added
+
+* Laravel MCP server for writing Course → Lesson → video Step data (`create_video_course` plus granular tools). New courses default to private.
+* HTTP MCP at `POST /mcp/lms` is registered by the package (Sanctum, `throttle:mcp`, `isLmsAdmin()`). `php artisan lms:mcp-token` mints a bearer token. Hosts still add `HasApiTokens` and run the Sanctum `personal_access_tokens` migration.
+
+### Changed
+
+* `laravel/mcp` and `laravel/sanctum` are required. Set `filament-lms.mcp.web` to `false` to unpublish `/mcp/lms`.
+
+### Fixed
+
+* MCP course/step payloads now generate admin and learner Filament URLs by setting the panel that owns the resource or page (HTTP MCP requests have no current panel).
+* Lesson and step Spatie sort order is scoped to the parent course/lesson so a new course starts at order 1 instead of the global max.
+* MCP course tools use `certificate_template_id` instead of the dropped `award` column.
+* Auto-generated step slugs include the course slug so two courses can share lesson and step names.
+* `create_lesson` with an explicit order shifts later lessons instead of leaving duplicate positions.
+* `update_step` validates the video URL before writing and will not convert a non-video step.
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.0.1...v5.1.0
+
 ## v5.0.1 - 2026-09-23
 
 Fix landscape image steps overflowing on mobile, and add tap-to-zoom lightbox for readable full-size previews.
@@ -58,12 +84,6 @@ Breaking change: course certificates require certificate-builder templates. `lms
 * CU-868kv4cgu: list learner dashboard courses newest first by @scottgrayson in https://github.com/TappNetwork/Filament-LMS/pull/121
 
 **Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v4.7.6...v4.7.7
-
-## Unreleased
-
-### Changed
-
-- Learner dashboard lists courses newest first (`created_at` descending).
 
 ## v4.7.6 - 2026-08-07
 

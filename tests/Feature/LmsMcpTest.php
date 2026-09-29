@@ -1,0 +1,500 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tapp\FilamentLms\Tests\Feature;
+
+use Filament\Facades\Filament;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Laravel\Mcp\Facades\Mcp;
+use Laravel\Mcp\Server;
+use Laravel\Mcp\Server\Testing\TestResponse;
+use ReflectionMethod;
+use Tapp\FilamentLms\Helpers\TenantHelper;
+use Tapp\FilamentLms\Mcp\LmsServer;
+use Tapp\FilamentLms\Mcp\Tools\CreateLesson;
+use Tapp\FilamentLms\Mcp\Tools\CreateVideoCourse;
+use Tapp\FilamentLms\Mcp\Tools\CreateVideoStep;
+use Tapp\FilamentLms\Mcp\Tools\DeleteCourse;
+use Tapp\FilamentLms\Mcp\Tools\DeleteLesson;
+use Tapp\FilamentLms\Mcp\Tools\DeleteStep;
+use Tapp\FilamentLms\Mcp\Tools\GetCourse;
+use Tapp\FilamentLms\Mcp\Tools\ListCourses;
+use Tapp\FilamentLms\Mcp\Tools\UpdateCourse;
+use Tapp\FilamentLms\Mcp\Tools\UpdateLesson;
+use Tapp\FilamentLms\Mcp\Tools\UpdateStep;
+use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\Lesson;
+use Tapp\FilamentLms\Models\Scopes\TenantScope;
+use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Tests\TestTeam;
+use Tapp\FilamentLms\Tests\TestUser;
+
+beforeEach(function () {
+    if (! class_exists(LmsServer::class) || ! class_exists(Server::class)) {
+        $this->markTestSkipped('laravel/mcp is required to run LMS MCP tests.');
+    }
+});
+
+function assertMcpSeePath(TestResponse $response, string $path): void
+{
+    $method = new ReflectionMethod($response, 'content');
+    $content = $method->invoke($response);
+    $haystack = implode("\n", $content);
+    $escaped = str_replace('/', '\\/', $path);
+
+    expect(str_contains($haystack, $path) || str_contains($haystack, $escaped))
+        ->toBeTrue("Expected MCP response to include [{$path}]");
+}
+
+function videoCoursePayload(array $overrides = []): array
+{
+    return array_merge([
+        'name' => 'DNS Cloudflare',
+        'description' => 'How DNS works with Cloudflare.',
+        'lessons' => [
+            [
+                'name' => 'Getting started',
+                'steps' => [
+                    [
+                        'name' => 'Welcome video',
+                        'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                        'text' => 'Welcome to the course.',
+                    ],
+                ],
+            ],
+        ],
+    ], $overrides);
+}
+
+test('create_video_course defaults new courses to private', function () {
+    $response = LmsServer::tool(CreateVideoCourse::class, videoCoursePayload());
+
+    $response->assertOk();
+
+    $course = Course::query()->first();
+    expect($course)->not->toBeNull()
+        ->and($course->is_private)->toBeTrue()
+        ->and($course->slug)->toBe('dns-cloudflare')
+        ->and($course->external_id)->toBe('dns_cloudflare')
+        ->and($course->completion_mode->value)->toBe('native');
+});
+
+test('create_video_course creates nested lessons, videos, and steps', function () {
+    $response = LmsServer::tool(CreateVideoCourse::class, videoCoursePayload());
+
+    $response->assertOk()
+        ->assertSee('DNS Cloudflare')
+        ->assertSee('Getting started')
+        ->assertSee('Welcome video');
+
+    expect(Course::query()->count())->toBe(1)
+        ->and(Lesson::query()->count())->toBe(1)
+        ->and(Step::query()->count())->toBe(1)
+        ->and(Video::query()->count())->toBe(1);
+
+    $step = Step::query()->first();
+    expect($step->material_type)->toBe('video')
+        ->and($step->text)->toBe('Welcome to the course.')
+        ->and($step->is_optional)->toBeFalse();
+});
+
+test('create_video_course converts youtube watch urls to embed urls', function () {
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+
+    $video = Video::query()->first();
+    expect($video->url)->toBe('https://www.youtube.com/embed/dQw4w9WgXcQ')
+        ->and($video->provider)->toBe('youtube');
+});
+
+test('create_video_course rejects invalid video urls', function () {
+    $response = LmsServer::tool(CreateVideoCourse::class, videoCoursePayload([
+        'lessons' => [
+            [
+                'name' => 'Getting started',
+                'steps' => [
+                    [
+                        'name' => 'Broken video',
+                        'video_url' => 'https://example.com/not-a-video',
+                    ],
+                ],
+            ],
+        ],
+    ]));
+
+    $response->assertHasErrors(['Automatic conversion from video link to embed link failed']);
+    expect(Course::query()->count())->toBe(0);
+});
+
+test('create_video_course rejects duplicate slug and external_id', function () {
+    Course::factory()->create([
+        'name' => 'Existing Course',
+        'slug' => 'dns-cloudflare',
+        'external_id' => 'dns_cloudflare',
+    ]);
+
+    $response = LmsServer::tool(CreateVideoCourse::class, videoCoursePayload());
+
+    $response->assertHasErrors();
+    expect(Course::query()->count())->toBe(1);
+});
+
+test('create_video_course rejects invalid external_id format', function () {
+    $response = LmsServer::tool(CreateVideoCourse::class, videoCoursePayload([
+        'external_id' => '123-not-valid',
+    ]));
+
+    $response->assertHasErrors(['External ID must contain only lowercase letters']);
+    expect(Course::query()->count())->toBe(0);
+});
+
+test('create_video_course prefixes auto external_id when name starts with a number', function () {
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload([
+        'name' => '101 Intro',
+    ]))->assertOk();
+
+    expect(Course::query()->first()->external_id)->toBe('course_101_intro');
+});
+
+test('optional transcript is stored on step text', function () {
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload([
+        'lessons' => [
+            [
+                'name' => 'Lesson one',
+                'steps' => [
+                    [
+                        'name' => 'Talk track',
+                        'video_url' => 'https://youtu.be/dQw4w9WgXcQ',
+                        'text' => 'This is the transcript.',
+                        'is_optional' => true,
+                    ],
+                ],
+            ],
+        ],
+    ]))->assertOk();
+
+    $step = Step::query()->first();
+    expect($step->text)->toBe('This is the transcript.')
+        ->and($step->is_optional)->toBeTrue();
+});
+
+test('list_courses and get_course include lessons and steps', function () {
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+    $course = Course::query()->first();
+
+    $list = LmsServer::tool(ListCourses::class, []);
+    $list->assertOk()->assertSee('DNS Cloudflare')->assertSee('Welcome video');
+
+    $get = LmsServer::tool(GetCourse::class, ['id' => $course->id]);
+    $get->assertOk()
+        ->assertSee('dns-cloudflare')
+        ->assertSee('Getting started')
+        ->assertSee('dQw4w9WgXcQ')
+        ->assertSee('youtube');
+
+    assertMcpSeePath($get, 'admin/lms/courses');
+    assertMcpSeePath($get, 'lms/courses/dns-cloudflare/getting-started');
+});
+
+test('create_video_course scopes lesson and step order to the new course', function () {
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload([
+        'name' => 'Second Course',
+        'slug' => 'second-course',
+        'external_id' => 'second_course',
+        'lessons' => [
+            [
+                'name' => 'Lesson B',
+                'steps' => [
+                    [
+                        'name' => 'Second video',
+                        'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    ],
+                ],
+            ],
+        ],
+    ]))->assertOk();
+
+    $first = Course::query()->where('slug', 'dns-cloudflare')->first();
+    $second = Course::query()->where('slug', 'second-course')->first();
+
+    expect($first->lessons()->first()->order)->toBe(1)
+        ->and($first->lessons()->first()->steps()->first()->order)->toBe(1)
+        ->and($second->lessons()->first()->order)->toBe(1)
+        ->and($second->lessons()->first()->steps()->first()->order)->toBe(1);
+});
+
+test('create_video_course allows the same lesson and step names on a second course', function () {
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload([
+        'name' => 'Second Course',
+        'slug' => 'second-course',
+        'external_id' => 'second_course',
+    ]))->assertOk();
+
+    expect(Course::query()->count())->toBe(2)
+        ->and(Step::query()->pluck('slug')->all())->toBe([
+            'dns-cloudflare-getting-started-welcome-video',
+            'second-course-getting-started-welcome-video',
+        ]);
+});
+
+test('update_course and delete_course work', function () {
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+    $course = Course::query()->first();
+
+    LmsServer::tool(UpdateCourse::class, [
+        'id' => $course->id,
+        'name' => 'DNS Updated',
+        'is_private' => false,
+        'description' => 'Updated description',
+    ])->assertOk()->assertSee('DNS Updated');
+
+    $course->refresh();
+    expect($course->name)->toBe('DNS Updated')
+        ->and($course->is_private)->toBeFalse()
+        ->and($course->description)->toBe('Updated description');
+
+    LmsServer::tool(DeleteCourse::class, ['id' => $course->id])->assertOk();
+
+    expect(Course::query()->count())->toBe(0)
+        ->and(Lesson::query()->count())->toBe(0)
+        ->and(Step::query()->count())->toBe(0)
+        ->and(Video::query()->count())->toBe(0);
+});
+
+test('granular lesson and step tools create update and delete', function () {
+    $course = Course::factory()->create([
+        'name' => 'Manual Course',
+        'slug' => 'manual-course',
+        'external_id' => 'manual_course',
+        'is_private' => true,
+    ]);
+
+    LmsServer::tool(CreateLesson::class, [
+        'course_id' => $course->id,
+        'name' => 'Lesson A',
+    ])->assertOk();
+
+    $lesson = Lesson::query()->first();
+    expect($lesson->slug)->toBe('lesson-a')->and($lesson->order)->toBe(1);
+
+    LmsServer::tool(CreateLesson::class, [
+        'course_id' => $course->id,
+        'name' => 'Lesson Zero',
+        'order' => 1,
+    ])->assertOk();
+
+    expect(Lesson::query()->where('name', 'Lesson Zero')->first()->order)->toBe(1)
+        ->and(Lesson::query()->where('name', 'Lesson A')->first()->order)->toBe(2);
+
+    LmsServer::tool(UpdateLesson::class, [
+        'id' => $lesson->id,
+        'name' => 'Lesson A updated',
+    ])->assertOk()->assertSee('Lesson A updated');
+
+    LmsServer::tool(CreateVideoStep::class, [
+        'lesson_id' => $lesson->id,
+        'name' => 'Step one',
+        'video_url' => 'https://vimeo.com/226053498',
+        'text' => 'Vimeo transcript',
+    ])->assertOk();
+
+    $step = Step::query()->first();
+    $video = Video::query()->first();
+    expect($step->slug)->toBe('manual-course-lesson-a-step-one')
+        ->and($step->text)->toBe('Vimeo transcript')
+        ->and($video->url)->toBe('https://player.vimeo.com/video/226053498');
+
+    LmsServer::tool(UpdateStep::class, [
+        'id' => $step->id,
+        'name' => 'Should not persist',
+        'video_url' => 'https://example.com/not-a-video',
+    ])->assertHasErrors();
+
+    expect($step->fresh()->name)->toBe('Step one');
+
+    LmsServer::tool(UpdateStep::class, [
+        'id' => $step->id,
+        'name' => 'Step one updated',
+        'video_name' => 'Renamed video',
+    ])->assertOk()->assertSee('Step one updated');
+
+    expect(Video::query()->first()->name)->toBe('Renamed video');
+
+    LmsServer::tool(DeleteStep::class, ['id' => $step->id])->assertOk();
+    expect(Step::query()->count())->toBe(0)->and(Video::query()->count())->toBe(0);
+
+    LmsServer::tool(DeleteLesson::class, ['id' => $lesson->id])->assertOk();
+    expect(Lesson::query()->whereKey($lesson->id)->exists())->toBeFalse()
+        ->and(Lesson::query()->where('name', 'Lesson Zero')->exists())->toBeTrue();
+});
+
+test('update_lesson shifts sibling order instead of duplicating', function () {
+    $course = Course::factory()->create([
+        'name' => 'Order Course',
+        'slug' => 'order-course',
+        'external_id' => 'order_course',
+    ]);
+
+    LmsServer::tool(CreateLesson::class, [
+        'course_id' => $course->id,
+        'name' => 'First',
+    ])->assertOk();
+    LmsServer::tool(CreateLesson::class, [
+        'course_id' => $course->id,
+        'name' => 'Second',
+    ])->assertOk();
+
+    $first = Lesson::query()->where('name', 'First')->first();
+    $second = Lesson::query()->where('name', 'Second')->first();
+
+    LmsServer::tool(UpdateLesson::class, [
+        'id' => $second->id,
+        'order' => 1,
+    ])->assertOk();
+
+    expect($second->fresh()->order)->toBe(1)
+        ->and($first->fresh()->order)->toBe(2);
+});
+
+test('create_video_course allows the same slug on another tenant', function () {
+    enableMcpTenancy();
+
+    $admin = new class extends TestUser
+    {
+        public function isLmsAdmin(): bool
+        {
+            return true;
+        }
+    };
+    $admin->forceFill([
+        'name' => 'Admin',
+        'email' => 'admin@example.com',
+        'password' => bcrypt('password'),
+    ])->save();
+    $this->actingAs($admin);
+
+    $teamA = TestTeam::query()->create(['name' => 'Team A']);
+    $teamB = TestTeam::query()->create(['name' => 'Team B']);
+
+    Filament::setTenant($teamA);
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+
+    Filament::setTenant($teamB);
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertOk();
+
+    expect(Course::query()->withoutGlobalScopes()->where('slug', 'dns-cloudflare')->count())->toBe(2);
+
+    Filament::setTenant($teamA);
+    LmsServer::tool(CreateVideoCourse::class, videoCoursePayload())->assertHasErrors();
+});
+
+test('web mcp denies tools when no user is authenticated', function () {
+    Mcp::web('/mcp/lms-unsecured', LmsServer::class);
+
+    $response = $this->postJson('/mcp/lms-unsecured', mcpToolCallPayload('list_courses'), [
+        'Accept' => 'application/json, text/event-stream',
+    ]);
+
+    expect($response->getContent())->toContain('Authentication is required to use this tool over HTTP.');
+});
+
+test('web mcp allows tools for an authenticated lms admin', function () {
+    Mcp::web('/mcp/lms-secured', LmsServer::class);
+
+    $admin = new class extends TestUser
+    {
+        public function isLmsAdmin(): bool
+        {
+            return true;
+        }
+    };
+    $admin->forceFill([
+        'name' => 'Http Admin',
+        'email' => 'http-admin@example.com',
+        'password' => bcrypt('password'),
+    ])->save();
+    $this->actingAs($admin);
+
+    $response = $this->postJson('/mcp/lms-secured', mcpToolCallPayload('list_courses'), [
+        'Accept' => 'application/json, text/event-stream',
+    ]);
+
+    expect($response->getContent())->not->toContain('Authentication is required to use this tool over HTTP.')
+        ->and($response->getContent())->not->toContain('You must be an LMS admin to use this tool.');
+});
+
+/**
+ * @return array{jsonrpc: string, id: int, method: string, params: array{name: string, arguments: array<string, mixed>}}
+ */
+function mcpToolCallPayload(string $tool): array
+{
+    return [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'tools/call',
+        'params' => [
+            'name' => $tool,
+            'arguments' => [],
+        ],
+    ];
+}
+
+function enableMcpTenancy(): void
+{
+    $schema = Schema::connection((string) config('database.default'));
+
+    if (! $schema->hasTable('teams')) {
+        $schema->create('teams', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });
+    }
+
+    foreach (['lms_courses', 'lms_lessons', 'lms_steps', 'lms_videos'] as $tableName) {
+        if (! $schema->hasColumn($tableName, 'team_id')) {
+            $schema->table($tableName, function (Blueprint $table): void {
+                $table->unsignedBigInteger('team_id')->nullable();
+            });
+        }
+    }
+
+    config([
+        'filament-lms.tenancy.enabled' => true,
+        'filament-lms.tenancy.model' => TestTeam::class,
+        'filament-lms.tenancy.relationship_name' => 'team',
+        'filament-lms.tenancy.column' => 'team_id',
+    ]);
+
+    $migration = require dirname(__DIR__, 2).'/database/migrations/scope_lms_courses_unique_indexes_to_tenant.php.stub';
+    $migration->up();
+
+    foreach ([Course::class, Lesson::class, Step::class, Video::class] as $model) {
+        $model::resolveRelationUsing(
+            TenantHelper::getTenantRelationshipName(),
+            fn ($instance) => $instance->belongsTo(TestTeam::class, TenantHelper::getTenantColumnName()),
+        );
+
+        if (! $model::hasGlobalScope('filament_lms_tenancy')) {
+            $model::addGlobalScope('filament_lms_tenancy', new TenantScope);
+        }
+
+        $model::creating(function ($instance): void {
+            $column = TenantHelper::getTenantColumnName();
+
+            if (! empty($instance->{$column})) {
+                return;
+            }
+
+            $tenant = Filament::getTenant();
+
+            if ($tenant !== null) {
+                $instance->{$column} = $tenant->getKey();
+            }
+        });
+    }
+}

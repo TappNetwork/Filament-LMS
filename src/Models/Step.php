@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -103,6 +104,11 @@ class Step extends Model implements Sortable
     protected static function newFactory()
     {
         return StepFactory::new();
+    }
+
+    public function buildSortQuery(): Builder
+    {
+        return static::query()->where('lesson_id', $this->lesson_id);
     }
 
     public function lesson(): BelongsTo

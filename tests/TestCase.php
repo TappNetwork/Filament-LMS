@@ -10,6 +10,8 @@ use Filament\Support\SupportServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
+use Laravel\Mcp\Server\McpServiceProvider;
+use Laravel\Sanctum\SanctumServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Maatwebsite\Excel\ExcelServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -91,6 +93,17 @@ abstract class TestCase extends Orchestra
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->timestamps();
+        });
+
+        $app['db']->connection()->getSchemaBuilder()->create('personal_access_tokens', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('tokenable');
+            $table->text('name');
+            $table->string('token', 64)->unique();
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable()->index();
             $table->timestamps();
         });
 
@@ -321,11 +334,20 @@ abstract class TestCase extends Orchestra
             MediaLibraryServiceProvider::class,
             FilamentLmsServiceProvider::class,
             LmsPanelProvider::class,
+            TestAdminPanelProvider::class,
         ];
 
         // Only add FilamentFormBuilderServiceProvider if it exists
         if (class_exists(FilamentFormBuilderServiceProvider::class)) {
             $providers[] = FilamentFormBuilderServiceProvider::class;
+        }
+
+        if (class_exists(McpServiceProvider::class)) {
+            $providers[] = McpServiceProvider::class;
+        }
+
+        if (class_exists(SanctumServiceProvider::class)) {
+            $providers[] = SanctumServiceProvider::class;
         }
 
         return $providers;

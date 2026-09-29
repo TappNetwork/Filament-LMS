@@ -83,6 +83,91 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
+## MCP Server
+
+The package can expose **write tools** for AI clients (Cursor, Claude Code, Claude Desktop) so a skill can create Course → Lesson → Step data. Draft titles, descriptions, and structure, then call these tools. Videos are hosted YouTube or Vimeo URLs — the package does not upload video files. Optional transcripts go on the step `text` field. New courses default to `is_private = true` (there is no draft flag).
+
+The package requires `laravel/mcp` and `laravel/sanctum`. It registers a **local stdio** server when `filament-lms.mcp.enabled` is `true` (the default):
+
+```php
+Mcp::local('filament-lms', \Tapp\FilamentLms\Mcp\LmsServer::class);
+```
+
+Start it from the host app:
+
+```bash
+php artisan mcp:start filament-lms
+```
+
+Example Cursor MCP config:
+
+```json
+{
+  "mcpServers": {
+    "filament-lms": {
+      "command": "php",
+      "args": ["artisan", "mcp:start", "filament-lms"],
+      "cwd": "/path/to/your-app"
+    }
+  }
+}
+```
+
+### Web (remote Claude) + Sanctum
+
+The package registers `POST /mcp/lms` with `auth:sanctum`, `throttle:mcp`, and `isLmsAdmin()`. Host leftover: `HasApiTokens` on the user model and the Sanctum `personal_access_tokens` table.
+
+```bash
+php artisan vendor:publish --tag=sanctum-migrations
+php artisan migrate
+php artisan lms:mcp-token admin@example.com --server-key=your-app
+```
+
+Issue that token only for an LMS admin (`isLmsAdmin()`). The command prints Claude Desktop JSON once. Send the token as `Authorization: Bearer …`.
+
+Claude Desktop: Settings → Developer → Edit Config, merge the printed `mcpServers` entry, restart, then ask to list courses (`list_courses`).
+
+Claude Code:
+
+```bash
+claude mcp add --transport http --scope user filament-lms \
+  "{APP_URL}/mcp/lms" \
+  --header "Authorization: Bearer {TOKEN}"
+```
+
+Cursor and Claude Desktop work with that header. Claude.ai custom connectors often prefer OAuth — if a token URL is rejected, that is a follow-up (Passport on the host, or Switchboard).
+
+Turn off auto-registration with:
+
+```php
+// config/filament-lms.php
+'mcp' => [
+    'enabled' => false, // skip stdio
+    'web' => false, // skip POST /mcp/lms
+],
+```
+
+Web requests that have `$request->user()` must be able to access the LMS Filament panel. Local stdio has no HTTP user — same trust model as tinker.
+
+### v1 tools
+
+Convenience:
+
+- `create_video_course` — `name`, `description`, optional `slug` / `external_id` / `award` / flags, and nested `lessons[]` each with `steps[]` (`name`, `video_url`, optional `text` / `is_optional`)
+
+Granular:
+
+- `list_courses` / `get_course`
+- `update_course` / `delete_course`
+- `create_lesson` / `update_lesson` / `delete_lesson`
+- `create_video_step` / `update_step` / `delete_step`
+
+Course uniqueness matches the Filament form (`name`, `slug`, `external_id` unique; `external_id` regex `^[a-z][a-z0-9_]*$`). Award defaults to `default`. Completion mode defaults to `native`. Tools return created IDs and admin/learner URLs when those routes can be resolved.
+
+### Deferred
+
+Credits, evaluations, tests/forms, documents, SCORM, course images, user assignment, Switchboard, and a package REST API are out of scope for v1.
+
 ### Tailwind CSS Setup
 
 This package uses Tailwind CSS classes in its Blade views. The configuration differs between Tailwind v3 and v4:

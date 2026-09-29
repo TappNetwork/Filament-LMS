@@ -5,7 +5,11 @@ namespace Tapp\FilamentLms;
 use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Laravel\Mcp\Facades\Mcp;
 use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
@@ -14,9 +18,11 @@ use Tapp\FilamentLibrary\Models\LibraryItem;
 use Tapp\FilamentLms\Console\Commands\BackfillCourseCompletedAt;
 use Tapp\FilamentLms\Console\Commands\BackfillEmbeddedPlayerCourses;
 use Tapp\FilamentLms\Console\Commands\ImportCartridgesCommand;
+use Tapp\FilamentLms\Console\Commands\LmsMcpTokenCommand;
 use Tapp\FilamentLms\Console\Commands\MigrateAwardsToCertificateTemplatesCommand;
 use Tapp\FilamentLms\Console\Commands\ReconcileUserGroupMemberships;
 use Tapp\FilamentLms\Console\Commands\UpgradeAwardsCommand;
+use Tapp\FilamentLms\Http\Middleware\EnsureLmsMcpAdmin;
 use Tapp\FilamentLms\Livewire\DocumentStep;
 use Tapp\FilamentLms\Livewire\FormStep;
 use Tapp\FilamentLms\Livewire\ImageStep;
@@ -29,6 +35,7 @@ use Tapp\FilamentLms\Livewire\VideoPlayer;
 use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Livewire\ViewGradedEntry;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
+use Tapp\FilamentLms\Mcp\LmsServer;
 use Tapp\FilamentLms\Observers\UserGroupMembershipUserObserver;
 use Tapp\FilamentLms\Pages\CreateTestEntry;
 use Tapp\FilamentLms\UserGroups\UserGroupCriteriaRegistry;
@@ -84,6 +91,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             ->hasCommand(MigrateAwardsToCertificateTemplatesCommand::class)
             ->hasCommand(UpgradeAwardsCommand::class)
             ->hasCommand(ReconcileUserGroupMemberships::class)
+            ->hasCommand(LmsMcpTokenCommand::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishMigrations()
@@ -145,6 +153,29 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
 
         $this->configureLivewireTemporaryUploadLimits();
         $this->registerUserGroupMembershipObserver();
+        $this->registerMcpServer();
+    }
+
+    protected function registerMcpServer(): void
+    {
+        if (! class_exists(Mcp::class)) {
+            return;
+        }
+
+        if (config('filament-lms.mcp.enabled', true)) {
+            Mcp::local('filament-lms', LmsServer::class);
+        }
+
+        if (! config('filament-lms.mcp.web', true)) {
+            return;
+        }
+
+        RateLimiter::for('mcp', function (Request $request) {
+            return Limit::perMinute(60)->by((string) ($request->user()?->getAuthIdentifier() ?: $request->ip()));
+        });
+
+        Mcp::web('/mcp/lms', LmsServer::class)
+            ->middleware(['auth:sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class]);
     }
 
     protected function registerUserGroupMembershipObserver(): void

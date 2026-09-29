@@ -44,6 +44,21 @@ test('step belongs to lesson', function () {
     expect($step->lesson->id)->toBe($lesson->id);
 });
 
+test('step order is scoped to the lesson', function () {
+    $course = Course::factory()->create();
+    $lessonA = Lesson::factory()->create(['course_id' => $course->id]);
+    $lessonB = Lesson::factory()->create(['course_id' => $course->id]);
+
+    $firstOnA = Step::factory()->create(['lesson_id' => $lessonA->id]);
+    $firstOnB = Step::factory()->create(['lesson_id' => $lessonB->id]);
+    $secondOnA = Step::factory()->create(['lesson_id' => $lessonA->id]);
+
+    expect($firstOnA->order)->toBe(1)
+        ->and($firstOnB->order)->toBe(1)
+        ->and($secondOnA->order)->toBe(2)
+        ->and($firstOnB->fresh()->order)->toBe(1);
+});
+
 test('step can be completed by user', function () {
     $course = Course::factory()->create();
     $lesson = Lesson::factory()->create(['course_id' => $course->id]);

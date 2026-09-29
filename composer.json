@@ -14,6 +14,8 @@
         "filament/filament": "^5.0|^4.0",
         "filament/spatie-laravel-media-library-plugin": "^5.0|^4.0",
         "illuminate/contracts": "^13.0||^12.0",
+        "laravel/mcp": "^0.7.1|^0.8|^0.9|^1.0",
+        "laravel/sanctum": "^4.0",
         "maatwebsite/excel": "^4.0",
         "spatie/browsershot": "^5.0",
         "spatie/eloquent-sortable": "^5.0",

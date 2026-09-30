@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v5.1.1 - 2026-09-30
+
+Attach Devtical Sanctum token UI on the admin panel and enforce per-tool Sanctum abilities on HTTP MCP calls.
+
+### Added
+
+* `devtical/filament-sanctum` is required. When `filament-lms.sanctum_ui.enabled` is true, `Lms::make()` attaches `SanctumPlugin` on the `admin` panel.
+* MCP tool names are merged into `filament-sanctum.abilities.list` when `filament-lms.mcp.contribute_abilities` is true.
+* HTTP MCP tools require the bearer token to `tokenCan` the tool name (in addition to `isLmsAdmin()`).
+
+### Changed
+
+* Hosts still add `HasApiTokens` and override `isLmsAdmin()`. UI-minted tokens store checked abilities; `lms:mcp-token` still stores `*`.
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.1.0...v5.1.1
+
 ## v5.1.0 - 2026-09-29
 
 Register HTTP MCP at `POST /mcp/lms` and add write tools for Course → Lesson → video Step.

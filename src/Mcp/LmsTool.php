@@ -44,11 +44,20 @@ abstract class LmsTool extends Tool
             return null;
         }
 
-        if (method_exists($user, 'isLmsAdmin') && $user->isLmsAdmin()) {
-            return null;
+        if (! method_exists($user, 'isLmsAdmin') || ! $user->isLmsAdmin()) {
+            return Response::error('You must be an LMS admin to use this tool.');
         }
 
-        return Response::error('You must be an LMS admin to use this tool.');
+        if (
+            method_exists($user, 'currentAccessToken')
+            && method_exists($user, 'tokenCan')
+            && $user->currentAccessToken() !== null
+            && ! $user->tokenCan($this->name())
+        ) {
+            return Response::error('Token lacks ability '.$this->name().'.');
+        }
+
+        return null;
     }
 
     protected function ensureTenantContext(): ?Response

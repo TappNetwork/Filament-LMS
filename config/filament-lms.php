@@ -282,6 +282,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Sanctum token UI
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, Lms::make() attaches Devtical SanctumPlugin to the admin
+    | panel so admins can mint personal access tokens. Set to false and call
+    | SanctumPlugin::make() from the host panel to own registration yourself.
+    |
+    */
+    'sanctum_ui' => [
+        'enabled' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | MCP server
     |--------------------------------------------------------------------------
     |
@@ -289,10 +303,12 @@ return [
     | HTTP server at POST /mcp/lms. HTTP is on by default, behind Sanctum,
     | throttle:mcp, and isLmsAdmin(). Set web to false to unpublish the route.
     | Set enabled to false to skip stdio registration.
+    | contribute_abilities merges MCP tool names into filament-sanctum.abilities.list.
     |
     */
     'mcp' => [
         'enabled' => true,
         'web' => true,
+        'contribute_abilities' => true,
     ],
 ];

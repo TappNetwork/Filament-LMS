@@ -6,6 +6,7 @@ namespace Tapp\FilamentLms\Mcp;
 
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Tool;
+use ReflectionClass;
 use Tapp\FilamentLms\Mcp\Tools\CreateLesson;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoCourse;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoStep;
@@ -52,4 +53,24 @@ class LmsServer extends Server
         UpdateStep::class,
         DeleteStep::class,
     ];
+
+    /**
+     * Sanctum ability keys mapped to Filament checkbox labels.
+     *
+     * @return array<string, string>
+     */
+    public static function sanctumAbilities(): array
+    {
+        /** @var list<class-string<Tool>> $toolClasses */
+        $toolClasses = (new ReflectionClass(static::class))->getDefaultProperties()['tools'] ?? [];
+
+        $abilities = [];
+
+        foreach ($toolClasses as $toolClass) {
+            $tool = new $toolClass;
+            $abilities[$tool->name()] = $tool->title();
+        }
+
+        return $abilities;
+    }
 }

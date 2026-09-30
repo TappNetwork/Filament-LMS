@@ -2,6 +2,7 @@
 
 namespace Tapp\FilamentLms;
 
+use Devtical\Sanctum\SanctumPlugin;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Resources\Resource;
@@ -39,6 +40,15 @@ class Lms implements Plugin
 
         // Register the form builder plugin
         $panel->plugin(FilamentFormBuilderPlugin::make());
+
+        if (
+            config('filament-lms.sanctum_ui.enabled', true)
+            && $panel->getId() === 'admin'
+            && ! $panel->hasPlugin('filament-sanctum')
+            && class_exists(SanctumPlugin::class)
+        ) {
+            $panel->plugin(SanctumPlugin::make());
+        }
     }
 
     public function boot(Panel $panel): void

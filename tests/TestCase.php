@@ -350,6 +350,10 @@ abstract class TestCase extends Orchestra
             $providers[] = SanctumServiceProvider::class;
         }
 
+        if (class_exists(\Devtical\Sanctum\SanctumServiceProvider::class)) {
+            $providers[] = \Devtical\Sanctum\SanctumServiceProvider::class;
+        }
+
         return $providers;
     }
 }

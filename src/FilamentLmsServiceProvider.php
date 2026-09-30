@@ -154,6 +154,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         $this->configureLivewireTemporaryUploadLimits();
         $this->registerUserGroupMembershipObserver();
         $this->registerMcpServer();
+        $this->contributeSanctumAbilities();
     }
 
     protected function registerMcpServer(): void
@@ -176,6 +177,29 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
 
         Mcp::web('/mcp/lms', LmsServer::class)
             ->middleware(['auth:sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class]);
+    }
+
+    protected function contributeSanctumAbilities(): void
+    {
+        if (! config('filament-lms.mcp.contribute_abilities', true)) {
+            return;
+        }
+
+        if (! class_exists(LmsServer::class)) {
+            return;
+        }
+
+        $lmsAbilities = LmsServer::sanctumAbilities();
+        $existing = [];
+
+        if (file_exists(config_path('filament-sanctum.php'))) {
+            $existing = config('filament-sanctum.abilities.list', []);
+            $existing = is_array($existing) ? $existing : [];
+        }
+
+        config([
+            'filament-sanctum.abilities.list' => array_merge($lmsAbilities, $existing),
+        ]);
     }
 
     protected function registerUserGroupMembershipObserver(): void

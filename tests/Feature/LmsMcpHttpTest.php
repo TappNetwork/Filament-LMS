@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Sanctum\Sanctum;
 use Tapp\FilamentLms\Mcp\LmsServer;
+use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Tests\TestUser;
 
 beforeEach(function () {
@@ -80,7 +81,7 @@ test('http mcp delete_course succeeds with a wildcard token', function () {
     $admin = makeLmsAdmin('wildcard@example.com');
     $token = $admin->createToken('lms-mcp')->plainTextToken;
 
-    $course = \Tapp\FilamentLms\Models\Course::query()->create([
+    $course = Course::query()->create([
         'name' => 'Wildcard Course',
         'slug' => 'wildcard-course',
         'external_id' => 'wildcard_course',
@@ -94,7 +95,7 @@ test('http mcp delete_course succeeds with a wildcard token', function () {
     ]);
 
     expect($response->getContent())->not->toContain('Token lacks ability')
-        ->and(\Tapp\FilamentLms\Models\Course::query()->whereKey($course->id)->exists())->toBeFalse();
+        ->and(Course::query()->whereKey($course->id)->exists())->toBeFalse();
 });
 
 function makeLmsAdmin(string $email): TestUser

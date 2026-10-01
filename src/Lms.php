@@ -2,10 +2,13 @@
 
 namespace Tapp\FilamentLms;
 
+use Devtical\Sanctum\Pages\Sanctum;
 use Devtical\Sanctum\SanctumPlugin;
+use Filament\Actions\Action;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
 use Tapp\FilamentFormBuilder\FilamentFormBuilderPlugin;
 use Tapp\FilamentLms\Pages\CreateRubric;
@@ -53,7 +56,36 @@ class Lms implements Plugin
 
     public function boot(Panel $panel): void
     {
-        //
+        if (! $this->shouldRegisterLmsAdminSanctumMenu($panel)) {
+            return;
+        }
+
+        $panel->userMenuItems([
+            Action::make('sanctum')
+                ->label(trans('Sanctum'))
+                ->url(fn (): string => Sanctum::getUrl(panel: $panel->getId()))
+                ->icon(config('filament-sanctum.navigation.icon', 'heroicon-o-finger-print'))
+                ->visible(fn (): bool => $this->currentUserIsLmsAdmin()),
+        ]);
+    }
+
+    protected function shouldRegisterLmsAdminSanctumMenu(Panel $panel): bool
+    {
+        return config('filament-lms.sanctum_ui.enabled', true)
+            && config('filament-lms.sanctum_ui.authorize_lms_admin', true)
+            && $panel->getId() === 'admin'
+            && class_exists(SanctumPlugin::class)
+            && class_exists(Sanctum::class)
+            && $panel->hasPlugin('filament-sanctum');
+    }
+
+    protected function currentUserIsLmsAdmin(): bool
+    {
+        $user = Auth::user();
+
+        return $user !== null
+            && method_exists($user, 'isLmsAdmin')
+            && $user->isLmsAdmin();
     }
 
     public static function make(): static

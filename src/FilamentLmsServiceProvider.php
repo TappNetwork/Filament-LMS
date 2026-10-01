@@ -2,12 +2,14 @@
 
 namespace Tapp\FilamentLms;
 
+use Devtical\Sanctum\SanctumPlugin;
 use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Mcp\Facades\Mcp;
 use Livewire\Livewire;
@@ -155,6 +157,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         $this->registerUserGroupMembershipObserver();
         $this->registerMcpServer();
         $this->contributeSanctumAbilities();
+        $this->configureSanctumAuthorization();
     }
 
     protected function registerMcpServer(): void
@@ -200,6 +203,31 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         config([
             'filament-sanctum.abilities.list' => array_merge($lmsAbilities, $existing),
         ]);
+    }
+
+    protected function configureSanctumAuthorization(): void
+    {
+        if (! config('filament-lms.sanctum_ui.enabled', true)) {
+            return;
+        }
+
+        if (! config('filament-lms.sanctum_ui.authorize_lms_admin', true)) {
+            return;
+        }
+
+        if (! class_exists(SanctumPlugin::class)) {
+            return;
+        }
+
+        config([
+            'filament-sanctum.authorization.enabled' => true,
+            'filament-sanctum.authorization.gate' => 'lms-mcp-token',
+            'filament-sanctum.navigation.user_menu.enabled' => false,
+        ]);
+
+        Gate::define('lms-mcp-token', function (mixed $user): bool {
+            return method_exists($user, 'isLmsAdmin') && $user->isLmsAdmin();
+        });
     }
 
     protected function registerUserGroupMembershipObserver(): void

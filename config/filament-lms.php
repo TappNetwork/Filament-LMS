@@ -289,9 +289,13 @@ return [
     | panel so admins can mint personal access tokens. Set to false and call
     | SanctumPlugin::make() from the host panel to own registration yourself.
     |
+    | authorize_lms_admin gates the Sanctum page and user-menu link with
+    | isLmsAdmin() so only users who can call HTTP MCP can mint tokens.
+    |
     */
     'sanctum_ui' => [
         'enabled' => true,
+        'authorize_lms_admin' => true,
     ],
 
     /*

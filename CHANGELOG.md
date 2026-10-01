@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v5.1.2 - 2026-10-01
+
+Restrict the Sanctum token UI and avatar menu link to LMS admins so minting matches who can call HTTP MCP.
+
+### Changed
+
+* When `filament-lms.sanctum_ui.authorize_lms_admin` is true (default), the Sanctum page gate requires `isLmsAdmin()` and the package owns the avatar Sanctum Action with `visible()` so non–LMS admins do not see the link.
+* Set `filament-lms.sanctum_ui.authorize_lms_admin` to false to keep the previous open access for hosts that opt out.
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.1.1...v5.1.2
+
 ## v5.1.1 - 2026-09-30
 
 Attach Devtical Sanctum token UI on the admin panel and enforce per-tool Sanctum abilities on HTTP MCP calls.

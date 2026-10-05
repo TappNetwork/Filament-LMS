@@ -18,7 +18,8 @@ final class CloudflareCertificatePdfDriver implements CertificatePdfDriver
 
         if ($token === '' || $accountId === '') {
             throw new RuntimeException(
-                'Certificate PDF driver [cloudflare] requires CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID. '.
+                'Certificate PDF driver [cloudflare] requires CLOUDFLARE_BROWSER_RENDERING_API_TOKEN '.
+                '(preferred) or CLOUDFLARE_API_TOKEN, and CLOUDFLARE_ACCOUNT_ID. '.
                 'See the Filament LMS certificate PDF documentation.'
             );
         }

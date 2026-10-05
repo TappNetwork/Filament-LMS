@@ -541,11 +541,17 @@ Set these in the consuming app (e.g. Tapp Portal) environment:
 
 ```env
 FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
+CLOUDFLARE_BROWSER_RENDERING_API_TOKEN=your-browser-rendering-token
 CLOUDFLARE_API_TOKEN=your-api-token
 CLOUDFLARE_ACCOUNT_ID=your-account-id
 ```
 
-The Cloudflare token needs Account **Browser Rendering** permission. These `CLOUDFLARE_*` variables match [Spatie laravel-pdf’s Cloudflare driver](https://cloud.laravel.com/docs/knowledge-base/generating-pdfs) and may also be published under `config/services.php` as `services.cloudflare.api_token` / `account_id`.
+- **Preferred:** `CLOUDFLARE_BROWSER_RENDERING_API_TOKEN` — scoped for Cloudflare **Browser Rendering Edit** (use this when the host already uses `CLOUDFLARE_API_TOKEN` for other Cloudflare APIs, e.g. Portal zone-monitor allowlist sync).
+- **Fallback:** `CLOUDFLARE_API_TOKEN` — for apps that only need one Cloudflare token (same name as [Spatie laravel-pdf’s Cloudflare driver](https://cloud.laravel.com/docs/knowledge-base/generating-pdfs)).
+- **Required:** `CLOUDFLARE_ACCOUNT_ID`
+- **Optional:** `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare` (already the package default)
+
+Credentials may also be published under `config/services.php` as `services.cloudflare.api_token` / `account_id`.
 
 Published package config (`config/filament-lms.php`):
 
@@ -556,7 +562,7 @@ Published package config (`config/filament-lms.php`):
         'landscape' => true,
         'print_background' => true,
         'cloudflare' => [
-            'api_token' => env('CLOUDFLARE_API_TOKEN'),
+            'api_token' => env('CLOUDFLARE_BROWSER_RENDERING_API_TOKEN', env('CLOUDFLARE_API_TOKEN')),
             'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
             'timeout' => 60,
         ],

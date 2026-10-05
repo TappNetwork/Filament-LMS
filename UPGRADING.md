@@ -9,9 +9,12 @@ Certificate downloads default to Cloudflare Browser Rendering instead of Spatie 
 
 ```env
 FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
-CLOUDFLARE_API_TOKEN=...
+CLOUDFLARE_BROWSER_RENDERING_API_TOKEN=...  # preferred (Browser Rendering Edit)
+CLOUDFLARE_API_TOKEN=...                    # fallback when a single Cloudflare token is enough
 CLOUDFLARE_ACCOUNT_ID=...
 ```
+
+Prefer `CLOUDFLARE_BROWSER_RENDERING_API_TOKEN` when the host already uses `CLOUDFLARE_API_TOKEN` for other Cloudflare APIs (for example Portal zone-monitor allowlist sync). `CLOUDFLARE_API_TOKEN` remains a supported fallback.
 
 3. For local Chromium only: `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot` (requires Node + Puppeteer).
 

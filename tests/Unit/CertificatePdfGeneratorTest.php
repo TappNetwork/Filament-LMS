@@ -13,6 +13,13 @@ it('defaults the certificate pdf driver to cloudflare', function () {
     expect(config('filament-lms.certificates.pdf.driver'))->toBe('cloudflare');
 });
 
+it('prefers CLOUDFLARE_BROWSER_RENDERING_API_TOKEN with CLOUDFLARE_API_TOKEN fallback in package config', function () {
+    $config = file_get_contents(__DIR__.'/../../config/filament-lms.php');
+
+    expect($config)->toContain("env('CLOUDFLARE_BROWSER_RENDERING_API_TOKEN', env('CLOUDFLARE_API_TOKEN'))")
+        ->and($config)->toContain("env('CLOUDFLARE_ACCOUNT_ID')");
+});
+
 it('resolves the cloudflare and browsershot certificate pdf drivers', function () {
     $generator = app(CertificatePdfGenerator::class);
 
@@ -77,7 +84,7 @@ it('throws when cloudflare credentials are missing', function () {
     ]);
 
     app(CloudflareCertificatePdfDriver::class)->pdf('<p>Hi</p>');
-})->throws(RuntimeException::class, 'CLOUDFLARE_API_TOKEN');
+})->throws(RuntimeException::class, 'CLOUDFLARE_BROWSER_RENDERING_API_TOKEN');
 
 it('throws a clear error when cloudflare returns a non-success response', function () {
     config([

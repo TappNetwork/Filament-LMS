@@ -32,10 +32,13 @@ return [
     |
     | Laravel Cloud / Portal env:
     |   FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
-    |   CLOUDFLARE_API_TOKEN=...
+    |   CLOUDFLARE_BROWSER_RENDERING_API_TOKEN=...  (preferred; Browser Rendering Edit)
+    |   CLOUDFLARE_API_TOKEN=...                    (fallback if a single Cloudflare token is enough)
     |   CLOUDFLARE_ACCOUNT_ID=...
     |
-    | These CLOUDFLARE_* vars match Spatie laravel-pdf's cloudflare driver.
+    | Prefer CLOUDFLARE_BROWSER_RENDERING_API_TOKEN when the host already uses
+    | CLOUDFLARE_API_TOKEN for other Cloudflare APIs (e.g. Portal zone monitor).
+    | The fallback keeps Spatie laravel-pdf-style CLOUDFLARE_API_TOKEN working.
     */
     'certificates' => [
         'pdf' => [
@@ -43,7 +46,7 @@ return [
             'landscape' => true,
             'print_background' => true,
             'cloudflare' => [
-                'api_token' => env('CLOUDFLARE_API_TOKEN'),
+                'api_token' => env('CLOUDFLARE_BROWSER_RENDERING_API_TOKEN', env('CLOUDFLARE_API_TOKEN')),
                 'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
                 'timeout' => 60,
             ],

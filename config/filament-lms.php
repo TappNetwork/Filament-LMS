@@ -25,24 +25,27 @@ return [
     | Certificate PDF downloads
     |--------------------------------------------------------------------------
     |
-    | Default driver is Cloudflare Browser Rendering (no Node/Puppeteer on the
-    | app server). Set FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot for local
-    | Chromium via Spatie Browsershot. Credentials may also live under
-    | config/services.php as services.cloudflare.api_token / account_id.
+    | Default (no FILAMENT_LMS_CERTIFICATE_PDF_DRIVER): browsershot — existing
+    | Forge/sites keep working with zero env changes.
     |
-    | Laravel Cloud / Portal env:
-    |   FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
+    | When the driver env is unset and Cloudflare credentials are present
+    | (CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_BROWSER_RENDERING_API_TOKEN or
+    | CLOUDFLARE_API_TOKEN), the package auto-selects cloudflare Browser
+    | Rendering. Explicit FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare or
+    | browsershot always wins.
+    |
+    | Laravel Cloud / new setups (Portal):
     |   CLOUDFLARE_BROWSER_RENDERING_API_TOKEN=...  (preferred; Browser Rendering Edit)
     |   CLOUDFLARE_API_TOKEN=...                    (fallback if a single Cloudflare token is enough)
     |   CLOUDFLARE_ACCOUNT_ID=...
+    |   FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare  (optional; auto when creds exist)
     |
-    | Prefer CLOUDFLARE_BROWSER_RENDERING_API_TOKEN when the host already uses
-    | CLOUDFLARE_API_TOKEN for other Cloudflare APIs (e.g. Portal zone monitor).
-    | The fallback keeps Spatie laravel-pdf-style CLOUDFLARE_API_TOKEN working.
+    | Credentials may also live under config/services.php as
+    | services.cloudflare.api_token / account_id.
     */
     'certificates' => [
         'pdf' => [
-            'driver' => env('FILAMENT_LMS_CERTIFICATE_PDF_DRIVER', 'cloudflare'),
+            'driver' => env('FILAMENT_LMS_CERTIFICATE_PDF_DRIVER'),
             'landscape' => true,
             'print_background' => true,
             'cloudflare' => [

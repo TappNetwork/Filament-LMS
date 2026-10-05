@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* Certificate PDF downloads no longer require Puppeteer/Browsershot on the app server by default. The default driver is Cloudflare Browser Rendering (`FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare`) using the same HTML as the in-browser certificate view.
-* Set `CLOUDFLARE_BROWSER_RENDERING_API_TOKEN` (preferred; Browser Rendering Edit) or fall back to `CLOUDFLARE_API_TOKEN`, plus `CLOUDFLARE_ACCOUNT_ID` (or `services.cloudflare.*`) in the host app (e.g. Portal on Laravel Cloud). Prefer the dedicated Browser Rendering token when the host already uses `CLOUDFLARE_API_TOKEN` for other Cloudflare APIs. Optional local driver: `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot` (still needs Node + Puppeteer).
+* Certificate PDF downloads can use Cloudflare Browser Rendering (same HTML as the in-browser certificate view) without requiring Puppeteer on Laravel Cloud. **Default remains browsershot** so existing Forge/sites need zero env changes.
+* When `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER` is unset, the package auto-selects `cloudflare` only if `CLOUDFLARE_ACCOUNT_ID` and (`CLOUDFLARE_BROWSER_RENDERING_API_TOKEN` or `CLOUDFLARE_API_TOKEN`) are present; otherwise browsershot. Explicit `cloudflare` / `browsershot` always wins.
+* Laravel Cloud / Portal: set `CLOUDFLARE_BROWSER_RENDERING_API_TOKEN` (preferred; Browser Rendering Edit) + `CLOUDFLARE_ACCOUNT_ID` (optional `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare`). Prefer the dedicated Browser Rendering token when the host already uses `CLOUDFLARE_API_TOKEN` for other Cloudflare APIs.
 
 ## v5.1.2 - 2026-10-01
 

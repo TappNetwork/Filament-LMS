@@ -2,21 +2,22 @@
 
 ## Certificate PDF driver (Cloudflare)
 
-Certificate downloads default to Cloudflare Browser Rendering instead of Spatie Browsershot/Puppeteer on the app server.
+**Backwards compatible for Forge / existing hosts:** no env changes required. When `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER` is unset, the package keeps using **browsershot** unless Cloudflare credentials are present.
 
 1. Republish or merge `config/filament-lms.php` so the new `certificates.pdf` section is present (or rely on package defaults).
-2. On Laravel Cloud (e.g. Portal), set:
+2. **Existing Forge/sites:** do nothing. Browsershot continues to work as before.
+3. **Laravel Cloud / new setups** (e.g. Portal): set credentials (driver is optional — auto-selects cloudflare when creds exist):
 
 ```env
-FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
 CLOUDFLARE_BROWSER_RENDERING_API_TOKEN=...  # preferred (Browser Rendering Edit)
-CLOUDFLARE_API_TOKEN=...                    # fallback when a single Cloudflare token is enough
 CLOUDFLARE_ACCOUNT_ID=...
+# optional explicit override:
+# FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
 ```
 
-Prefer `CLOUDFLARE_BROWSER_RENDERING_API_TOKEN` when the host already uses `CLOUDFLARE_API_TOKEN` for other Cloudflare APIs (for example Portal zone-monitor allowlist sync). `CLOUDFLARE_API_TOKEN` remains a supported fallback.
+`CLOUDFLARE_API_TOKEN` remains a supported token fallback when a single Cloudflare token is enough (e.g. hosts that do not already use that var for other APIs). Prefer `CLOUDFLARE_BROWSER_RENDERING_API_TOKEN` when the host already uses `CLOUDFLARE_API_TOKEN` for other Cloudflare APIs (Portal zone-monitor allowlist sync).
 
-3. For local Chromium only: `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot` (requires Node + Puppeteer).
+4. Explicit override always wins: `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot` or `cloudflare`.
 
 The in-browser certificate HTML route is unchanged.
 

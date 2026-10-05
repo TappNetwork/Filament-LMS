@@ -5,13 +5,12 @@ namespace Tapp\FilamentLms\Http\Controllers;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use InvalidArgumentException;
-use Spatie\Browsershot\Browsershot;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Services\CertificatePdf\CertificatePdfGenerator;
 use Tapp\FilamentLms\Support\CertificateBuilder;
 
 class CertificateController extends Controller
@@ -47,21 +46,24 @@ class CertificateController extends Controller
         return $builderView;
     }
 
-    public function download(Course $course): StreamedResponse
+    public function download(Course $course, CertificatePdfGenerator $pdfs): StreamedResponse
     {
         if (! $course->completedByUserAt(Auth::id()) && ! Auth::user()?->can('update', $course)) {
             abort(403);
         }
 
-        $url = URL::temporarySignedRoute(
-            'filament-lms::certificates.show',
-            now()->addMinutes(20),
-            ['course' => $course, 'user' => Auth::id()]
-        );
+        /** @var Authenticatable $user */
+        $user = Auth::user();
 
-        $pdf = $this->browsershot($url)->pdf();
+        $builderView = $this->builderCertificateView($course, $user);
 
-        $filename = Str::slug($course->name).'-'.Str::slug(Auth::user()->name).'-certificate-'.now()->toDateString().'.pdf';
+        if ($builderView === null) {
+            abort(404);
+        }
+
+        $pdf = $pdfs->pdf($this->htmlForPdf($builderView));
+
+        $filename = Str::slug($course->name).'-'.Str::slug((string) data_get($user, 'name', 'user')).'-certificate-'.now()->toDateString().'.pdf';
 
         return response()->stream(function () use ($pdf) {
             echo $pdf;
@@ -71,13 +73,21 @@ class CertificateController extends Controller
         ]);
     }
 
-    public function browsershot(string $url): Browsershot
+    /**
+     * Render the same certificate Blade used by the in-browser show route,
+     * with a base href so relative CSS/assets resolve in headless PDF renderers.
+     */
+    public function htmlForPdf(View $view): string
     {
-        return Browsershot::url($url)
-            ->noSandbox()
-            ->waitUntilNetworkIdle()
-            ->showBackground()
-            ->landscape();
+        $html = $view->render();
+        $base = rtrim((string) config('app.url'), '/').'/';
+        $baseTag = '<base href="'.e($base).'">';
+
+        if (preg_match('/<head([^>]*)>/i', $html) === 1) {
+            return (string) preg_replace('/<head([^>]*)>/i', '<head$1>'.$baseTag, $html, 1);
+        }
+
+        return $baseTag.$html;
     }
 
     private function builderCertificateView(Course $course, Authenticatable $user): ?View

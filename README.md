@@ -533,6 +533,44 @@ Add a matching `course` token set in `config/certificate-builder.php`. LMS resol
 
 On **Edit Course**, **Create Certificate Template** creates a template for that token set, sets `certificate_template_id`, and opens the designer. **Edit Certificate Template** opens the assigned template.
 
+### Certificate PDF downloads (Laravel Cloud)
+
+Downloads use the same certificate Blade HTML as the in-browser `filament-lms::certificates.show` page, then convert HTML → PDF. The default driver is **Cloudflare Browser Rendering** so Laravel Cloud hosts do not need Node or Puppeteer.
+
+Set these in the consuming app (e.g. Tapp Portal) environment:
+
+```env
+FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
+CLOUDFLARE_API_TOKEN=your-api-token
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+```
+
+The Cloudflare token needs Account **Browser Rendering** permission. These `CLOUDFLARE_*` variables match [Spatie laravel-pdf’s Cloudflare driver](https://cloud.laravel.com/docs/knowledge-base/generating-pdfs) and may also be published under `config/services.php` as `services.cloudflare.api_token` / `account_id`.
+
+Published package config (`config/filament-lms.php`):
+
+```php
+'certificates' => [
+    'pdf' => [
+        'driver' => env('FILAMENT_LMS_CERTIFICATE_PDF_DRIVER', 'cloudflare'),
+        'landscape' => true,
+        'print_background' => true,
+        'cloudflare' => [
+            'api_token' => env('CLOUDFLARE_API_TOKEN'),
+            'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
+            'timeout' => 60,
+        ],
+        'browsershot' => [
+            'wait_until_network_idle' => true,
+        ],
+    ],
+],
+```
+
+**Local / optional Chromium:** set `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot` and install Node + Puppeteer for Spatie Browsershot. Do not use `browsershot` as the production driver on Laravel Cloud.
+
+**Manual visual check:** complete a course, open the certificate HTML in the browser, download the PDF, and confirm landscape layout, backgrounds, and branding match.
+
 ### certificate_logo
 
 Specify a custom logo to display on certificates. If not set, it falls back to the `brand_logo` setting.

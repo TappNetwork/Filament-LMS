@@ -20,6 +20,39 @@ return [
     // Show unique certificate ID
     'certificate_show_id' => true,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Certificate PDF downloads
+    |--------------------------------------------------------------------------
+    |
+    | Default driver is Cloudflare Browser Rendering (no Node/Puppeteer on the
+    | app server). Set FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot for local
+    | Chromium via Spatie Browsershot. Credentials may also live under
+    | config/services.php as services.cloudflare.api_token / account_id.
+    |
+    | Laravel Cloud / Portal env:
+    |   FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
+    |   CLOUDFLARE_API_TOKEN=...
+    |   CLOUDFLARE_ACCOUNT_ID=...
+    |
+    | These CLOUDFLARE_* vars match Spatie laravel-pdf's cloudflare driver.
+    */
+    'certificates' => [
+        'pdf' => [
+            'driver' => env('FILAMENT_LMS_CERTIFICATE_PDF_DRIVER', 'cloudflare'),
+            'landscape' => true,
+            'print_background' => true,
+            'cloudflare' => [
+                'api_token' => env('CLOUDFLARE_API_TOKEN'),
+                'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
+                'timeout' => 60,
+            ],
+            'browsershot' => [
+                'wait_until_network_idle' => true,
+            ],
+        ],
+    ],
+
     'vite_theme' => '',
     'colors' => [],
     // Enable top navigation on the LMS dashboard (courses list page).

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+* Certificate PDF downloads no longer require Puppeteer/Browsershot on the app server by default. The default driver is Cloudflare Browser Rendering (`FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare`) using the same HTML as the in-browser certificate view.
+* Set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (or `services.cloudflare.*`) in the host app (e.g. Portal on Laravel Cloud). Optional local driver: `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot` (still needs Node + Puppeteer).
+
 ## v5.1.2 - 2026-10-01
 
 Restrict the Sanctum token UI and avatar menu link to LMS admins so minting matches who can call HTTP MCP.

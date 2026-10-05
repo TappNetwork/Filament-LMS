@@ -1,5 +1,22 @@
 # Upgrading
 
+## Certificate PDF driver (Cloudflare)
+
+Certificate downloads default to Cloudflare Browser Rendering instead of Spatie Browsershot/Puppeteer on the app server.
+
+1. Republish or merge `config/filament-lms.php` so the new `certificates.pdf` section is present (or rely on package defaults).
+2. On Laravel Cloud (e.g. Portal), set:
+
+```env
+FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
+CLOUDFLARE_API_TOKEN=...
+CLOUDFLARE_ACCOUNT_ID=...
+```
+
+3. For local Chromium only: `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot` (requires Node + Puppeteer).
+
+The in-browser certificate HTML route is unchanged.
+
 ## Award certificates → certificate templates
 
 This is a breaking change. Course certificates are builder-only. The `lms_courses.award` column is removed.

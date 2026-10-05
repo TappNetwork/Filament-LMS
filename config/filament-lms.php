@@ -20,6 +20,45 @@ return [
     // Show unique certificate ID
     'certificate_show_id' => true,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Certificate PDF downloads
+    |--------------------------------------------------------------------------
+    |
+    | Default (no FILAMENT_LMS_CERTIFICATE_PDF_DRIVER): browsershot — existing
+    | Forge/sites keep working with zero env changes.
+    |
+    | When the driver env is unset and Cloudflare credentials are present
+    | (CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_BROWSER_RENDERING_API_TOKEN or
+    | CLOUDFLARE_API_TOKEN), the package auto-selects cloudflare Browser
+    | Rendering. Explicit FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare or
+    | browsershot always wins.
+    |
+    | Laravel Cloud / new setups (Portal):
+    |   CLOUDFLARE_BROWSER_RENDERING_API_TOKEN=...  (preferred; Browser Rendering Edit)
+    |   CLOUDFLARE_API_TOKEN=...                    (fallback if a single Cloudflare token is enough)
+    |   CLOUDFLARE_ACCOUNT_ID=...
+    |   FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare  (optional; auto when creds exist)
+    |
+    | Credentials may also live under config/services.php as
+    | services.cloudflare.api_token / account_id.
+    */
+    'certificates' => [
+        'pdf' => [
+            'driver' => env('FILAMENT_LMS_CERTIFICATE_PDF_DRIVER'),
+            'landscape' => true,
+            'print_background' => true,
+            'cloudflare' => [
+                'api_token' => env('CLOUDFLARE_BROWSER_RENDERING_API_TOKEN', env('CLOUDFLARE_API_TOKEN')),
+                'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
+                'timeout' => 60,
+            ],
+            'browsershot' => [
+                'wait_until_network_idle' => true,
+            ],
+        ],
+    ],
+
     'vite_theme' => '',
     'colors' => [],
     // Enable top navigation on the LMS dashboard (courses list page).

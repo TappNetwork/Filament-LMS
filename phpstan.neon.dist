@@ -41,6 +41,10 @@ parameters:
             paths:
                 - src/Livewire/LibraryFileStep.php
                 - src/Livewire/LibraryLinkStep.php
+        # Package config uses env(); Larastan only treats app config/ as config.
+        -
+            identifier: larastan.noEnvCallsOutsideOfConfig
+            path: config/filament-lms.php
         # Optional filament-certificate-builder integration
         - '#Class Tapp\\FilamentCertificateBuilder\\#'
         - '#unknown class Tapp\\FilamentCertificateBuilder\\#'

@@ -1,5 +1,26 @@
 # Upgrading
 
+## Certificate PDF driver (Cloudflare)
+
+**Backwards compatible for Forge / existing hosts:** no env changes required. When `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER` is unset, the package keeps using **browsershot** unless Cloudflare credentials are present.
+
+1. Republish or merge `config/filament-lms.php` so the new `certificates.pdf` section is present (or rely on package defaults).
+2. **Existing Forge/sites:** do nothing. Browsershot continues to work as before.
+3. **Laravel Cloud / new setups** (e.g. Portal): set credentials (driver is optional — auto-selects cloudflare when creds exist):
+
+```env
+CLOUDFLARE_BROWSER_RENDERING_API_TOKEN=...  # preferred (Browser Rendering Edit)
+CLOUDFLARE_ACCOUNT_ID=...
+# optional explicit override:
+# FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
+```
+
+`CLOUDFLARE_API_TOKEN` remains a supported token fallback when a single Cloudflare token is enough (e.g. hosts that do not already use that var for other APIs). Prefer `CLOUDFLARE_BROWSER_RENDERING_API_TOKEN` when the host already uses `CLOUDFLARE_API_TOKEN` for other Cloudflare APIs (Portal zone-monitor allowlist sync).
+
+4. Explicit override always wins: `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot` or `cloudflare`.
+
+The in-browser certificate HTML route is unchanged.
+
 ## Award certificates → certificate templates
 
 This is a breaking change. Course certificates are builder-only. The `lms_courses.award` column is removed.

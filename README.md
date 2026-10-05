@@ -533,6 +533,62 @@ Add a matching `course` token set in `config/certificate-builder.php`. LMS resol
 
 On **Edit Course**, **Create Certificate Template** creates a template for that token set, sets `certificate_template_id`, and opens the designer. **Edit Certificate Template** opens the assigned template.
 
+### Certificate PDF downloads
+
+Downloads use the same certificate Blade HTML as the in-browser `filament-lms::certificates.show` page, then convert HTML → PDF.
+
+**Backwards compatible (Forge / existing hosts):** no env changes required. When `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER` is unset, the package keeps **browsershot** unless Cloudflare credentials are present.
+
+**Driver resolution**
+
+| Situation | Driver used |
+|---|---|
+| `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=browsershot` or `cloudflare` | That explicit value |
+| Driver env unset + Cloudflare credentials present | `cloudflare` (auto) |
+| Driver env unset + no Cloudflare credentials | `browsershot` (default) |
+
+Cloudflare credentials mean `CLOUDFLARE_ACCOUNT_ID` **and** (`CLOUDFLARE_BROWSER_RENDERING_API_TOKEN` **or** `CLOUDFLARE_API_TOKEN`).
+
+**Laravel Cloud / new setups** (e.g. Tapp Portal) — set credentials (driver is optional):
+
+```env
+CLOUDFLARE_BROWSER_RENDERING_API_TOKEN=your-browser-rendering-token
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+# optional explicit override:
+# FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare
+```
+
+- **Preferred:** `CLOUDFLARE_BROWSER_RENDERING_API_TOKEN` — scoped for Cloudflare **Browser Rendering Edit** (use this when the host already uses `CLOUDFLARE_API_TOKEN` for other Cloudflare APIs, e.g. Portal zone-monitor allowlist sync).
+- **Fallback token:** `CLOUDFLARE_API_TOKEN` — for apps that only need one Cloudflare token (same name as [Spatie laravel-pdf’s Cloudflare driver](https://cloud.laravel.com/docs/knowledge-base/generating-pdfs)).
+- **Required for Cloudflare:** `CLOUDFLARE_ACCOUNT_ID`
+- **Optional:** `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER=cloudflare` or `browsershot` (explicit always wins)
+
+Credentials may also be published under `config/services.php` as `services.cloudflare.api_token` / `account_id`.
+
+Published package config (`config/filament-lms.php`):
+
+```php
+'certificates' => [
+    'pdf' => [
+        'driver' => env('FILAMENT_LMS_CERTIFICATE_PDF_DRIVER'), // null → auto (browsershot unless Cloudflare creds exist)
+        'landscape' => true,
+        'print_background' => true,
+        'cloudflare' => [
+            'api_token' => env('CLOUDFLARE_BROWSER_RENDERING_API_TOKEN', env('CLOUDFLARE_API_TOKEN')),
+            'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
+            'timeout' => 60,
+        ],
+        'browsershot' => [
+            'wait_until_network_idle' => true,
+        ],
+    ],
+],
+```
+
+**Forge / local Chromium:** leave the driver unset (or set `browsershot`) and keep Node + Puppeteer for Spatie Browsershot. Do not rely on `browsershot` as the production driver on Laravel Cloud.
+
+**Manual visual check:** complete a course, open the certificate HTML in the browser, download the PDF, and confirm landscape layout, backgrounds, and branding match.
+
 ### certificate_logo
 
 Specify a custom logo to display on certificates. If not set, it falls back to the `brand_logo` setting.

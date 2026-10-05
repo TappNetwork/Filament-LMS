@@ -41,6 +41,10 @@ parameters:
             paths:
                 - src/Livewire/LibraryFileStep.php
                 - src/Livewire/LibraryLinkStep.php
+        # Config files intentionally call env(); Larastan noEnvCallsOutsideOfConfig is for app code.
+        -
+            identifier: larastan.noEnvCallsOutsideOfConfig
+            path: config/filament-lms.php
         # Optional filament-certificate-builder integration
         - '#Class Tapp\\FilamentCertificateBuilder\\#'
         - '#unknown class Tapp\\FilamentCertificateBuilder\\#'

@@ -24,7 +24,8 @@ class CourseFactory extends Factory
             'name' => $name,
             'slug' => $slug,
             'external_id' => $externalId,
-            'certificate_template_id' => CertificateBuilder::defaultTemplateId(),
+            // Closure so withoutCertificateTemplate() does not create a Default Certificate as a side effect.
+            'certificate_template_id' => fn () => CertificateBuilder::defaultTemplateId(),
             'description' => $this->faker->sentence(),
         ];
     }

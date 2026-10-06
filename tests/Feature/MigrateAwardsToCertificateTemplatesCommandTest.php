@@ -28,10 +28,9 @@ function seedAwardLogo(string $relativePath): string
     return $absolute;
 }
 
-it('fails when the certificate builder is not installed', function () {
-    $this->artisan('filament-lms:upgrade-awards')
-        ->expectsOutputToContain('Certificate builder is not installed')
-        ->assertExitCode(1);
+it('runs upgrade-awards when the certificate builder is installed', function () {
+    $this->artisan('filament-lms:upgrade-awards --dry-run')
+        ->assertSuccessful();
 });
 
 it('creates a template per award and assigns untemplated courses', function () {
@@ -109,7 +108,7 @@ it('is idempotent', function () {
 
     publishAwardFixture('decan', 'custom-award.blade.php');
 
-    Course::factory()->create([
+    Course::factory()->withoutCertificateTemplate()->create([
         'name' => 'Decan Course',
         'external_id' => 'decan_idempotent',
         'award' => 'decan',
@@ -137,7 +136,7 @@ it('does not write during a dry run', function () {
         'decan' => 'Delaware Contraceptive Access Network',
     ]]);
 
-    $course = Course::factory()->create([
+    $course = Course::factory()->withoutCertificateTemplate()->create([
         'name' => 'Dry Run Course',
         'external_id' => 'dry_run_course',
         'award' => 'decan',
@@ -161,12 +160,12 @@ it('can migrate a single award key', function () {
         'decan' => 'Delaware Contraceptive Access Network',
     ]]);
 
-    Course::factory()->create([
+    Course::factory()->withoutCertificateTemplate()->create([
         'name' => 'Default Only Course',
         'external_id' => 'default_only_course',
         'award' => 'default',
     ]);
-    $decanCourse = Course::factory()->create([
+    $decanCourse = Course::factory()->withoutCertificateTemplate()->create([
         'name' => 'Decan Only Course',
         'external_id' => 'decan_only_course',
         'award' => 'decan',

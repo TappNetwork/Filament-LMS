@@ -45,7 +45,7 @@ it('forbids download when the user has not completed the course', function () {
         ->assertForbidden();
 });
 
-it('does not expose template actions when the builder package is missing', function () {
+it('exposes create but not edit when the course has no certificate template', function () {
     $user = TestUser::query()->create([
         'name' => 'Pat Admin',
         'email' => 'pat-admin-cert@example.com',
@@ -53,7 +53,7 @@ it('does not expose template actions when the builder package is missing', funct
     ]);
     $course = Course::factory()->withoutCertificateTemplate()->create();
 
-    expect(CertificateBuilder::enabled())->toBeFalse()
-        ->and(CertificateBuilder::canCreateTemplate($user, $course))->toBeFalse()
+    expect(CertificateBuilder::enabled())->toBeTrue()
+        ->and(CertificateBuilder::canCreateTemplate($user, $course))->toBeTrue()
         ->and(CertificateBuilder::canEditTemplate($user, $course))->toBeFalse();
 });

@@ -41,6 +41,7 @@ final class CertificateBuilder
         }
 
         $layoutClass = self::LAYOUT_CLASS;
+        /** @var array<string, mixed> $layout */
         $layout = class_exists($layoutClass)
             ? $layoutClass::default($tokenSet)
             : [];
@@ -48,7 +49,7 @@ final class CertificateBuilder
         $created = self::TEMPLATE_MODEL::query()->create([
             'name' => 'Default Certificate',
             'token_set' => $tokenSet,
-            'layout' => is_array($layout) ? $layout : [],
+            'layout' => $layout,
         ]);
 
         return (int) $created->getKey();

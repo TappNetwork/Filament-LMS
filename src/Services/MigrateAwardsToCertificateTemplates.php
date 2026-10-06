@@ -216,6 +216,7 @@ final class MigrateAwardsToCertificateTemplates
      */
     private function layoutFor(AwardCertificateBlueprint $blueprint, ?string $layoutClass, string $tokenSet): array
     {
+        /** @var array<string, mixed> $layout */
         $layout = class_exists((string) $layoutClass) && method_exists((string) $layoutClass, 'default')
             ? $layoutClass::default($tokenSet)
             : [
@@ -224,10 +225,6 @@ final class MigrateAwardsToCertificateTemplates
                 'signature_count' => 2,
                 'elements' => [],
             ];
-
-        if (! is_array($layout)) {
-            $layout = [];
-        }
 
         return $this->layouts->apply($layout, $blueprint);
     }

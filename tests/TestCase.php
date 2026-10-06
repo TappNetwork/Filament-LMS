@@ -337,6 +337,10 @@ abstract class TestCase extends Orchestra
             TestAdminPanelProvider::class,
         ];
 
+        if (class_exists(\Tapp\FilamentCertificateBuilder\FilamentCertificateBuilderServiceProvider::class)) {
+            $providers[] = \Tapp\FilamentCertificateBuilder\FilamentCertificateBuilderServiceProvider::class;
+        }
+
         // Only add FilamentFormBuilderServiceProvider if it exists
         if (class_exists(FilamentFormBuilderServiceProvider::class)) {
             $providers[] = FilamentFormBuilderServiceProvider::class;

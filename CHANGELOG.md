@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v5.1.5 - 2026-10-06
+
+### Changes
+
+- Restrict certificate HTML `show` to authenticated owners or users who can update the course (#137). Guests and signed-URL-only access are no longer allowed.
+- PDF download is unchanged: still behind `auth`, and both Cloudflare and Browsershot drivers render from an HTML string (they do not fetch the show URL).
+
+#### Auth rules (`GET lms/certificates/{course}/{user}`)
+
+- Allowed: logged-in certificate user (`Auth::id() == $userId`)
+- Allowed: logged-in user with `can('update', $course)` (admin preview)
+- Denied: guests, other users, completion-only / signed-URL guest access
+
+Tagged from `4.x` at `COMMIT_PLACEHOLDER`.
+
 ## v5.1.4 - 2026-10-06
 
 ### Changes

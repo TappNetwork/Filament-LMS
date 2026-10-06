@@ -6,7 +6,7 @@ An opinionated LMS plugin for Filament containing a user facing LMS panel and Re
  
 Filament | Filament LMS       | Documentation
 :--------|:-------------------|:--------------
-4.x/5.x  | 4.x                | Current
+5.x      | 4.x / 5.x          | Current (`tapp/filament-certificate-builder` required)
 3.x      | 1.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/1.x)
 
 ## Installation
@@ -510,10 +510,9 @@ The LMS package generates PDF certificates when users complete courses. You can 
 
 ### Certificate-builder templates
 
-Course certificates require [tapp/filament-certificate-builder](https://github.com/TappNetwork/filament-certificate-builder). See [UPGRADING.md](UPGRADING.md) to convert legacy `award` Blades.
+Course certificates require [tapp/filament-certificate-builder](https://github.com/TappNetwork/filament-certificate-builder), which is a hard dependency of this package (`^5.0`). See [UPGRADING.md](UPGRADING.md) to convert legacy `award` Blades.
 
 ```bash
-composer require tapp/filament-certificate-builder
 php artisan vendor:publish --tag=filament-lms-migrations
 php artisan migrate
 ```

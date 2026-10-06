@@ -17,6 +17,7 @@ use Maatwebsite\Excel\ExcelServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
+use Tapp\FilamentCertificateBuilder\FilamentCertificateBuilderServiceProvider;
 use Tapp\FilamentFormBuilder\FilamentFormBuilderServiceProvider;
 use Tapp\FilamentFormBuilder\Models\FilamentForm;
 use Tapp\FilamentLms\FilamentLmsServiceProvider;
@@ -336,6 +337,10 @@ abstract class TestCase extends Orchestra
             LmsPanelProvider::class,
             TestAdminPanelProvider::class,
         ];
+
+        if (class_exists(FilamentCertificateBuilderServiceProvider::class)) {
+            $providers[] = FilamentCertificateBuilderServiceProvider::class;
+        }
 
         // Only add FilamentFormBuilderServiceProvider if it exists
         if (class_exists(FilamentFormBuilderServiceProvider::class)) {

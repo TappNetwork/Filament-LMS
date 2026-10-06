@@ -27,10 +27,10 @@ This is a breaking change. Course certificates are builder-only. The `lms_course
 
 ### Before you deploy
 
-1. Require the builder in the host app:
+1. Upgrade Filament LMS so Composer installs the required `tapp/filament-certificate-builder` (`^5.0`) dependency:
 
 ```bash
-composer require tapp/filament-certificate-builder
+composer update tapp/filament-lms
 ```
 
 2. Keep `filament-lms.awards` in the host config until `php artisan migrate` has run. The upgrade reads those labels (and any `award` values already on courses) to name templates. After migrate succeeds you can delete the `awards` array.

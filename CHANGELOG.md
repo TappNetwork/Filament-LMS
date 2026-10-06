@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v5.1.4 - 2026-10-06
+
+### Changes
+
+- Require `tapp/filament-certificate-builder` (`^5.0`) as a hard dependency so course certificates install with the package (#134)
+
+Tagged from `4.x` at `e6c16e9`.
+
 ## Unreleased
 
 ### Changed

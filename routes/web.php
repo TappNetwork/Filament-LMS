@@ -21,7 +21,8 @@ Route::middleware('web')->group(function () {
         ->name('filament-lms::certificates.download')
         ->middleware('auth');
     Route::get('lms/certificates/{course}/{user}', [CertificateController::class, 'show'])
-        ->name('filament-lms::certificates.show');
+        ->name('filament-lms::certificates.show')
+        ->middleware('auth');
 
     Route::get('lms/scorm-package/{document}/{entry?}', [ScormPackageController::class, 'show'])
         ->where('entry', '.*')

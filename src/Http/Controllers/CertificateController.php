@@ -31,9 +31,8 @@ class CertificateController extends Controller
             throw new InvalidArgumentException('User model must implement Authenticatable contract');
         }
 
-        if (! request()->hasValidSignature() &&
-            ! $course->completedByUserAt($userId) &&
-            ! Auth::user()?->can('update', $course)) {
+        // HTML certificate is private: owner or course updater only (no guest / completion-only access).
+        if (Auth::id() != $userId && ! Auth::user()?->can('update', $course)) {
             abort(403);
         }
 

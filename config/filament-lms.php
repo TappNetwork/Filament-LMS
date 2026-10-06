@@ -212,7 +212,8 @@ return [
     | Plugin integrations
     |--------------------------------------------------------------------------
     |
-    | Optional integrations with other Filament packages.
+    | Integrations with other Filament packages. Certificate builder is required
+    | (Composer dependency). Filament Library remains optional.
     |
     */
     'integrations' => [
@@ -225,7 +226,7 @@ return [
         ],
 
         'certificate_builder' => [
-            // Required for course certificates. The builder package must be installed.
+            // Required for course certificates (tapp/filament-certificate-builder is a Composer require).
             'enabled' => true,
 
             // Token set key from config/certificate-builder.php used for new course templates.

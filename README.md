@@ -510,10 +510,9 @@ The LMS package generates PDF certificates when users complete courses. You can 
 
 ### Certificate-builder templates
 
-Course certificates require [tapp/filament-certificate-builder](https://github.com/TappNetwork/filament-certificate-builder). See [UPGRADING.md](UPGRADING.md) to convert legacy `award` Blades.
+Course certificates require [tapp/filament-certificate-builder](https://github.com/TappNetwork/filament-certificate-builder), which is a hard dependency of this package (`^5.0`). See [UPGRADING.md](UPGRADING.md) to convert legacy `award` Blades.
 
 ```bash
-composer require tapp/filament-certificate-builder
 php artisan vendor:publish --tag=filament-lms-migrations
 php artisan migrate
 ```

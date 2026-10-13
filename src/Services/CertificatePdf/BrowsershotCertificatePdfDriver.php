@@ -28,8 +28,12 @@ final class BrowsershotCertificatePdfDriver implements CertificatePdfDriver
 
     public function browsershot(string $html): Browsershot
     {
+        // Match filament-certificate-builder: Letter landscape with zero margins so a
+        // full-bleed 11in×8.5in canvas does not spill footer content onto a blank page 2.
         $browsershot = Browsershot::html($html)
             ->noSandbox()
+            ->format('Letter')
+            ->margins(0, 0, 0, 0)
             ->landscape((bool) config('filament-lms.certificates.pdf.landscape', true));
 
         if ((bool) config('filament-lms.certificates.pdf.print_background', true)) {

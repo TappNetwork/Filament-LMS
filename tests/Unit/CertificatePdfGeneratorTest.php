@@ -103,8 +103,13 @@ it('posts rendered html to cloudflare browser rendering and returns the pdf body
         return $request->url() === 'https://api.cloudflare.com/client/v4/accounts/acct-123/browser-rendering/pdf'
             && $request->hasHeader('Authorization', 'Bearer test-token')
             && ($data['html'] ?? null) === '<html><body>Certificate</body></html>'
+            && ($data['pdfOptions']['format'] ?? null) === 'Letter'
             && ($data['pdfOptions']['landscape'] ?? false) === true
-            && ($data['pdfOptions']['printBackground'] ?? false) === true;
+            && ($data['pdfOptions']['printBackground'] ?? false) === true
+            && ($data['pdfOptions']['margin']['top'] ?? null) === '0'
+            && ($data['pdfOptions']['margin']['right'] ?? null) === '0'
+            && ($data['pdfOptions']['margin']['bottom'] ?? null) === '0'
+            && ($data['pdfOptions']['margin']['left'] ?? null) === '0';
     });
 });
 
@@ -159,7 +164,7 @@ it('injects a base href into certificate html for pdf rendering', function () {
         ->and($html)->toContain('<head><base href="https://portal.example.test/">');
 });
 
-it('configures browsershot html driver with landscape and no-sandbox', function () {
+it('configures browsershot html driver with Letter format, zero margins, landscape and no-sandbox', function () {
     config([
         'filament-lms.certificates.pdf.landscape' => true,
         'filament-lms.certificates.pdf.print_background' => true,
@@ -171,6 +176,13 @@ it('configures browsershot html driver with landscape and no-sandbox', function 
 
     expect($command['options']['args'] ?? [])
         ->toContain('--no-sandbox')
+        ->and($command['options']['format'] ?? null)->toBe('Letter')
+        ->and($command['options']['margin'] ?? null)->toBe([
+            'top' => '0mm',
+            'right' => '0mm',
+            'bottom' => '0mm',
+            'left' => '0mm',
+        ])
         ->and($command['options']['landscape'] ?? false)->toBeTrue()
         ->and($command['options']['printBackground'] ?? false)->toBeTrue()
         ->and($command['options']['waitUntil'] ?? null)->toBe('networkidle0');

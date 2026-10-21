@@ -147,6 +147,39 @@ Turn off auto-registration with:
 ],
 ```
 
+### Register the tools on your own server
+
+An app that already runs its own MCP server can serve the LMS tools from it. Spread `LmsServer::TOOLS` into your server and add your own tools. Use `HasSanctumAbilities` to get the Sanctum ability list for every tool on your server:
+
+```php
+use Laravel\Mcp\Server;
+use Tapp\FilamentLms\Mcp\Concerns\HasSanctumAbilities;
+use Tapp\FilamentLms\Mcp\LmsServer;
+
+class AppMcpServer extends Server
+{
+    use HasSanctumAbilities;
+
+    protected array $tools = [
+        ...LmsServer::TOOLS,
+        \App\Mcp\Tools\CreateWidget::class,
+    ];
+}
+```
+
+Register it in `routes/ai.php`. Keep the `filament-lms` handle and the `/mcp/lms` path if existing clients and tokens must keep working:
+
+```php
+use Laravel\Mcp\Facades\Mcp;
+use Tapp\FilamentLms\Http\Middleware\EnsureLmsMcpAdmin;
+
+Mcp::local('filament-lms', AppMcpServer::class);
+Mcp::web('/mcp/lms', AppMcpServer::class)
+    ->middleware(['auth:sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class]);
+```
+
+The package registers its own servers after every provider boots. It skips the `filament-lms` handle and the `/mcp/lms` path when your app already registered them, so your server wins without a config change. The package always defines the `mcp` rate limiter unless your app defines it first. To add your own tools to the Filament Sanctum ability checkboxes, merge `AppMcpServer::sanctumAbilities()` into `filament-sanctum.abilities.list`.
+
 Web requests that have `$request->user()` must be able to access the LMS Filament panel. Local stdio has no HTTP user — same trust model as tinker.
 
 ### v1 tools

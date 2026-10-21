@@ -347,6 +347,8 @@ return [
     | HTTP server at POST /mcp/lms. HTTP is on by default, behind Sanctum,
     | throttle:mcp, and isLmsAdmin(). Set web to false to unpublish the route.
     | Set enabled to false to skip stdio registration.
+    | Both stay out of the way when the host app registers its own server on the
+    | same handle or path, for example in routes/ai.php.
     | contribute_abilities merges MCP tool names into filament-sanctum.abilities.list.
     |
     */

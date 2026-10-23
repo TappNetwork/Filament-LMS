@@ -3,11 +3,11 @@
 namespace Workbench\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Tapp\FilamentLms\Tests\TestUser;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentLms\Tests\TestUser;
 
 class DatabaseSeeder extends Seeder
 {

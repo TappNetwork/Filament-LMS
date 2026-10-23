@@ -1,84 +1,125 @@
-# Verification Proof: Dashboard Feature
+# Verification Proof: INCOMPLETE
 
 **Date**: 2024-10-23  
-**Feature**: Dashboard (Course Library)  
-**Status**: Verified via Pest tests
+**Status**: ❌ BLOCKED - Cannot complete full end-to-end verification
 
-## Setup
+## What Was Attempted
 
-The Filament-LMS package was explored and documented. The verification approach uses:
+Attempted to follow the /create-verification-skill playbook workflow:
+1. Launch: Set up database with package migrations
+2. Doctor: Health checks  
+3. Drive: Browser automation through actual UI
+4. Evidence: Capture screenshots and database state
+5. Cleanup: Stop server, verify evidence persists
 
-- **Surface**: Student-facing LMS panel at `/lms` (Filament/Livewire)
-- **Harness**: Pest feature tests (existing in `tests/Feature/`)
-- **Database**: SQLite (testbench in-memory for tests)
-- **Observation**: Test assertions + code inspection
+## Actual Results
 
-## Test Execution
+### Launch: PARTIAL
 
-Ran existing Pest tests to verify core functionality:
+**Issue**: Package migrations are `.stub` files that must be published to a host app.
 
-```bash
-$ cd /workspace && vendor/bin/pest tests/Feature/CourseTest.php --no-coverage
-{"tool":"pest","result":"passed","tests":9,"passed":9,"assertions":23,"duration_ms":586}
+**Attempted solutions**:
+1. Copy .stub files to .php and add timestamps
+2. Run via `testbench migrate --path=database/migrations`  
+3. Manual SQL table creation
+
+**Result**: 
+- Testbench migrations (users table) run successfully ✓
+- LMS package migrations fail due to:
+  - Missing `is_private` column in lms_courses
+  - Migration ordering issues (alter statements before create)  
+  - Certificate-builder dependency tables missing
+
+**Blocker**: The package's real migration workflow requires a Laravel host app that publishes these migrations. Testbench doesn't replicate this.
+
+### Doctor: NOT REACHED
+
+Cannot run health checks without complete database schema.
+
+### Drive: NOT REACHED  
+
+Cannot drive UI without seeded data, which requires complete schema.
+
+### Evidence: NOT CAPTURED
+
+No screenshots or database state captured because prerequisites failed.
+
+### Cleanup: N/A
+
+No server was successfully run with working data.
+
+## Exact Errors
+
+```
+SQLSTATE[HY000]: General error: 1 table lms_courses has no column named is_private
 ```
 
-All 9 tests passed, covering:
-- Course creation with required fields
-- Course-lesson relationships  
-- Course progress loading
-- Link generation to current step
-- Course completion tracking
-- Certificate generation prerequisites
+This occurs because the `rename_hidden_to_is_private` migration tries to run but the base `create_lms_courses` table wasn't created properly.
 
-## Feature Verification
+```
+SQLSTATE[HY000]: General error: 1 no such table: certificate_templates
+```
 
-### Dashboard (Course Library)
+Course factory attempts to set `certificate_template_id` but the certificate-builder migrations haven't run in the right order.
 
-**Verified behaviors**:
-1. Course model creates with name, slug, external_id, description
-2. Courses load accessible courses (public or explicitly assigned)
-3. Progress tracking works via `lms_step_user` pivot table
-4. Course cards show completion status
-5. Filtering by credit category (when enabled)
+## What Actually Works
 
-**Code locations**:
-- Page: `src/Pages/Dashboard.php`
-- View: `resources/views/pages/dashboard.blade.php`  
-- Model: `src/Models/Course.php`
-- Test: `tests/Feature/CourseTest.php`
+1. **Pest tests**: Existing tests pass using in-memory database with programmatic table creation (TestCase::setUpDatabase)
+2. **Server starts**: `php vendor/bin/testbench serve` launches successfully
+3. **Login page renders**: /lms redirects to /lms/login, form HTML loads
 
-**Not verified** (requires live server + browser):
-- Actual UI rendering in browser
-- Click interactions on course cards
-- Visual layout/styling
-- Certificate template rendering
+## Why This Approach Fails
 
-## Environment Limitations
+The package is designed to be **installed in a Laravel app**, not run standalone:
 
-**Testbench serve limitations discovered**:
-- Package uses programmatic table creation in `tests/TestCase.php::setUpDatabase()`
-- Migrations are `.stub` files published to host apps, not auto-loaded by testbench
-- Running `php vendor/bin/testbench serve` starts server but database is in-memory and not pre-seeded
-- For full UI verification, package needs to be installed in a real Laravel app
+1. Migrations are published via `php artisan vendor:publish`
+2. Host app runs `php artisan migrate` which handles dependencies
+3. TestCase programmatically creates tables for tests, bypassing migrations entirely
 
-**Recommended verification environment**:
-1. Install package in Laravel app (not standalone testbench)
-2. Run migrations: `php artisan migrate`
-3. Seed data via tinker or seeder
-4. Start Laravel server: `php artisan serve`
-5. Drive UI with Playwright or manual testing
+Testbench can serve the app but doesn't replicate the full Laravel installation workflow.
 
-## Artifacts
+## Recommended Verification Approach
 
-- Skill documentation: `.cursor/skills/verify-filament-lms/SKILL.md`
-- Feature maps: `.cursor/skills/verify-filament-lms/features/*.md`
-- Seed script: `.cursor/skills/verify-filament-lms/seed-verification-data.sh` (prepared but needs Laravel host app)
-- Doctor script: `.cursor/skills/verify-filament-lms/doctor.sh`
+To actually verify this package's UI:
 
-## Conclusion
+1. **Create throwaway Laravel app** (verification scaffolding):
+   ```bash
+   laravel new lms-verify
+   cd lms-verify
+   # Add package as path repository in composer.json
+   composer require tapp/filament-lms:@dev
+   php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider"
+   php artisan migrate
+   # Seed data via tinker
+   php artisan serve
+   ```
 
-✅ **Skill is deliverable**: Complete documentation of package structure, features, verification procedures  
-⚠️ **Live UI verification**: Requires Laravel host app (documented in skill)  
-✅ **Backend logic verified**: Pest tests confirm core functionality works  
+2. **Drive with Playwright**: Browser automation works once app is running
 
-The skill provides accurate guidance for future verification runs in proper Laravel environments.
+3. **Cleanup**: `rm -rf lms-verify` after capturing evidence
+
+This is significantly more complex than the playbook assumed for a "package" verification.
+
+## Skill Accuracy
+
+The skill documents testbench serve correctly but underestimates the migration complexity. The skill should either:
+
+**Option A**: Document the Laravel app scaffolding approach (honest but heavy)
+**Option B**: Document Pest test verification only (limited but working)  
+**Option C**: Note this is a package and full UI verification requires host app setup
+
+Currently the skill attempts Option A but the proof shows it doesn't work without significant additional setup.
+
+## What Should Be Fixed
+
+1. **SKILL.md**: Add clear section on migration publishing requirements
+2. **Launch section**: Either provide complete Laravel app setup or limit to Pest tests  
+3. **Feature maps**: Mark which features can be verified via tests vs. requiring live UI
+4. **PROOF.md**: This file - be honest about what's actually proven
+
+## Files Modified
+
+- `.cursor/skills/verify-filament-lms/PROOF.md` (this file)
+- `.cursor/skills/verify-filament-lms/evidence/.gitignore` (added)
+
+No fake evidence committed. No false claims of success.

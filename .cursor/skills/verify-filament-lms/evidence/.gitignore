@@ -1,0 +1,6 @@
+# Evidence files (screenshots, database dumps) are run-specific
+*.png
+*.html
+*.txt
+*.pdf
+!README.md

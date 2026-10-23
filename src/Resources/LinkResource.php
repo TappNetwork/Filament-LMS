@@ -21,6 +21,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
+use Tapp\FilamentLms\Concerns\ShowsContentNavigation;
 use Tapp\FilamentLms\Jobs\GenerateLinkScreenshot;
 use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Resources\LinkResource\Pages\CreateLink;
@@ -30,6 +31,7 @@ use Tapp\FilamentLms\Resources\LinkResource\Pages\ListLinks;
 class LinkResource extends Resource
 {
     use HasLmsSlug;
+    use ShowsContentNavigation;
 
     protected static ?string $model = Link::class;
 

@@ -6,25 +6,14 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\HtmlString;
-use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
-use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\CreditCategory;
 use Tapp\FilamentLms\RelationManagers\CourseUserGroupsRelationManager;
@@ -33,8 +22,8 @@ use Tapp\FilamentLms\Resources\CourseResource\Pages\CreateCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\EditCourse;
 use Tapp\FilamentLms\Resources\CourseResource\Pages\ListCourses;
 use Tapp\FilamentLms\Resources\CourseResource\RelationManagers\LessonsRelationManager;
-use Tapp\FilamentLms\Services\CourseEvaluationService;
-use Tapp\FilamentLms\Support\CertificateBuilder;
+use Tapp\FilamentLms\Resources\CourseResource\Schemas\CourseEditorForm;
+use Tapp\FilamentLms\Support\CourseEditor;
 
 class CourseResource extends Resource
 {
@@ -70,159 +59,13 @@ class CourseResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema
-            ->components([
-                TextInput::make('name')
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(function (Set $set, ?string $state, string $operation, $get) {
-                        // Always update slug when name changes
-                        $set('slug', Str::slug($state));
+        if (CourseEditor::isBuilder()) {
+            return $schema
+                ->columns(1)
+                ->components(CourseEditorForm::builderComponents());
+        }
 
-                        // Only auto-generate external_id on create or if it's empty.
-                        // Use slug with underscore so acronyms stay together (e.g. DNS Cloudflare -> dns_cloudflare not d_n_s_cloudflare).
-                        if ($operation === 'create' || empty($get('external_id'))) {
-                            $set('external_id', Str::slug($state ?? '', '_'));
-                        }
-                    })
-                    ->scopedUnique(ignoreRecord: true)
-                    ->required(),
-                TextInput::make('external_id')
-                    ->label('External ID')
-                    ->helperText('Used for external integrations like HubSpot. Updating this will cause a new property to be added to the integration.')
-                    ->required()
-                    ->scopedUnique(ignoreRecord: true)
-                    ->rules([
-                        'regex:/^[a-z][a-z0-9_]*$/',
-                        'max:100',
-                    ])
-                    ->validationMessages([
-                        'regex' => 'External ID must contain only lowercase letters, numbers, and underscores, and must start with a letter.',
-                        'max' => 'External ID cannot exceed 100 characters.',
-                    ]),
-                TextInput::make('slug')
-                    ->helperText('Used for urls.')
-                    ->scopedUnique(ignoreRecord: true)
-                    ->required(),
-                SpatieMediaLibraryFileUpload::make('image')
-                    ->helperText('Upload a course image.')
-                    ->collection('courses')
-                    ->image(),
-                Textarea::make('description'),
-                TextInput::make('required_test_percentage')
-                    ->label('Required Average Test Score (percentage)')
-                    ->helperText('User will not be able to complete the course until they have met this requirement.')
-                    ->numeric()
-                    ->minValue(0)
-                    ->maxValue(100)
-                    ->default(0)
-                    ->nullable(),
-                Select::make('certificate_template_id')
-                    ->label('Certificate Template')
-                    ->helperText('Required. Form must be saved before previewing.')
-                    ->options(function (): array {
-                        $model = CertificateBuilder::TEMPLATE_MODEL;
-
-                        return $model::query()
-                            ->where('token_set', CertificateBuilder::tokenSet())
-                            ->orderBy('name')
-                            ->pluck('name', 'id')
-                            ->all();
-                    })
-                    ->default(fn (): ?int => CertificateBuilder::defaultTemplateId())
-                    ->hint(function (?Course $record) {
-                        if ($record && $record->id) {
-                            $link = route('filament-lms::certificates.show', ['course' => $record->id, 'user' => auth()->id()]);
-
-                            return new HtmlString("<a rel='noopener noreferrer' target='_blank' href='{$link}'>Click to Preview</a>");
-                        }
-
-                        return null;
-                    })
-                    ->searchable()
-                    ->preload()
-                    ->required()
-                    ->visible(fn (): bool => CertificateBuilder::enabled()),
-                Checkbox::make('embedded_player')
-                    ->label('Embedded player mode')
-                    ->helperText('Hides LMS step sidebar and uses the SCORM/HTML5 package as the primary navigation.'),
-                Select::make('completion_mode')
-                    ->label('Completion mode')
-                    ->options([
-                        CompletionMode::Native->value => 'Native (per-step in LMS)',
-                        CompletionMode::Scorm12->value => 'SCORM 1.2 API sync',
-                        CompletionMode::Html5->value => 'HTML5 (started on enter, complete on exit or player signal)',
-                    ])
-                    ->default(CompletionMode::Native->value)
-                    ->required(),
-                Checkbox::make('is_private')
-                    ->label('Private Course')
-                    ->helperText('Private courses are only visible to assigned users and LMS admins'),
-                Select::make('evaluation_course_id')
-                    ->label('Evaluation course')
-                    ->relationship(
-                        'evaluationCourse',
-                        'name',
-                        modifyQueryUsing: function (Builder $query, Get $get, $livewire): void {
-                            $recordId = $livewire->record?->id;
-                            if ($recordId !== null) {
-                                $query->where('id', '!=', $recordId);
-                            }
-
-                            $query->whereNull('evaluation_course_id')
-                                ->where('is_private', true);
-                        },
-                    )
-                    ->searchable()
-                    ->preload()
-                    ->nullable()
-                    ->visible(function (?Course $record): bool {
-                        if (! config('filament-lms.evaluations.enabled', false)) {
-                            return false;
-                        }
-
-                        if ($record === null) {
-                            return true;
-                        }
-
-                        return ! app(CourseEvaluationService::class)->isEvaluationCourse($record);
-                    })
-                    ->rules([
-                        fn (?Course $record): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($record): void {
-                            if ($value === null) {
-                                return;
-                            }
-
-                            $service = app(CourseEvaluationService::class);
-
-                            if (! $service->canUseEvaluationCourseId($record, $value)) {
-                                $fail('Choose an evaluation-only course that is not already linked as a training course.');
-                            }
-                        },
-                    ])
-                    ->helperText('Set this on the training course and select its evaluation course — not the other way around.'),
-
-                Repeater::make('courseCreditCategories')
-                    ->relationship()
-                    ->label(config('filament-lms.credits_repeater_label', 'Credits'))
-                    ->schema([
-                        Select::make('credit_category_id')
-                            ->label('Category')
-                            ->relationship('creditCategory', 'name', modifyQueryUsing: fn ($query) => $query->orderBy('name'))
-                            ->required()
-                            ->searchable()
-                            ->preload()
-                            ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
-                        TextInput::make('credits')
-                            ->numeric()
-                            ->required()
-                            ->minValue(0.5)
-                            ->step(0.5),
-                    ])
-                    ->columns(2)
-                    ->defaultItems(0)
-                    ->addActionLabel(config('filament-lms.credits_add_action_label', 'Add credits'))
-                    ->visible(fn (): bool => config('filament-lms.credits_enabled', false)),
-            ]);
+        return $schema->components(CourseEditorForm::legacyComponents());
     }
 
     public static function table(Table $table): Table
@@ -297,6 +140,10 @@ class CourseResource extends Resource
 
     public static function getRelations(): array
     {
+        if (CourseEditor::isBuilder()) {
+            return [];
+        }
+
         return [
             LessonsRelationManager::make(),
             CourseUsersRelationManager::make(),

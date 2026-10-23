@@ -10,10 +10,13 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -21,8 +24,10 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
+use Tapp\FilamentLms\Concerns\ShowsContentNavigation;
 use Tapp\FilamentLms\Forms\Components\MorphToSelectWithCreate;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
@@ -34,6 +39,7 @@ use UnitEnum;
 final class StepResource extends Resource
 {
     use HasLmsSlug;
+    use ShowsContentNavigation;
 
     protected static ?string $model = Step::class;
 
@@ -66,7 +72,7 @@ final class StepResource extends Resource
     /**
      * Generate a slug for a step based on its lesson and name.
      */
-    private static function generateStepSlug(int|string|null $lessonId, ?string $name): ?string
+    public static function generateStepSlug(int|string|null $lessonId, ?string $name): ?string
     {
         // Cast lesson ID to int (Filament forms may pass string values)
         $lessonId = $lessonId ? (int) $lessonId : null;
@@ -82,118 +88,300 @@ final class StepResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema
-            ->components([
-                TextInput::make('name')
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(function (Set $set, Get $get, ?string $state, $livewire) {
-                        if (isset($livewire->record)) {
-                            return;
-                        }
-                        $slug = self::generateStepSlug($get('lesson_id'), $state);
-                        if ($slug) {
-                            $set('slug', $slug);
-                        }
-                    })
-                    ->required(),
-                TextInput::make('slug')
-                    ->helperText('Used for urls.')
-                    ->unique(ignoreRecord: true)
-                    ->required(),
-                Select::make('lesson_id')
-                    ->relationship(name: 'lesson', titleAttribute: 'name')
-                    ->preload()
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(function (Set $set, Get $get, $state, $livewire) {
-                        if ($state) {
-                            $newLesson = Lesson::find($state);
-                            $currentRetryStepId = $livewire->data['retry_step_id'] ?? null;
+        return $schema->components(self::getFormComponents());
+    }
 
-                            if ($currentRetryStepId && $newLesson) {
-                                $retryStep = Step::find($currentRetryStepId);
-                                if ($retryStep && $retryStep->lesson->course_id !== $newLesson->course_id) {
-                                    $set('retry_step_id', null);
+    /**
+     * Shared step fields. The course editor reorders and restyles them; the library form keeps the 4.8 layout.
+     *
+     * @return array<int, mixed>
+     */
+    public static function getFormComponents(bool $inCourseEditor = false): array
+    {
+        if ($inCourseEditor) {
+            return self::courseEditorFormComponents();
+        }
+
+        return self::libraryFormComponents();
+    }
+
+    /**
+     * Limit retry steps to the same course, excluding the step being edited.
+     */
+    public static function constrainRetrySteps(Builder $query, ?int $lessonId, ?int $exceptStepId): void
+    {
+        if ($exceptStepId) {
+            $query->whereKeyNot($exceptStepId);
+        }
+
+        if (! $lessonId) {
+            return;
+        }
+
+        $lesson = Lesson::query()->find($lessonId);
+
+        if ($lesson === null) {
+            return;
+        }
+
+        $query->whereHas('lesson', function (Builder $lessonQuery) use ($lesson): void {
+            $lessonQuery->where('course_id', $lesson->course_id);
+        });
+    }
+
+    /**
+     * @return list<int>
+     */
+    public static function retryStepIdsForLesson(int $lessonId, ?int $exceptStepId = null): array
+    {
+        $query = Step::query()->orderBy('order');
+        self::constrainRetrySteps($query, $lessonId, $exceptStepId);
+
+        return $query->pluck('id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all();
+    }
+
+    private static function materialTypeIsTest(Get $get, mixed $livewire): bool
+    {
+        $materialType = $get('material_type');
+
+        if ($materialType === 'test') {
+            return true;
+        }
+
+        $record = is_object($livewire) ? ($livewire->record ?? null) : null;
+
+        return $record instanceof Step && $record->material_type === 'test';
+    }
+
+    private static function retryStepExceptId(Get $get, mixed $livewire): ?int
+    {
+        $formId = $get('id');
+
+        if (filled($formId)) {
+            return (int) $formId;
+        }
+
+        $record = is_object($livewire) ? ($livewire->record ?? null) : null;
+
+        if ($record instanceof Step && $record->getKey()) {
+            return (int) $record->getKey();
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    private static function libraryFormComponents(): array
+    {
+        return [
+            TextInput::make('name')
+                ->live(onBlur: true)
+                ->afterStateUpdated(function (Set $set, Get $get, ?string $state, $livewire) {
+                    if (isset($livewire->record)) {
+                        return;
+                    }
+                    $slug = self::generateStepSlug($get('lesson_id'), $state);
+                    if ($slug) {
+                        $set('slug', $slug);
+                    }
+                })
+                ->required(),
+            TextInput::make('slug')
+                ->helperText('Used for urls.')
+                ->unique(ignoreRecord: true)
+                ->required(),
+            Select::make('lesson_id')
+                ->relationship(name: 'lesson', titleAttribute: 'name')
+                ->preload()
+                ->required()
+                ->live()
+                ->afterStateUpdated(function (Set $set, Get $get, $state, $livewire) {
+                    if ($state) {
+                        $newLesson = Lesson::find($state);
+                        $currentRetryStepId = $livewire->data['retry_step_id'] ?? null;
+
+                        if ($currentRetryStepId && $newLesson) {
+                            $retryStep = Step::find($currentRetryStepId);
+                            if ($retryStep && $retryStep->lesson->course_id !== $newLesson->course_id) {
+                                $set('retry_step_id', null);
+                            }
+                        }
+                    }
+                    if (isset($livewire->record)) {
+                        return;
+                    }
+                    $slug = self::generateStepSlug($state, $get('name'));
+                    if ($slug) {
+                        $set('slug', $slug);
+                    }
+                }),
+            Checkbox::make('is_optional')
+                ->label('Optional Step')
+                ->helperText('Optional steps can be skipped without completing them. Users can proceed to the next step without finishing optional steps.'),
+            MarkdownEditor::make('text')
+                ->label('Text Content')
+                ->placeholder('Enter step text content...')
+                ->helperText('This text will be displayed at the top of the step page for all users, before the step material. This is useful for providing instructions, context, or additional information about the step.')
+                ->columnSpanFull(),
+            ...MorphToSelectWithCreate::make('material'),
+            Checkbox::make('require_perfect_score')
+                ->label('Require Perfect Score to Proceed')
+                ->helperText('When enabled, users must answer all questions correctly (100%) before they can proceed to the next step. If disabled, users can proceed with any score.')
+                ->visible(function (Get $get, $livewire) {
+                    // Check form state first (for create/edit)
+                    $materialType = $get('material_type');
+                    if ($materialType === 'test') {
+                        return true;
+                    }
+                    // Check record when editing existing step
+                    if (isset($livewire->record) && $livewire->record) {
+                        return $livewire->record->material_type === 'test';
+                    }
+
+                    return false;
+                })
+                ->default(false)
+                ->live(),
+            Select::make('retry_step_id')
+                ->label('Review Previous Step')
+                ->helperText('If the user does not get all questions correct, they will be shown a message with a link to this step to review before retrying the test.')
+                ->relationship(
+                    name: 'retryStep',
+                    titleAttribute: 'name',
+                    modifyQueryUsing: function ($query, Get $get, $livewire) {
+                        // Exclude the current step from the options
+                        if (isset($livewire->record) && $livewire->record && $livewire->record->id) {
+                            $query->where('id', '!=', $livewire->record->id);
+                        }
+                        // Only show steps from the same course
+                        $lessonId = $get('lesson_id');
+                        if ($lessonId) {
+                            $query->whereHas('lesson', function ($q) use ($lessonId) {
+                                $lesson = Lesson::find($lessonId);
+                                if ($lesson) {
+                                    $q->where('course_id', $lesson->course_id);
                                 }
-                            }
-                        }
-                        if (isset($livewire->record)) {
-                            return;
-                        }
-                        $slug = self::generateStepSlug($state, $get('name'));
-                        if ($slug) {
-                            $set('slug', $slug);
-                        }
-                    }),
-                Checkbox::make('is_optional')
-                    ->label('Optional Step')
-                    ->helperText('Optional steps can be skipped without completing them. Users can proceed to the next step without finishing optional steps.'),
-                MarkdownEditor::make('text')
-                    ->label('Text Content')
-                    ->placeholder('Enter step text content...')
-                    ->helperText('This text will be displayed at the top of the step page for all users, before the step material. This is useful for providing instructions, context, or additional information about the step.')
-                    ->columnSpanFull(),
-                ...MorphToSelectWithCreate::make('material'),
-                Checkbox::make('require_perfect_score')
-                    ->label('Require Perfect Score to Proceed')
-                    ->helperText('When enabled, users must answer all questions correctly (100%) before they can proceed to the next step. If disabled, users can proceed with any score.')
-                    ->visible(function (Get $get, $livewire) {
-                        // Check form state first (for create/edit)
-                        $materialType = $get('material_type');
-                        if ($materialType === 'test') {
-                            return true;
-                        }
-                        // Check record when editing existing step
-                        if (isset($livewire->record) && $livewire->record) {
-                            return $livewire->record->material_type === 'test';
+                            });
                         }
 
-                        return false;
-                    })
-                    ->default(false)
-                    ->live(),
-                Select::make('retry_step_id')
-                    ->label('Review Previous Step')
-                    ->helperText('If the user does not get all questions correct, they will be shown a message with a link to this step to review before retrying the test.')
-                    ->relationship(
-                        name: 'retryStep',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: function ($query, Get $get, $livewire) {
-                            // Exclude the current step from the options
-                            if (isset($livewire->record) && $livewire->record && $livewire->record->id) {
-                                $query->where('id', '!=', $livewire->record->id);
-                            }
-                            // Only show steps from the same course
+                        return $query;
+                    }
+                )
+                ->searchable()
+                ->preload()
+                ->visible(function (Get $get, $livewire) {
+                    // Show for test steps regardless of require_perfect_score
+                    $materialType = $get('material_type');
+                    if ($materialType === 'test') {
+                        return true;
+                    }
+                    if (isset($livewire->record) && $livewire->record) {
+                        return $livewire->record->material_type === 'test';
+                    }
+
+                    return false;
+                })
+                ->nullable(),
+        ];
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    private static function courseEditorFormComponents(): array
+    {
+        return [
+            Hidden::make('id')->dehydrated(false),
+            Hidden::make('lesson_id')->required(),
+            Hidden::make('slug_is_locked')->dehydrated(false),
+            TextInput::make('name')
+                ->label(__('filament-lms::course-editor.fields.name.label'))
+                ->required()
+                ->live(onBlur: true)
+                ->afterStateUpdated(function (Set $set, Get $get, ?string $state): void {
+                    if ($get('slug_is_locked')) {
+                        return;
+                    }
+
+                    $slug = self::generateStepSlug($get('lesson_id'), $state);
+                    if ($slug) {
+                        $set('slug', $slug);
+                    }
+                }),
+            Toggle::make('is_optional')
+                ->label(__('filament-lms::course-editor.step.optional'))
+                ->helperText(__('filament-lms::course-editor.step.optional_helper')),
+            MarkdownEditor::make('text')
+                ->label(__('filament-lms::course-editor.step.content'))
+                ->placeholder(__('filament-lms::course-editor.step.content_placeholder'))
+                ->helperText(__('filament-lms::course-editor.step.content_helper'))
+                ->columnSpanFull(),
+            ...MorphToSelectWithCreate::make('material', segmented: true),
+            Section::make(__('filament-lms::course-editor.sections.test_settings.heading'))
+                ->visible(fn (Get $get, mixed $livewire): bool => self::materialTypeIsTest($get, $livewire))
+                ->schema([
+                    Select::make('retry_step_id')
+                        ->label(__('filament-lms::course-editor.step.retry_step'))
+                        ->helperText(__('filament-lms::course-editor.step.retry_step_helper'))
+                        ->hintIcon(
+                            'heroicon-o-information-circle',
+                            __('filament-lms::course-editor.step.retry_step_hint'),
+                        )
+                        ->relationship(
+                            name: 'retryStep',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: function (Builder $query, Get $get, mixed $livewire): Builder {
+                                self::constrainRetrySteps(
+                                    $query,
+                                    $get('lesson_id') ? (int) $get('lesson_id') : null,
+                                    self::retryStepExceptId($get, $livewire),
+                                );
+
+                                return $query;
+                            },
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->nullable(),
+                    Toggle::make('require_perfect_score')
+                        ->label(__('filament-lms::course-editor.step.require_perfect_score'))
+                        ->helperText(__('filament-lms::course-editor.step.require_perfect_score_helper'))
+                        ->default(false),
+                ]),
+            Section::make(__('filament-lms::course-editor.sections.advanced.heading'))
+                ->collapsible()
+                ->collapsed()
+                ->schema([
+                    TextInput::make('slug')
+                        ->label(__('filament-lms::course-editor.fields.slug.label'))
+                        ->required()
+                        ->unique(ignoreRecord: true)
+                        ->helperText(__('filament-lms::course-editor.fields.slug.helper'))
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (Set $set, Get $get, ?string $state): void {
+                            $generated = self::generateStepSlug($get('lesson_id'), $get('name'));
+                            $set('slug_is_locked', $generated !== null && $generated !== (string) $state);
+                        }),
+                    TextInput::make('player_slide_id')
+                        ->label(__('filament-lms::course-editor.step.player_slide_id'))
+                        ->placeholder(__('filament-lms::course-editor.step.player_slide_id_placeholder'))
+                        ->helperText(__('filament-lms::course-editor.step.player_slide_id_helper'))
+                        ->visible(function (Get $get): bool {
                             $lessonId = $get('lesson_id');
-                            if ($lessonId) {
-                                $query->whereHas('lesson', function ($q) use ($lessonId) {
-                                    $lesson = Lesson::find($lessonId);
-                                    if ($lesson) {
-                                        $q->where('course_id', $lesson->course_id);
-                                    }
-                                });
+                            if (! $lessonId) {
+                                return false;
                             }
 
-                            return $query;
-                        }
-                    )
-                    ->searchable()
-                    ->preload()
-                    ->visible(function (Get $get, $livewire) {
-                        // Show for test steps regardless of require_perfect_score
-                        $materialType = $get('material_type');
-                        if ($materialType === 'test') {
-                            return true;
-                        }
-                        if (isset($livewire->record) && $livewire->record) {
-                            return $livewire->record->material_type === 'test';
-                        }
+                            $lesson = Lesson::query()->with('course')->find($lessonId);
 
-                        return false;
-                    })
-                    ->nullable(),
-
-            ]);
+                            return (bool) $lesson?->course?->embedded_player;
+                        }),
+                ]),
+        ];
     }
 
     public static function table(Table $table): Table

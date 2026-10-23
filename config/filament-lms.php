@@ -322,6 +322,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Integrated course editor
+    |--------------------------------------------------------------------------
+    |
+    | mode:
+    |   - legacy: Edit Course keeps the 4.8 relation-manager layout.
+    |   - builder: Details, Curriculum, and Access tabs, with lessons and
+    |     steps edited from the course page.
+    |
+    | The default is legacy so existing admin screens stay unchanged until
+    | an app opts in. No migrations are required to switch modes.
+    | Lesson, Step, and material resources stay in the LMS navigation group.
+    | show_content_resources hides those navigation items when false.
+    | Courses stay in the group either way. The resources remain registered.
+    |
+    | Editor labels and descriptions live in the package language file
+    | resources/lang/en/course-editor.php. Publish them with
+    | `php artisan vendor:publish --tag=filament-lms-translations`
+    | and edit lang/vendor/filament-lms/en/course-editor.php.
+    |
+    */
+    'course_editor' => [
+        'mode' => 'legacy',
+        'show_content_resources' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Sanctum token UI
     |--------------------------------------------------------------------------
     |

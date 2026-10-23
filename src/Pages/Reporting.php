@@ -8,6 +8,7 @@ use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -195,7 +196,7 @@ class Reporting extends Page implements HasTable
                     ->options(fn (): array => CourseProgressQueryService::reportUserFilterOptions())
                     ->searchable()
                     ->attribute('user_id'),
-            ])
+            ], layout: FiltersLayout::AboveContentCollapsible)
             ->headerActions([
                 Action::make('export')
                     ->label('Export')

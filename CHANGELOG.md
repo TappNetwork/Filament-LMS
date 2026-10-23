@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v5.2.0 - 2026-10-23
+
+### What's Changed
+
+* feat(mcp): let host apps serve LMS tools from their own server by @scottgrayson in https://github.com/TappNetwork/Filament-LMS/pull/139
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.1.6...v5.2.0
+
+## v5.1.6 - 2026-10-20
+
+### Changes
+
+- Certificate PDF drivers use Letter with zero margins so certificates no longer spill onto a blank second page. (#138)
+
+Tagged from `4.x` at `e90bf4e`.
+
 ## v5.1.5 - 2026-10-06
 
 ### Changes

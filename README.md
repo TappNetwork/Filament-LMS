@@ -83,6 +83,23 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
+### Prepare your User model
+
+Your User model **must** use the `FilamentLmsUser` trait **and** implement the `FilamentLmsUserInterface` contract. The LMS step pages refuse to render for a user model that does not implement the interface (a `LogicException` is thrown explaining what is missing).
+
+```php
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
+
+class User extends Authenticatable implements FilamentLmsUserInterface
+{
+    use FilamentLmsUser;
+
+    // ...
+}
+```
+
 ## MCP Server
 
 The package can expose **write tools** for AI clients (Cursor, Claude Code, Claude Desktop) so a skill can create Course → Lesson → Step data. Draft titles, descriptions, and structure, then call these tools. Videos are hosted YouTube or Vimeo URLs — the package does not upload video files. Optional transcripts go on the step `text` field. New courses default to `is_private = true` (there is no draft flag).
@@ -304,9 +321,13 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Support\Collection;
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
 
-class User extends Authenticatable implements FilamentUser, HasTenants
+class User extends Authenticatable implements FilamentLmsUserInterface, FilamentUser, HasTenants
 {
+    use FilamentLmsUser;
+
     // Allow users to access the LMS panel
     public function canAccessPanel(Panel $panel): bool
     {
@@ -911,9 +932,10 @@ If you need custom logic to determine whether a course is visible to a user, you
 If you want to call the trait's original method within your override, you can alias it when importing the trait:
 
 ```php
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Traits\FilamentLmsUser;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentLmsUserInterface
 {
     use FilamentLmsUser {
         FilamentLmsUser::isCourseVisibleForUser as filamentLmsIsCourseVisibleForUser;
@@ -1004,9 +1026,10 @@ By default, the `canAccessStep` method checks if the step is available based on 
 To implement custom step access logic, override the `canAccessStep` method in your User model:
 
 ```php
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Traits\FilamentLmsUser;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentLmsUserInterface
 {
     use FilamentLmsUser;
 
@@ -1050,9 +1073,10 @@ By default, the `canEditStep` method returns `false`, meaning no users have edit
 To implement custom step edit logic, override the `canEditStep` method in your User model:
 
 ```php
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Traits\FilamentLmsUser;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentLmsUserInterface
 {
     use FilamentLmsUser;
 

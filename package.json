@@ -20,6 +20,7 @@
     "prettier": "^3.6.2"
   },
   "dependencies": {
+    "playwright": "^1.64.1",
     "vidstack": "^1.12.12"
   }
 }

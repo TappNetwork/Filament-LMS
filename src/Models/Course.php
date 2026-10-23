@@ -139,9 +139,16 @@ final class Course extends Model implements HasMedia
         return app(CourseEvaluationService::class)->evaluationUrlForPrimaryCourse($this);
     }
 
+    /**
+     * @return HasMany<Lesson, $this>
+     */
     public function lessons(): HasMany
     {
-        return $this->hasMany(Lesson::class)->ordered();
+        $lessons = $this->hasMany(Lesson::class);
+
+        $lessons->ordered();
+
+        return $lessons;
     }
 
     public function isEmbeddedPlayer(): bool

@@ -1,5 +1,27 @@
 # Upgrading
 
+## Integrated course editor
+
+No migrations and no column changes. Existing course, lesson, step, and material rows render in the new editor as they are, including steps with no material and gaps in `order`.
+
+The package default is the current layout:
+
+```php
+'course_editor' => [
+    'mode' => 'legacy', // 'builder' for the tabbed editor
+    'show_content_resources' => true,
+],
+```
+
+`config/filament-lms.php` is merged one level deep. A published config does not pick up this key from the package. Add `course_editor` to the published file, or leave it out to stay on `legacy`.
+
+- `legacy` is the 4.8 / current Edit Course page: the same form and the Lessons, Users, and User Groups relation managers.
+- `builder` replaces course page with Details, Curriculum, and Access tabs. Lessons and steps are edited from the course. Lesson, Step, and material resources stay in the LMS navigation group. Set `show_content_resources` to `false` to hide Lesson, Step, and material resources from that group. Courses stay listed, and the resources stay registered.
+
+Editor copy is in `resources/lang/en/course-editor.php` (`__('filament-lms::course-editor...')`). Override it by publishing `filament-lms-translations` to `lang/vendor/filament-lms/en/course-editor.php`.
+
+Apps that extend `CourseResource`, `EditCourse`, or `CreateCourse` keep their own page. Switch modes in config; do not remove the relation managers or resources.
+
 ## Certificate PDF driver (Cloudflare)
 
 **Backwards compatible for Forge / existing hosts:** no env changes required. When `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER` is unset, the package keeps using **browsershot** unless Cloudflare credentials are present.

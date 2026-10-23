@@ -53,6 +53,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         $package
             ->name('filament-lms')
             ->hasViews()
+            ->hasTranslations()
             ->hasAssets()
             ->hasConfigFile('filament-lms')
             ->hasMigrations([

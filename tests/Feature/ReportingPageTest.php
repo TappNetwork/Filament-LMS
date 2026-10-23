@@ -1,5 +1,7 @@
 <?php
 
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Gate;
 use Tapp\FilamentLms\Pages\Reporting;
@@ -55,6 +57,13 @@ test('users with permission can access reporting page', function () {
 
     // Assert the page can be accessed
     expect(Reporting::canAccess())->toBeTrue();
+});
+
+test('reporting table filters render above the content', function () {
+    $page = new Reporting;
+    $table = $page->table(Table::make($page));
+
+    expect($table->getFiltersLayout())->toBe(FiltersLayout::AboveContentCollapsible);
 });
 
 test('unauthenticated users cannot access reporting page', function () {

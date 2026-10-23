@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
+use Tapp\FilamentLms\Exports\CourseEvaluationEntriesExport;
 use Tapp\FilamentLms\Exports\CourseProgressExport;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\CourseProgressReportRow;
@@ -200,22 +201,42 @@ class Reporting extends Page implements HasTable
                 Action::make('export')
                     ->label('Export')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->action(function () use ($table) {
-                        $query = $table->getQuery();
-
-                        // Apply all active filters
-                        foreach ($table->getFilters() as $filter) {
-                            $state = $filter->getState();
-                            if (! empty($state)) {
-                                $filter->apply($query, $state);
-                            }
-                        }
-
-                        return Excel::download(
-                            new CourseProgressExport($query),
-                            'course-progress-'.now()->format('Y-m-d').'.xlsx'
-                        );
-                    }),
+                    ->action(fn () => Excel::download(
+                        new CourseProgressExport($this->filteredReportQuery($table)),
+                        'course-progress-'.now()->format('Y-m-d').'.xlsx',
+                    )),
+                Action::make('exportEvaluations')
+                    ->label('Export evaluation answers')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->action(fn () => Excel::download(
+                        new CourseEvaluationEntriesExport($this->filteredReportQuery($table)),
+                        'evaluation-answers-'.now()->format('Y-m-d').'.xlsx',
+                    )),
+                Action::make('exportFormEntries')
+                    ->label('Export course answers')
+                    ->icon('heroicon-o-document-text')
+                    ->action(fn () => Excel::download(
+                        new CourseEvaluationEntriesExport($this->filteredReportQuery($table), evaluationsOnly: false),
+                        'course-answers-'.now()->format('Y-m-d').'.xlsx',
+                    )),
             ]);
+    }
+
+    /**
+     * Report query with the filters currently selected on the table.
+     */
+    protected function filteredReportQuery(Table $table): Builder
+    {
+        $query = $table->getQuery();
+
+        foreach ($table->getFilters() as $filter) {
+            $state = $filter->getState();
+
+            if (! empty($state) && $query !== null) {
+                $filter->apply($query, $state);
+            }
+        }
+
+        return $query;
     }
 }

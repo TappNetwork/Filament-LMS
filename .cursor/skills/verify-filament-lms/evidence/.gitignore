@@ -4,3 +4,4 @@
 *.txt
 *.pdf
 !README.md
+.cursor/skills/verify-filament-lms/evidence/*.sqlite

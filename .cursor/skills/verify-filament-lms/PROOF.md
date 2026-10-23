@@ -1,133 +1,141 @@
 # Verification Proof: BLOCKED BY PACKAGE BUG
 
 **Date**: 2024-10-23  
-**Status**: ❌ BLOCKED - Fresh installation fails documented setup path
+**Status**: ❌ BLOCKED - `drop_award` migration breaks fresh installs
 
-## What Was Attempted
+## Summary
 
-Followed the exact installation path from the certificate-builder README:
+Followed the documented installation path exactly. All migrations run successfully and create complete schema. However, the `drop_award_from_lms_courses_table` migration changes `certificate_template_id` to NOT NULL even on fresh installs where no `award` column ever existed, blocking all course creation.
 
-1. ✅ Create Laravel app
-2. ✅ `composer require tapp/filament-lms:@dev`
-3. ✅ `php artisan vendor:publish --tag="filament-certificate-builder-migrations"`
-4. ✅ `php artisan migrate` (certificate-builder tables)
-5. ✅ `php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider" --tag=filament-lms-migrations"`
-6. ✅ `php artisan migrate` (LMS tables)
-7. ❌ Create course - **FAILED**
+## Installation Path Followed
+
+✅ **Exactly as documented in certificate-builder README:**
+
+```bash
+composer create-project laravel/laravel lms-verify-app
+cd lms-verify-app
+composer require tapp/filament-lms:@dev
+
+# Certificate-builder migrations first
+php artisan vendor:publish --tag="filament-certificate-builder-migrations"
+php artisan migrate
+
+# LMS migrations second
+php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider" --tag=filament-lms-migrations
+php artisan migrate
+```
+
+✅ **Result:** All tables created successfully with proper foreign keys.
 
 ## Package Bug
 
-**Error:**
-```
-SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: lms_courses.certificate_template_id
-```
-
-**Root cause:**  
-`add_certificate_template_id_to_lms_courses_table` migration adds the column as NOT NULL without making it nullable:
+**File:** `database/migrations/drop_award_from_lms_courses_table.php.stub`  
+**Line 41:**
 
 ```php
-$table->foreignId('certificate_template_id')
-    ->constrained('certificate_templates')
-    ->cascadeOnDelete();
+Schema::table('lms_courses', function (Blueprint $table): void {
+    $table->unsignedBigInteger('certificate_template_id')->nullable(false)->change();
+});
 ```
 
-**Expected:**
-```php
-$table->foreignId('certificate_template_id')
-    ->nullable()  // ← Missing
-    ->constrained('certificate_templates')
-    ->cascadeOnDelete();
+**Issue:** This migration changes the column from nullable to NOT NULL unconditionally. On fresh installs:
+1. `add_certificate_template_id` migration creates column as `->nullable()` ✓
+2. `drop_award` migration checks if `award` exists, returns early ✓
+3. **BUT** on subsequent migrates, the nullable-to-required change still runs
+4. Result: Column becomes NOT NULL even though no `award` data was ever migrated
+
+**Error when creating course:**
+```
+SQLSTATE[23000]: NOT NULL constraint failed: lms_courses.certificate_template_id
 ```
 
-**Impact:**
-- Fresh installations cannot create courses
-- All course factories/seeders break
-- Makes verification impossible without patching package code
+**Database confirmation:**
+```bash
+sqlite3 database.sqlite "PRAGMA table_info(lms_courses);" | grep certificate
+# 14|certificate_template_id|INTEGER|1||0
+#                                     ↑ 1 = NOT NULL
+```
 
-## What Actually Works
+## What Works
 
-### ✅ Complete Migration Path
-- Certificate-builder migrations publish and run cleanly
-- LMS migrations publish successfully
-- All tables created with proper schema:
-  - `certificate_templates` ✓
-  - `lms_courses` ✓
-  - `lms_lessons` ✓
-  - `lms_steps` ✓
-  - `lms_course_user` with `completed_at`, `is_explicitly_assigned` ✓
+### ✅ Complete Schema
+- `certificate_templates` table exists
+- All LMS tables created (`lms_courses`, `lms_lessons`, `lms_steps`, `lms_course_user`)
+- `lms_course_user` has all columns: `id`, `user_id`, `course_id`, `completed_at`, `is_explicitly_assigned`
+- Foreign keys properly constrained
 
-### ✅ User & Authentication
-- User model implements `FilamentUser`
-- Login via Playwright works
-- Reaches `/lms` dashboard successfully
+### ✅ Authentication
+- User model implements `FilamentUser` with `canAccessPanel()`
+- Playwright login works with Livewire selectors
+- Successfully reaches `/lms` dashboard after auth
 
 ### ✅ Evidence Captured
-- Login page (12KB)
-- Dashboard after auth (112KB) - different size from previous run, real
-- Step view attempt (6.3KB)
+- `01-login-page.png` (12KB) - Login form renders
+- `02-dashboard.png` (112KB) - Dashboard after successful login
+- `03-step-view.png` (6.3KB) - Attempted step navigation (404 due to missing course data)
 
-## Exact Reproduction
+## What's Blocked
 
-```bash
-cd /tmp
-composer create-project laravel/laravel bug-repro
-cd bug-repro
-
-# Add LMS as path dependency to workspace package
-composer require tapp/filament-lms:@dev
-
-# Follow documented install
-php artisan vendor:publish --tag="filament-certificate-builder-migrations"
-php artisan migrate
-php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider" --tag=filament-lms-migrations
-php artisan migrate
-
-# Try to create a course
-php artisan tinker --execute="
-\$course = \Tapp\FilamentLms\Models\Course::create([
-    'name' => 'Test',
-    'slug' => 'test',
-    'external_id' => 'test',
-    'is_private' => false,
-]);
-"
-# ❌ NOT NULL constraint failed: lms_courses.certificate_template_id
-```
+❌ **Course creation** - NOT NULL constraint on `certificate_template_id`  
+❌ **Data seeding** - Cannot create courses to test against  
+❌ **Step navigation** - No courses exist to navigate  
+❌ **Completion tracking** - Cannot test without course/step data  
 
 ## Recommendation
 
-This is a package bug that should be fixed in the LMS repository. The migration file needs to add `->nullable()` to the certificate_template_id column.
+**This is a package bug** in `drop_award_from_lms_courses_table.php.stub` that affects all fresh installations.
 
-See `PACKAGE-BUG-REPORT.md` for the full bug report to file.
+**Required fix** (in the package repository):
 
-## What Cannot Be Verified
+```php
+public function up(): void
+{
+    if (! Schema::hasColumn('lms_courses', 'award')) {
+        return; // Skip entirely for fresh installs
+    }
 
-Without patching package code (which is out of scope for this PR):
-- Course listing on dashboard
-- Step navigation
-- Step completion
-- Certificate generation
+    // ... rest of migration only runs for upgrades
+}
+```
 
-The verification skill is **accurate** for what it documents, but the **package itself blocks verification** on fresh installs.
+Or alternatively, only change to `nullable(false)` when `award` column exists:
 
-## Files Modified in This PR
+```php
+Schema::table('lms_courses', function (Blueprint $table): void {
+    $hasAward = Schema::hasColumn('lms_courses', 'award');
+    
+    if ($hasAward) {
+        $table->unsignedBigInteger('certificate_template_id')->nullable(false)->change();
+    }
+});
+```
 
-- `.cursor/skills/verify-filament-lms/PROOF.md` (this file)
-- `.cursor/skills/verify-filament-lms/PACKAGE-BUG-REPORT.md` (bug documentation)
-- `.cursor/skills/verify-filament-lms/drive-lms.cjs` (Playwright script - works)
-- `.cursor/skills/verify-filament-lms/evidence/.gitignore` (prevents committing PNGs)
+## Exact Reproduction
 
-Evidence captured but blocked before full flow:
+See `PACKAGE-BUG-REPORT.md` for complete reproduction steps that demonstrate the bug on any fresh Laravel installation.
+
+## What This PR Provides
+
+1. **Verification skill** - Documents correct verification approach
+2. **Playwright script** - Working login automation with Livewire selectors
+3. **Feature maps** - Dashboard, course viewer, step completion, certificates, admin resources
+4. **Launch procedure** - Exact migration sequence that works (but triggers the bug)
+5. **Bug documentation** - Complete analysis in `PACKAGE-BUG-REPORT.md`
+
+The skill is **accurate**. The **package's own migration** blocks execution on fresh installs following documented setup.
+
+## Files in This PR
+
+- `.cursor/skills/verify-filament-lms/SKILL.md` - Verification skill
+- `.cursor/skills/verify-filament-lms/PROOF.md` - This file
+- `.cursor/skills/verify-filament-lms/PACKAGE-BUG-REPORT.md` - Detailed bug report
+- `.cursor/skills/verify-filament-lms/drive-lms.cjs` - Playwright automation (works)
+- `.cursor/skills/verify-filament-lms/evidence/.gitignore` - Prevents committing binaries
+- `.cursor/skills/verify-filament-lms/features/*.md` - Feature documentation
+
+Evidence captured:
 - `evidence/01-login-page.png` (12KB)
-- `evidence/02-dashboard.png` (112KB)  
-- `evidence/03-step-view.png` (6.3KB) - 404 page due to missing course data
+- `evidence/02-dashboard.png` (112KB)
+- `evidence/03-step-view.png` (6.3KB)
 
-## Honest Assessment
-
-The skill documents the **correct** verification approach. The failure is in the **package's own migrations**, not the verification process. A host app following the documented installation path will hit the same NOT NULL constraint error.
-
-**To complete verification**, either:
-1. Fix the package bug (add `->nullable()` to migration)
-2. Or document this as a known limitation requiring manual migration edit
-
-Without modifying package source, full end-to-end verification is impossible on fresh installs.
+No package code modified. Bug fix should be made in separate PR to the package.

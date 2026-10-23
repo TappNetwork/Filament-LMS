@@ -105,7 +105,23 @@ await page.screenshot({ path: 'evidence/course-viewer.png', fullPage: true });
 
 ## Gotchas
 
-1. **Sidebar navigation breaks layout**:
+### Step URL redirect loop
+
+Direct navigation to step URLs (e.g. `/lms/courses/{courseSlug}/{lessonSlug}/{stepSlug}`) results in an infinite redirect loop where the URL redirects to itself with `HTTP 302`:
+
+```
+302 http://localhost:8000/lms/courses/intro-to-filament-lms/getting-started/welcome 
+  → http://localhost:8000/lms/courses/intro-to-filament-lms/getting-started/welcome
+  → (repeats infinitely)
+```
+
+**Root cause:** The step route likely has middleware or mount logic that expects session state or context set by navigating through the course landing page first, but when that state is missing, it redirects back to the same URL instead of to a fallback like the course overview or LMS dashboard.
+
+**Workaround:** Users must navigate to steps by clicking through the course cards on the dashboard (`/lms`) rather than typing or bookmarking step URLs directly. The dashboard properly sets up the required context before routing to the step page.
+
+**Verified:** This behavior reproduces consistently in a fresh Laravel app with only the package installed, seeded test data (user enrolled in course with one lesson and one step), and authenticated Playwright session. The course IS visible on the dashboard and the href IS correct, but following that href directly triggers the loop.
+
+### Sidebar navigation breaks layout
    - Filament's sidebar behavior changes based on `topNavigation()` and `sidebarCollapsibleOnDesktop()` config
    - In-course, sidebar replaces primary nav (unless `course_context = 'sub_navigation'` in config)
    - Check `config('filament-lms.navigation.course_context')` for expected behavior

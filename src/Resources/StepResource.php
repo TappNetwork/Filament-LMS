@@ -86,6 +86,30 @@ final class StepResource extends Resource
         return $lesson ? $lesson->slug.'-'.Str::slug($name) : null;
     }
 
+    /**
+     * Step slugs are unique across the table. Lesson slugs are only unique per course,
+     * so the same lesson slug and step name must gain a numeric suffix.
+     */
+    public static function uniqueStepSlug(string $slug, ?int $ignoreId = null): string
+    {
+        $base = $slug !== '' ? $slug : 'step';
+        $candidate = $base;
+        $suffix = 2;
+
+        while (
+            Step::query()
+                ->withoutGlobalScope('filament_lms_tenancy')
+                ->where('slug', $candidate)
+                ->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId))
+                ->exists()
+        ) {
+            $candidate = $base.'-'.$suffix;
+            $suffix++;
+        }
+
+        return $candidate;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components(self::getFormComponents());
@@ -309,7 +333,8 @@ final class StepResource extends Resource
 
                     $slug = self::generateStepSlug($get('lesson_id'), $state);
                     if ($slug) {
-                        $set('slug', $slug);
+                        $ignoreId = filled($get('id')) ? (int) $get('id') : null;
+                        $set('slug', self::uniqueStepSlug($slug, $ignoreId));
                     }
                 }),
             Toggle::make('is_optional')
@@ -364,7 +389,15 @@ final class StepResource extends Resource
                         ->live(onBlur: true)
                         ->afterStateUpdated(function (Set $set, Get $get, ?string $state): void {
                             $generated = self::generateStepSlug($get('lesson_id'), $get('name'));
-                            $set('slug_is_locked', $generated !== null && $generated !== (string) $state);
+                            $ignoreId = filled($get('id')) ? (int) $get('id') : null;
+                            $automatic = $generated === null ? null : self::uniqueStepSlug($generated, $ignoreId);
+
+                            $set(
+                                'slug_is_locked',
+                                $generated !== null
+                                    && (string) $state !== $generated
+                                    && (string) $state !== $automatic,
+                            );
                         }),
                     TextInput::make('player_slide_id')
                         ->label(__('filament-lms::course-editor.step.player_slide_id'))

@@ -318,7 +318,7 @@ class CourseCurriculum extends Component implements HasActions, HasForms
                     return [
                         'lesson_id' => $lesson->getKey(),
                         'name' => $name,
-                        'slug' => $lesson->slug.'-'.Str::slug($name),
+                        'slug' => $this->uniqueStepSlug($lesson->slug.'-'.Str::slug($name)),
                         'slug_is_locked' => false,
                         'is_optional' => false,
                         'require_perfect_score' => false,
@@ -374,7 +374,7 @@ class CourseCurriculum extends Component implements HasActions, HasForms
         $payload = [
             'lesson_id' => $lesson->getKey(),
             'name' => $data['name'],
-            'slug' => $data['slug'],
+            'slug' => $this->uniqueStepSlug((string) $data['slug'], $exceptId),
             'text' => filled($data['text'] ?? null) ? $data['text'] : null,
             'is_optional' => (bool) ($data['is_optional'] ?? false),
             'material_type' => $materialType,
@@ -524,21 +524,7 @@ class CourseCurriculum extends Component implements HasActions, HasForms
 
     protected function uniqueStepSlug(string $slug, ?int $ignoreId = null): string
     {
-        $base = $slug !== '' ? $slug : 'step';
-        $candidate = $base;
-        $suffix = 2;
-
-        while (
-            Step::query()
-                ->where('slug', $candidate)
-                ->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId))
-                ->exists()
-        ) {
-            $candidate = $base.'-'.$suffix;
-            $suffix++;
-        }
-
-        return $candidate;
+        return StepResource::uniqueStepSlug($slug, $ignoreId);
     }
 
     protected function copiedName(string $name): string

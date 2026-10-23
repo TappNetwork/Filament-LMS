@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Livewire\CourseCurriculum;
@@ -467,6 +468,107 @@ it('adds edits duplicates and deletes a step from the slide-over', function (): 
         ->callAction('deleteStep', arguments: ['step' => $created->getKey()]);
 
     expect(Step::query()->whereKey($created->getKey())->exists())->toBeFalse();
+});
+
+it('gives a new step a unique slug when another lesson already uses that slug', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+
+    $defaultName = __('filament-lms::course-editor.step.default_name', ['number' => 1]);
+    $baseSlug = 'welcome-'.Str::slug($defaultName);
+
+    $otherCourse = Course::factory()->create();
+    $otherLesson = Lesson::factory()->create([
+        'course_id' => $otherCourse->id,
+        'name' => 'Welcome',
+        'slug' => 'welcome',
+    ]);
+    Step::factory()->withoutMaterial()->create([
+        'lesson_id' => $otherLesson->id,
+        'name' => $defaultName,
+        'slug' => $baseSlug,
+    ]);
+    Step::factory()->withoutMaterial()->create([
+        'lesson_id' => $otherLesson->id,
+        'name' => 'Step 1 copy',
+        'slug' => $baseSlug.'-2',
+    ]);
+
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()->create([
+        'course_id' => $course->id,
+        'name' => 'Welcome',
+        'slug' => 'welcome',
+    ]);
+
+    $component = Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->mountAction('editStep', arguments: [
+            'lesson' => $lesson->getKey(),
+        ])
+        ->assertActionDataSet([
+            'name' => $defaultName,
+            'slug' => $baseSlug.'-3',
+        ])
+        ->callMountedAction()
+        ->assertHasNoActionErrors();
+
+    $created = Step::query()->where('lesson_id', $lesson->id)->first();
+
+    expect($created)->not->toBeNull()
+        ->and($created->name)->toBe($defaultName)
+        ->and($created->slug)->toBe($baseSlug.'-3')
+        ->and(Step::query()->where('slug', $created->slug)->count())->toBe(1);
+
+    $saveStep = new ReflectionMethod(CourseCurriculum::class, 'saveStep');
+    $saveStep->invoke($component->instance(), [
+        'lesson_id' => $lesson->getKey(),
+        'name' => 'Handbook',
+        'slug' => $baseSlug,
+        'text' => null,
+        'is_optional' => false,
+        'material_type' => null,
+        'material_id' => null,
+        'require_perfect_score' => false,
+    ], [
+        'lesson' => $lesson->getKey(),
+    ]);
+
+    expect(Step::query()->where('lesson_id', $lesson->id)->where('name', 'Handbook')->value('slug'))
+        ->toBe($baseSlug.'-4');
+});
+
+it('keeps a generated step slug unique when the step name changes', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+
+    $otherCourse = Course::factory()->create();
+    $otherLesson = Lesson::factory()->create([
+        'course_id' => $otherCourse->id,
+        'slug' => 'welcome',
+    ]);
+    Step::factory()->withoutMaterial()->create([
+        'lesson_id' => $otherLesson->id,
+        'slug' => 'welcome-introduction',
+    ]);
+
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()->create([
+        'course_id' => $course->id,
+        'slug' => 'welcome',
+    ]);
+
+    $component = Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->mountAction('editStep', arguments: [
+            'lesson' => $lesson->getKey(),
+        ])
+        ->set('mountedActions.0.data.name', 'Introduction');
+
+    $component->instance()
+        ->getSchema('mountedActionSchema0')
+        ->callAfterStateUpdated('mountedActions.0.data.name');
+
+    expect($component->instance()->mountedActions[0]['data']['slug'])->toBe('welcome-introduction-2')
+        ->and($component->instance()->mountedActions[0]['data']['slug_is_locked'])->toBeFalse();
 });
 
 it('shows the step name before the advanced section', function (): void {

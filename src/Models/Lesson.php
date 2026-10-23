@@ -54,10 +54,16 @@ class Lesson extends Model implements Sortable
         return $this->belongsTo(Course::class);
     }
 
+    /**
+     * @return HasMany<Step, $this>
+     */
     public function steps(): HasMany
     {
-        // @phpstan-ignore-next-line
-        return $this->hasMany(Step::class)->ordered();
+        $steps = $this->hasMany(Step::class);
+
+        $steps->ordered();
+
+        return $steps;
     }
 
     public function isActive()

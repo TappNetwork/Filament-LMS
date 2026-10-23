@@ -8,6 +8,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -332,7 +333,63 @@ it('renders lessons and steps in order and badges a step with no material', func
     expect(strpos($html, 'Earlier lesson'))->toBeLessThan(strpos($html, 'Later lesson'))
         ->and($html)->toContain('Lesson 1 · Earlier lesson')
         ->and($html)->toContain('No material')
+        ->and($html)->toContain('x-sortable')
+        ->and($html)->toContain('x-sortable-handle')
+        ->and($html)->toContain('reorderLessons')
+        ->and($html)->toContain('reorderSteps')
         ->and($later->order)->toBe(10);
+});
+
+it('does not enable outline sorting for view-only course access', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+    Gate::policy(Course::class, CourseOutlineViewOnlyPolicy::class);
+
+    $course = Course::factory()->create();
+    $first = Lesson::factory()->create([
+        'course_id' => $course->id,
+        'name' => 'First lesson',
+        'order' => 1,
+    ]);
+    $second = Lesson::factory()->create([
+        'course_id' => $course->id,
+        'name' => 'Second lesson',
+        'order' => 2,
+    ]);
+    $stepA = Step::factory()->withoutMaterial()->create([
+        'lesson_id' => $first->id,
+        'name' => 'Step A',
+        'order' => 1,
+    ]);
+    $stepB = Step::factory()->withoutMaterial()->create([
+        'lesson_id' => $first->id,
+        'name' => 'Step B',
+        'order' => 2,
+    ]);
+
+    $html = Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->assertSuccessful()
+        ->assertSee('First lesson')
+        ->assertSee('Step A')
+        ->html();
+
+    expect($html)
+        ->not->toContain('x-sortable')
+        ->not->toContain('reorderLessons')
+        ->not->toContain('reorderSteps');
+
+    Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->call('reorderLessons', [$second->id, $first->id])
+        ->assertForbidden();
+
+    Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->call('reorderSteps', $first->id, [$stepB->id, $stepA->id])
+        ->assertForbidden();
+
+    expect($first->refresh()->order)->toBe(1)
+        ->and($second->refresh()->order)->toBe(2)
+        ->and($stepA->refresh()->order)->toBe(1)
+        ->and($stepB->refresh()->order)->toBe(2);
 });
 
 it('reorders lessons and steps within their parent', function (): void {
@@ -924,6 +981,19 @@ it('scopes the outline to the current tenant and stamps the tenant column', func
     expect(Lesson::query()->where('slug', 'created-lesson')->first())
         ->company_id->toBe($alpha->getKey());
 });
+
+class CourseOutlineViewOnlyPolicy
+{
+    public function view(): bool
+    {
+        return true;
+    }
+
+    public function update(): bool
+    {
+        return false;
+    }
+}
 
 class CourseEditorTenant extends Model
 {

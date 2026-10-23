@@ -92,6 +92,9 @@ class CourseCurriculum extends Component implements HasActions, HasForms
      */
     public function reorderSteps(int $lessonId, array $orderedIds): void
     {
+        $course = $this->course();
+        abort_unless(CourseResource::can('update', $course), 403);
+
         $lesson = $this->findLesson($lessonId);
         abort_unless(LessonResource::can('update', $lesson), 403);
 

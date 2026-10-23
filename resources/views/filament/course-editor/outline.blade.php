@@ -15,13 +15,17 @@
     @else
         <ul
             class="flex flex-col gap-4"
-            x-sortable
-            x-on:end.stop="$wire.reorderLessons($event.target.sortable.toArray())"
+            @if ($canUpdateCourse)
+                x-sortable
+                x-on:end.stop="$wire.reorderLessons($event.target.sortable.toArray())"
+            @endif
         >
             @foreach ($lessons as $lesson)
                 <li
                     wire:key="lesson-{{ $lesson->getKey() }}"
-                    x-sortable-item="{{ $lesson->getKey() }}"
+                    @if ($canUpdateCourse)
+                        x-sortable-item="{{ $lesson->getKey() }}"
+                    @endif
                     class="flex items-start gap-2"
                 >
                     @if ($canUpdateCourse)
@@ -85,8 +89,10 @@
 
                             <ul
                                 class="flex flex-col gap-2"
-                                x-sortable
-                                x-on:end.stop="$wire.reorderSteps({{ $lesson->getKey() }}, $event.target.sortable.toArray())"
+                                @if ($canUpdateCourse)
+                                    x-sortable
+                                    x-on:end.stop="$wire.reorderSteps({{ $lesson->getKey() }}, $event.target.sortable.toArray())"
+                                @endif
                             >
                                 @foreach ($lesson->steps as $step)
                                     @php
@@ -94,7 +100,9 @@
                                     @endphp
                                     <li
                                         wire:key="step-{{ $step->getKey() }}"
-                                        x-sortable-item="{{ $step->getKey() }}"
+                                        @if ($canUpdateCourse)
+                                            x-sortable-item="{{ $step->getKey() }}"
+                                        @endif
                                         class="flex items-center gap-2 rounded-lg px-2 py-2 ring-1 ring-gray-950/10 dark:ring-white/10"
                                     >
                                         @if ($canUpdateCourse)

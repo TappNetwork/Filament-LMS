@@ -4,10 +4,11 @@ An opinionated LMS plugin for Filament containing a user facing LMS panel and Re
 
 ## Version Compatibility
  
-Filament | Filament LMS       | Documentation
-:--------|:-------------------|:--------------
-5.x      | 4.x / 5.x          | Current (`tapp/filament-certificate-builder` required)
-3.x      | 1.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/1.x)
+Filament  | Filament LMS       | Documentation
+:---------|:-------------------|:--------------
+5.x       | 5.x                | Current, `main` branch (`tapp/filament-certificate-builder` required)
+4.x / 5.x | 4.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/v4.8.0)
+3.x       | 1.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/1.x)
 
 ## Installation
 
@@ -48,7 +49,7 @@ or
 ```
 
 ```bash
-composer require tapp/filament-lms:"^4.0"
+composer require tapp/filament-lms:"^5.0"
 ```
 
 ### Publish

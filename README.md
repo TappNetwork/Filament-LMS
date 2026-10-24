@@ -6,8 +6,8 @@ An opinionated LMS plugin for Filament containing a user facing LMS panel and Re
  
 Filament  | Filament LMS       | Documentation
 :---------|:-------------------|:--------------
-5.x       | 5.x                | Current, `main` branch (`tapp/filament-certificate-builder` required)
-4.x / 5.x | 4.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/v4.8.0)
+5.x       | 5.x                | Current, `5.x` branch (`tapp/filament-certificate-builder` required)
+4.x / 5.x | 4.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/4.x)
 3.x       | 1.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/1.x)
 
 ## Installation

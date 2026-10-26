@@ -13,6 +13,7 @@ use Filament\Schemas\Schema;
 use Tapp\FilamentLms\Livewire\CourseCurriculum;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\RelationManagers\CourseUserGroupsRelationManager;
+use Tapp\FilamentLms\RelationManagers\CourseUsersRelationManager;
 use Tapp\FilamentLms\Support\CourseEditor;
 
 trait HasCourseEditorTabs
@@ -59,6 +60,7 @@ trait HasCourseEditorTabs
                             ->viewData([
                                 'course' => $course,
                                 'pageClass' => static::class,
+                                'showUsers' => CourseUsersRelationManager::canViewForRecord($course, static::class),
                                 'showGroups' => CourseUserGroupsRelationManager::canViewForRecord($course, static::class),
                             ])
                         : Text::make(__('filament-lms::course-editor.tabs.save_course_for_access')),

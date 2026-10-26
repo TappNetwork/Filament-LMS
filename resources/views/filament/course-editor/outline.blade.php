@@ -147,7 +147,7 @@
                                                 wire:click="mountAction('editStep', { step: {{ $step->getKey() }} })"
                                             />
                                         @endif
-                                        @if (\Tapp\FilamentLms\Resources\StepResource::can('create'))
+                                        @if (\Tapp\FilamentLms\Resources\StepResource::can('create') && \Tapp\FilamentLms\Resources\LessonResource::can('update', $lesson))
                                             <x-filament::icon-button
                                                 icon="heroicon-o-square-2-stack"
                                                 color="gray"

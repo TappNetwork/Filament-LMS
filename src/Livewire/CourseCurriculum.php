@@ -18,6 +18,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -118,6 +119,7 @@ class CourseCurriculum extends Component implements HasActions, HasForms
 
         $step = $this->findStep($stepId);
         abort_unless(StepResource::can('view', $step), 403);
+        abort_unless(LessonResource::can('update', $step->lesson), 403);
 
         $copy = $step->replicate();
         $copy->name = $this->copiedName($step->name);
@@ -199,43 +201,45 @@ class CourseCurriculum extends Component implements HasActions, HasForms
                 $lesson = $this->findLesson((int) $arguments['lesson']);
                 abort_unless(LessonResource::can('create') && CourseResource::can('update', $this->course()), 403);
 
-                $lesson->load('steps');
+                DB::transaction(function () use ($lesson): void {
+                    $lesson->load('steps');
 
-                $copy = $lesson->replicate();
-                $copy->name = $this->copiedName($lesson->name);
-                $copy->slug = $this->uniqueLessonSlug($lesson->course_id, Str::slug($copy->name));
-                $copy->course_id = $lesson->course_id;
-                $this->assignTenant($copy, $lesson->course);
-                $copy->save();
+                    $copy = $lesson->replicate();
+                    $copy->name = $this->copiedName($lesson->name);
+                    $copy->slug = $this->uniqueLessonSlug($lesson->course_id, Str::slug($copy->name));
+                    $copy->course_id = $lesson->course_id;
+                    $this->assignTenant($copy, $lesson->course);
+                    $copy->save();
 
-                $stepMap = [];
+                    $stepMap = [];
 
-                foreach ($lesson->steps as $step) {
-                    $stepCopy = $step->replicate();
-                    $stepCopy->lesson_id = $copy->getKey();
-                    $stepCopy->retry_step_id = null;
-                    $stepCopy->slug = $this->uniqueStepSlug($copy->slug.'-'.Str::slug($step->name));
-                    $this->assignTenant($stepCopy, $copy);
-                    $stepCopy->save();
-                    $stepMap[$step->getKey()] = $stepCopy->getKey();
-                }
-
-                foreach ($lesson->steps as $step) {
-                    if ($step->retry_step_id === null) {
-                        continue;
+                    foreach ($lesson->steps as $step) {
+                        $stepCopy = $step->replicate();
+                        $stepCopy->lesson_id = $copy->getKey();
+                        $stepCopy->retry_step_id = null;
+                        $stepCopy->slug = $this->uniqueStepSlug($copy->slug.'-'.Str::slug($step->name));
+                        $this->assignTenant($stepCopy, $copy);
+                        $stepCopy->save();
+                        $stepMap[$step->getKey()] = $stepCopy->getKey();
                     }
 
-                    $newStepId = $stepMap[$step->getKey()] ?? null;
-                    $newRetryId = $stepMap[$step->retry_step_id] ?? $step->retry_step_id;
+                    foreach ($lesson->steps as $step) {
+                        if ($step->retry_step_id === null) {
+                            continue;
+                        }
 
-                    if ($newStepId === null) {
-                        continue;
+                        $newStepId = $stepMap[$step->getKey()] ?? null;
+                        $newRetryId = $stepMap[$step->retry_step_id] ?? $step->retry_step_id;
+
+                        if ($newStepId === null) {
+                            continue;
+                        }
+
+                        Step::query()->whereKey($newStepId)->update([
+                            'retry_step_id' => $newRetryId,
+                        ]);
                     }
-
-                    Step::query()->whereKey($newStepId)->update([
-                        'retry_step_id' => $newRetryId,
-                    ]);
-                }
+                });
 
                 Notification::make()->title(__('filament-lms::course-editor.outline.lesson_cloned'))->success()->send();
                 $this->refreshOutline();

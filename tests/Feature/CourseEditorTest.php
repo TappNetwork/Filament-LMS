@@ -171,6 +171,26 @@ it('renders the builder edit page with details curriculum and access tabs', func
     ])->and($component->instance()->learnerUrl())->toContain('welcome-course');
 });
 
+it('keeps the edit course page available when assigned users cannot be viewed', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+
+    $course = Course::factory()->create();
+
+    Livewire::test(EditCourse::class, ['record' => $course->getKey()])
+        ->assertSuccessful()
+        ->assertSee('Assigned Users');
+
+    Gate::policy(TestUser::class, CourseEditorDenyUserViewPolicy::class);
+
+    Livewire::test(EditCourse::class, ['record' => $course->getKey()])
+        ->assertSuccessful()
+        ->assertSee('Access')
+        ->assertSee('Details')
+        ->assertDontSee('Assigned Users')
+        ->assertDontSee('course-users-'.$course->getKey());
+});
+
 it('spaces lesson actions like steps and shows filament tooltips', function (): void {
     config(['filament-lms.course_editor.mode' => 'builder']);
     useCourseEditorPanel();
@@ -459,6 +479,37 @@ it('adds clones and deletes lessons from the outline', function (): void {
     expect(Lesson::query()->whereKey($lesson->getKey())->exists())->toBeFalse();
 });
 
+it('rolls back a lesson clone when copying a step fails', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()->create([
+        'course_id' => $course->id,
+        'name' => 'Welcome',
+        'slug' => 'welcome',
+    ]);
+    Step::factory()->withoutMaterial()->create([
+        'lesson_id' => $lesson->id,
+        'name' => 'Intro',
+    ]);
+
+    Step::creating(function (): void {
+        throw new RuntimeException('step copy failed');
+    });
+
+    try {
+        Livewire::test(CourseCurriculum::class, ['record' => $course])
+            ->callAction('cloneLesson', arguments: ['lesson' => $lesson->getKey()]);
+    } catch (RuntimeException $exception) {
+        expect($exception->getMessage())->toBe('step copy failed');
+    }
+
+    expect(Lesson::query()->count())->toBe(1)
+        ->and(Step::query()->count())->toBe(1)
+        ->and(Lesson::query()->where('name', 'Welcome copy')->exists())->toBeFalse();
+});
+
 it('adds edits duplicates and deletes a step from the slide-over', function (): void {
     config(['filament-lms.course_editor.mode' => 'builder']);
     useCourseEditorPanel();
@@ -525,6 +576,32 @@ it('adds edits duplicates and deletes a step from the slide-over', function (): 
         ->callAction('deleteStep', arguments: ['step' => $created->getKey()]);
 
     expect(Step::query()->whereKey($created->getKey())->exists())->toBeFalse();
+});
+
+it('does not duplicate a step when the lesson cannot be updated', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+    Gate::policy(Lesson::class, CourseEditorLessonUpdateDeniedPolicy::class);
+
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()->create([
+        'course_id' => $course->id,
+        'slug' => 'welcome',
+    ]);
+    $step = Step::factory()->withoutMaterial()->create([
+        'lesson_id' => $lesson->id,
+        'name' => 'Introduction',
+    ]);
+
+    Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->assertSuccessful()
+        ->assertSee('Edit step')
+        ->assertDontSee('Duplicate step')
+        ->assertDontSee('Add step')
+        ->call('duplicateStep', $step->getKey())
+        ->assertForbidden();
+
+    expect(Step::query()->where('lesson_id', $lesson->id)->count())->toBe(1);
 });
 
 it('gives a new step a unique slug when another lesson already uses that slug', function (): void {
@@ -989,6 +1066,22 @@ class CourseOutlineViewOnlyPolicy
         return true;
     }
 
+    public function update(): bool
+    {
+        return false;
+    }
+}
+
+class CourseEditorDenyUserViewPolicy
+{
+    public function viewAny(): bool
+    {
+        return false;
+    }
+}
+
+class CourseEditorLessonUpdateDeniedPolicy
+{
     public function update(): bool
     {
         return false;

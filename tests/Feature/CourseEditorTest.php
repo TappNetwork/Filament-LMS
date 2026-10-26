@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Livewire\CourseCurriculum;
 use Tapp\FilamentLms\Models\Course;
@@ -47,6 +48,19 @@ function courseEditorAdmin(): TestUser
         'email' => 'course-editor-'.uniqid().'@example.com',
         'password' => 'password',
     ]);
+}
+
+/**
+ * A missing lesson or step throws ModelNotFoundException on some Laravel
+ * versions and is rendered as a 404 by the Livewire test client on others.
+ */
+function expectCourseRecordMissing(callable $attempt): void
+{
+    try {
+        $attempt()->assertNotFound();
+    } catch (ModelNotFoundException|NotFoundHttpException) {
+        // The record was rejected before a response was returned.
+    }
 }
 
 function useCourseEditorPanel(): void
@@ -616,13 +630,11 @@ it('rejects deleting, duplicating, or reordering a step from another course', fu
     $foreignLesson = Lesson::factory()->create(['course_id' => $foreignCourse->id]);
     $foreignStep = Step::factory()->withoutMaterial()->create(['lesson_id' => $foreignLesson->id]);
 
-    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
-        ->call('duplicateStep', $foreignStep->getKey()))
-        ->toThrow(ModelNotFoundException::class);
+    expectCourseRecordMissing(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->call('duplicateStep', $foreignStep->getKey()));
 
-    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
-        ->callAction('deleteStep', arguments: ['step' => $foreignStep->getKey()]))
-        ->toThrow(ModelNotFoundException::class);
+    expectCourseRecordMissing(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('deleteStep', arguments: ['step' => $foreignStep->getKey()]));
 
     // A foreign id is silently dropped by normalizeOrder() (it is not among
     // the lesson's own step ids), so this is a no-op rather than a 403 -
@@ -630,7 +642,7 @@ it('rejects deleting, duplicating, or reordering a step from another course', fu
     Livewire::test(CourseCurriculum::class, ['record' => $course])
         ->call('reorderSteps', $lesson->getKey(), [$foreignStep->getKey()]);
 
-    expect(Step::query()->whereKey($foreignStep->getKey())->exists())->toBeTrue()
+    expect(Step::query()->where('lesson_id', $foreignLesson->getKey())->count())->toBe(1)
         ->and($foreignStep->refresh()->lesson_id)->toBe($foreignLesson->getKey());
 });
 
@@ -653,12 +665,11 @@ it('rejects editing a step from another course and cannot move a step via a tamp
 
     // Editing a step that belongs to a different course is rejected, even
     // with a 'lesson' argument that resolves inside the current course.
-    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
-        ->mountAction('editStep', arguments: [
+    expectCourseRecordMissing(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('editStep', arguments: [
             'lesson' => $lesson->getKey(),
             'step' => $foreignStep->getKey(),
-        ]))
-        ->toThrow(ModelNotFoundException::class);
+        ]));
 
     // Tampering with the hidden lesson_id field to point at a different
     // lesson must not move the step: the step's own lesson_id is
@@ -716,13 +727,11 @@ it('rejects deleting or cloning a lesson from another course', function (): void
     $foreignCourse = Course::factory()->create();
     $foreignLesson = Lesson::factory()->create(['course_id' => $foreignCourse->id]);
 
-    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
-        ->callAction('deleteLesson', arguments: ['lesson' => $foreignLesson->getKey()]))
-        ->toThrow(ModelNotFoundException::class);
+    expectCourseRecordMissing(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('deleteLesson', arguments: ['lesson' => $foreignLesson->getKey()]));
 
-    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
-        ->callAction('cloneLesson', arguments: ['lesson' => $foreignLesson->getKey()]))
-        ->toThrow(ModelNotFoundException::class);
+    expectCourseRecordMissing(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('cloneLesson', arguments: ['lesson' => $foreignLesson->getKey()]));
 
     // A foreign id is silently dropped by normalizeOrder() (it is not among
     // the course's own lesson ids), so this is a no-op rather than a 403 -
@@ -743,9 +752,8 @@ it('rejects creating a step for a lesson from another course', function (): void
     $foreignCourse = Course::factory()->create();
     $foreignLesson = Lesson::factory()->create(['course_id' => $foreignCourse->id]);
 
-    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
-        ->mountAction('editStep', arguments: ['lesson' => $foreignLesson->getKey()]))
-        ->toThrow(ModelNotFoundException::class);
+    expectCourseRecordMissing(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('editStep', arguments: ['lesson' => $foreignLesson->getKey()]));
 
     expect(Step::query()->where('lesson_id', $foreignLesson->getKey())->count())->toBe(0);
 });
@@ -904,11 +912,9 @@ it('discards an unknown material_type instead of saving it as given', function (
     $lesson = Lesson::factory()->create(['course_id' => $course->id]);
     $step = Step::factory()->withoutMaterial()->create(['lesson_id' => $lesson->id]);
 
-    // ToggleButtons::make('material_type')->options(materialTypeOptions())
-    // casts a value with no matching option label to null before the
-    // action runs, so saveStep() never sees or persists an unrecognized
-    // material_type - it cannot reach the database and break the
-    // Curriculum tab.
+    // Filament versions differ here. Some reject an unknown option with the
+    // in() rule ("The selected material is invalid."). Others cast it to null
+    // before the action runs. Either way the unknown type is not stored.
     Livewire::test(CourseCurriculum::class, ['record' => $course])
         ->callAction('editStep', data: [
             'id' => $step->id,
@@ -924,8 +930,7 @@ it('discards an unknown material_type instead of saving it as given', function (
         ], arguments: [
             'lesson' => $lesson->getKey(),
             'step' => $step->getKey(),
-        ])
-        ->assertHasNoActionErrors();
+        ]);
 
     expect($step->refresh()->material_type)->toBeNull();
 });

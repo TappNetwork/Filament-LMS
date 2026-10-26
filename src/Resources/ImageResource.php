@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
+use Tapp\FilamentLms\Concerns\ShowsContentNavigation;
 use Tapp\FilamentLms\Models\Image;
 use Tapp\FilamentLms\Resources\ImageResource\Pages\CreateImage;
 use Tapp\FilamentLms\Resources\ImageResource\Pages\EditImage;
@@ -27,6 +28,7 @@ use Tapp\FilamentLms\Resources\ImageResource\Pages\ListImages;
 class ImageResource extends Resource
 {
     use HasLmsSlug;
+    use ShowsContentNavigation;
 
     protected static ?string $model = Image::class;
 

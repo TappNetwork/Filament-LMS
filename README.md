@@ -59,13 +59,21 @@ Make sure that the [Filament Form Builder](https://github.com/TappNetwork/Filame
 Then publish the migrations:
 
 ``` sh
-php artisan vendor:publish --provider="Tapp\FilamentLms\FilamentLmsServiceProvider"
+php artisan vendor:publish --tag=filament-lms-migrations
 ```
 
 > [!WARNING]  
 > If you are using multi-tenancy, please see the "Multi-Tenancy Support" section below **before** running migrations.
 
 run migrations after publishing
+
+### Optionally publish the translations
+
+```bash
+php artisan vendor:publish --tag=filament-lms-translations
+```
+
+That copies the file to `lang/vendor/filament-lms/en/course-editor.php`.
 
 ### Add plugin to admin panel
 
@@ -407,6 +415,25 @@ contains the LMS experience for the end user
 - Quiz (unlike a survey, a quiz has correct answers and a score)
 - Text (Wysiwyg?)
 - Image
+
+## Course editor
+
+Edit Course can stay on the relation-manager layout or use the integrated editor. The package default is `legacy`, so existing admin screens do not change until an app opts in. For already published config file, this config should be added manually:
+
+```php
+'course_editor' => [
+    'mode' => 'builder', // 'builder' | 'legacy'
+    'show_content_resources' => true,
+],
+```
+
+`builder` is admin-only. Learner pages are unchanged, and there are no new columns. Lesson, Step, and material resources stay in the LMS navigation group. Set `show_content_resources` to `false` to hide those items from navigation when a project only wants the course editor. Courses stay visible, and the hidden resources stay registered.
+
+- **Details** keeps the current course fields: name, description, image, slug, external id, completion, privacy, credits, evaluation course, and certificate template.
+- **Curriculum** lists lessons and steps in `order`. Dragging writes `order` with the same sortable scopes as before. Steps still store Markdown. A step can have no material.
+- **Access** keeps the course users and user groups relation managers.
+
+Set `mode` back to `legacy` to restore the previous Edit Course page. See [UPGRADING.md](UPGRADING.md).
 
 ## Configurations
 

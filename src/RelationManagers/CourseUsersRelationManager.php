@@ -16,9 +16,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Tapp\FilamentLms\Concerns\RemembersErrorBag;
 
 class CourseUsersRelationManager extends RelationManager
 {
+    use RemembersErrorBag;
+
     protected static string $relationship = 'users';
 
     protected static ?string $title = 'Assigned Users';

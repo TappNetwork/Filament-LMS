@@ -46,6 +46,16 @@ final class CourseMaterialForm
      */
     public static function schema(string $type): array
     {
+        // Memoized per schema build: the existing-materials section calls this
+        // with the same search value up to four times (empty state, radio
+        // visibility, options, and descriptions) while rendering.
+        $recentCache = [];
+        $recentFor = function (mixed $search) use ($type, &$recentCache): Collection {
+            $key = trim((string) $search);
+
+            return $recentCache[$key] ??= self::recent($type, $key);
+        };
+
         return [
             Grid::make(['default' => 1, 'lg' => 2])
                 ->schema([
@@ -66,13 +76,13 @@ final class CourseMaterialForm
                                 ->live(debounce: 300)
                                 ->dehydrated(false),
                             Text::make(__('filament-lms::course-editor.material.empty'))
-                                ->visible(fn (Get $get): bool => self::recent($type, $get('existing_search'))->isEmpty()),
+                                ->visible(fn (Get $get): bool => $recentFor($get('existing_search'))->isEmpty()),
                             Radio::make('existing_id')
                                 ->label(__('filament-lms::course-editor.material.use_existing'))
                                 ->helperText(__('filament-lms::course-editor.material.existing_helper'))
-                                ->options(fn (Get $get): array => self::options($type, $get('existing_search')))
-                                ->descriptions(fn (Get $get): array => self::descriptions($type, $get('existing_search')))
-                                ->visible(fn (Get $get): bool => self::recent($type, $get('existing_search'))->isNotEmpty()),
+                                ->options(fn (Get $get): array => self::optionsFromRecent($recentFor($get('existing_search'))))
+                                ->descriptions(fn (Get $get): array => self::descriptionsFromRecent($recentFor($get('existing_search'))))
+                                ->visible(fn (Get $get): bool => $recentFor($get('existing_search'))->isNotEmpty()),
                         ]),
                 ]),
         ];
@@ -244,23 +254,25 @@ final class CourseMaterialForm
     }
 
     /**
+     * @param  Collection<int, Model>  $recent
      * @return array<int|string, string>
      */
-    private static function options(string $type, mixed $search): array
+    private static function optionsFromRecent(Collection $recent): array
     {
-        return self::recent($type, $search)
+        return $recent
             ->mapWithKeys(fn (Model $material): array => [$material->getKey() => (string) $material->getAttribute('name')])
             ->all();
     }
 
     /**
+     * @param  Collection<int, Model>  $recent
      * @return array<int|string, Htmlable>
      */
-    private static function descriptions(string $type, mixed $search): array
+    private static function descriptionsFromRecent(Collection $recent): array
     {
         $descriptions = [];
 
-        foreach (self::recent($type, $search) as $material) {
+        foreach ($recent as $material) {
             $detail = self::existingDetail($material);
 
             if ($detail === null) {

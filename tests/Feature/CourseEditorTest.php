@@ -7,6 +7,7 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Lang;
@@ -604,6 +605,151 @@ it('does not duplicate a step when the lesson cannot be updated', function (): v
     expect(Step::query()->where('lesson_id', $lesson->id)->count())->toBe(1);
 });
 
+it('rejects deleting, duplicating, or reordering a step from another course', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+
+    $foreignCourse = Course::factory()->create();
+    $foreignLesson = Lesson::factory()->create(['course_id' => $foreignCourse->id]);
+    $foreignStep = Step::factory()->withoutMaterial()->create(['lesson_id' => $foreignLesson->id]);
+
+    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->call('duplicateStep', $foreignStep->getKey()))
+        ->toThrow(ModelNotFoundException::class);
+
+    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('deleteStep', arguments: ['step' => $foreignStep->getKey()]))
+        ->toThrow(ModelNotFoundException::class);
+
+    // A foreign id is silently dropped by normalizeOrder() (it is not among
+    // the lesson's own step ids), so this is a no-op rather than a 403 -
+    // either way, the foreign step must be untouched.
+    Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->call('reorderSteps', $lesson->getKey(), [$foreignStep->getKey()]);
+
+    expect(Step::query()->whereKey($foreignStep->getKey())->exists())->toBeTrue()
+        ->and($foreignStep->refresh()->lesson_id)->toBe($foreignLesson->getKey());
+});
+
+it('rejects editing a step from another course and cannot move a step via a tampered lesson_id', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $step = Step::factory()->withoutMaterial()->create([
+        'lesson_id' => $lesson->id,
+        'name' => 'Introduction',
+    ]);
+
+    $otherLesson = Lesson::factory()->create(['course_id' => $course->id]);
+
+    $foreignCourse = Course::factory()->create();
+    $foreignLesson = Lesson::factory()->create(['course_id' => $foreignCourse->id]);
+    $foreignStep = Step::factory()->withoutMaterial()->create(['lesson_id' => $foreignLesson->id]);
+
+    // Editing a step that belongs to a different course is rejected, even
+    // with a 'lesson' argument that resolves inside the current course.
+    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->mountAction('editStep', arguments: [
+            'lesson' => $lesson->getKey(),
+            'step' => $foreignStep->getKey(),
+        ]))
+        ->toThrow(ModelNotFoundException::class);
+
+    // Tampering with the hidden lesson_id field to point at a different
+    // lesson must not move the step: the step's own lesson_id is
+    // authoritative when editing, not the submitted value.
+    Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('editStep', data: [
+            'id' => $step->id,
+            'lesson_id' => $otherLesson->getKey(),
+            'name' => $step->name,
+            'slug' => $step->slug,
+            'slug_is_locked' => true,
+            'is_optional' => false,
+            'text' => null,
+            'material_type' => null,
+            'material_id' => null,
+            'require_perfect_score' => false,
+        ], arguments: [
+            'lesson' => $lesson->getKey(),
+            'step' => $step->getKey(),
+        ])
+        ->assertHasNoActionErrors();
+
+    expect($step->refresh()->lesson_id)->toBe($lesson->getKey());
+
+    // Tampering with lesson_id to point at another course entirely must
+    // not move the step there either.
+    Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('editStep', data: [
+            'id' => $step->id,
+            'lesson_id' => $foreignLesson->getKey(),
+            'name' => $step->name,
+            'slug' => $step->slug,
+            'slug_is_locked' => true,
+            'is_optional' => false,
+            'text' => null,
+            'material_type' => null,
+            'material_id' => null,
+            'require_perfect_score' => false,
+        ], arguments: [
+            'lesson' => $lesson->getKey(),
+            'step' => $step->getKey(),
+        ])
+        ->assertHasNoActionErrors();
+
+    expect($step->refresh()->lesson_id)->toBe($lesson->getKey())
+        ->and($step->lesson_id)->not->toBe($foreignLesson->getKey());
+});
+
+it('rejects deleting or cloning a lesson from another course', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+
+    $course = Course::factory()->create();
+
+    $foreignCourse = Course::factory()->create();
+    $foreignLesson = Lesson::factory()->create(['course_id' => $foreignCourse->id]);
+
+    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('deleteLesson', arguments: ['lesson' => $foreignLesson->getKey()]))
+        ->toThrow(ModelNotFoundException::class);
+
+    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('cloneLesson', arguments: ['lesson' => $foreignLesson->getKey()]))
+        ->toThrow(ModelNotFoundException::class);
+
+    // A foreign id is silently dropped by normalizeOrder() (it is not among
+    // the course's own lesson ids), so this is a no-op rather than a 403 -
+    // either way, the foreign lesson must be untouched.
+    Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->call('reorderLessons', [$foreignLesson->getKey()]);
+
+    expect(Lesson::query()->whereKey($foreignLesson->getKey())->exists())->toBeTrue()
+        ->and($foreignLesson->refresh()->course_id)->toBe($foreignCourse->getKey());
+});
+
+it('rejects creating a step for a lesson from another course', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+
+    $course = Course::factory()->create();
+
+    $foreignCourse = Course::factory()->create();
+    $foreignLesson = Lesson::factory()->create(['course_id' => $foreignCourse->id]);
+
+    expect(fn () => Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->mountAction('editStep', arguments: ['lesson' => $foreignLesson->getKey()]))
+        ->toThrow(ModelNotFoundException::class);
+
+    expect(Step::query()->where('lesson_id', $foreignLesson->getKey())->count())->toBe(0);
+});
+
 it('gives a new step a unique slug when another lesson already uses that slug', function (): void {
     config(['filament-lms.course_editor.mode' => 'builder']);
     useCourseEditorPanel();
@@ -748,6 +894,40 @@ it('opens the step editor when the step has no material', function (): void {
         ])
         ->assertSuccessful()
         ->assertSee('String manipulation');
+});
+
+it('discards an unknown material_type instead of saving it as given', function (): void {
+    config(['filament-lms.course_editor.mode' => 'builder']);
+    useCourseEditorPanel();
+
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $step = Step::factory()->withoutMaterial()->create(['lesson_id' => $lesson->id]);
+
+    // ToggleButtons::make('material_type')->options(materialTypeOptions())
+    // casts a value with no matching option label to null before the
+    // action runs, so saveStep() never sees or persists an unrecognized
+    // material_type - it cannot reach the database and break the
+    // Curriculum tab.
+    Livewire::test(CourseCurriculum::class, ['record' => $course])
+        ->callAction('editStep', data: [
+            'id' => $step->id,
+            'lesson_id' => $lesson->id,
+            'name' => $step->name,
+            'slug' => $step->slug,
+            'slug_is_locked' => true,
+            'is_optional' => false,
+            'text' => null,
+            'material_type' => 'not-a-real-type',
+            'material_id' => null,
+            'require_perfect_score' => false,
+        ], arguments: [
+            'lesson' => $lesson->getKey(),
+            'step' => $step->getKey(),
+        ])
+        ->assertHasNoActionErrors();
+
+    expect($step->refresh()->material_type)->toBeNull();
 });
 
 it('shows test settings only for a test and limits retry steps to the course', function (): void {

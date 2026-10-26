@@ -3,16 +3,17 @@
         return;
     }
 
-    $name = $material->getAttributes()['name'] ?? 'Material';
+    $name = $material->getAttributes()['name'] ?? __('filament-lms::course-editor.material.fallback');
     $url = \Tapp\FilamentLms\Support\CourseMaterialForm::urlFrom($material);
     $urlLabel = filled($url) ? \Tapp\FilamentLms\Support\CourseMaterialForm::urlPreviewLabel($url) : null;
+    $embedUrl = $url !== null && \Tapp\FilamentLms\Services\VideoUrlService::isValidEmbedUrl($url) ? $url : null;
 @endphp
 
 <div class="rounded-xl p-4 ring-1 ring-gray-950/10 dark:ring-white/10">
-    @if ($materialType === 'video' && filled($url))
+    @if ($materialType === 'video' && filled($embedUrl))
         <div class="mb-3 overflow-hidden rounded-lg bg-gray-950">
             <iframe
-                src="{{ $url }}"
+                src="{{ $embedUrl }}"
                 title="{{ $name }}"
                 class="aspect-video w-full"
                 allow="fullscreen"

@@ -7,7 +7,6 @@ namespace Tapp\FilamentLms\Livewire;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Facades\Filament;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -16,7 +15,6 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Enums\Width;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -25,7 +23,6 @@ use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Tapp\FilamentLms\Concerns\RemembersErrorBag;
-use Tapp\FilamentLms\Helpers\TenantHelper;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Models\Step;
@@ -125,10 +122,13 @@ class CourseCurriculum extends Component implements HasActions, HasForms
         $copy->name = $this->copiedName($step->name);
         $copy->slug = $this->uniqueStepSlug($step->lesson->slug.'-'.Str::slug($copy->name));
         $copy->lesson_id = $step->lesson_id;
-        $this->assignTenant($copy, $step->lesson);
         $copy->save();
 
-        Notification::make()->title(__('filament-lms::course-editor.outline.step_duplicated'))->success()->send();
+        Notification::make()
+            ->title(__('filament-lms::course-editor.outline.step_duplicated'))
+            ->body(__('filament-lms::course-editor.outline.step_duplicated_body'))
+            ->success()
+            ->send();
         $this->refreshOutline();
     }
 
@@ -148,7 +148,6 @@ class CourseCurriculum extends Component implements HasActions, HasForms
                     'name' => $data['name'],
                     'slug' => $this->uniqueLessonSlug($course->getKey(), (string) $data['slug']),
                 ]);
-                $this->assignTenant($lesson, $course);
                 $lesson->save();
 
                 Notification::make()->title(__('filament-lms::course-editor.outline.lesson_added'))->success()->send();
@@ -208,7 +207,6 @@ class CourseCurriculum extends Component implements HasActions, HasForms
                     $copy->name = $this->copiedName($lesson->name);
                     $copy->slug = $this->uniqueLessonSlug($lesson->course_id, Str::slug($copy->name));
                     $copy->course_id = $lesson->course_id;
-                    $this->assignTenant($copy, $lesson->course);
                     $copy->save();
 
                     $stepMap = [];
@@ -218,7 +216,6 @@ class CourseCurriculum extends Component implements HasActions, HasForms
                         $stepCopy->lesson_id = $copy->getKey();
                         $stepCopy->retry_step_id = null;
                         $stepCopy->slug = $this->uniqueStepSlug($copy->slug.'-'.Str::slug($step->name));
-                        $this->assignTenant($stepCopy, $copy);
                         $stepCopy->save();
                         $stepMap[$step->getKey()] = $stepCopy->getKey();
                     }
@@ -241,7 +238,11 @@ class CourseCurriculum extends Component implements HasActions, HasForms
                     }
                 });
 
-                Notification::make()->title(__('filament-lms::course-editor.outline.lesson_cloned'))->success()->send();
+                Notification::make()
+                    ->title(__('filament-lms::course-editor.outline.lesson_cloned'))
+                    ->body(__('filament-lms::course-editor.outline.lesson_cloned_body'))
+                    ->success()
+                    ->send();
                 $this->refreshOutline();
             });
     }
@@ -271,6 +272,7 @@ class CourseCurriculum extends Component implements HasActions, HasForms
             ->color('danger')
             ->requiresConfirmation()
             ->modalHeading(__('filament-lms::course-editor.outline.delete_step'))
+            ->modalDescription(__('filament-lms::course-editor.outline.delete_step_description'))
             ->modalSubmitActionLabel(__('filament-lms::course-editor.outline.delete'))
             ->authorize(fn (array $arguments): bool => StepResource::can('delete', $this->findStep((int) $arguments['step'])))
             ->action(function (array $arguments): void {
@@ -364,13 +366,20 @@ class CourseCurriculum extends Component implements HasActions, HasForms
      */
     protected function saveStep(array $data, array $arguments): void
     {
-        $lesson = $this->findLesson((int) $data['lesson_id']);
+        // The lesson is never taken from the submitted data: $data['lesson_id']
+        // is a hidden field a client could tamper with to move the step to a
+        // lesson it was never authorized against. On edit, the step's own
+        // lesson_id is authoritative. On create, the mounted action's
+        // 'lesson' argument (already checked by ->authorize()) is used.
+        $exceptId = isset($arguments['step']) ? (int) $arguments['step'] : null;
+        $step = $exceptId !== null ? $this->findStep($exceptId) : null;
+        $lesson = $step !== null ? $step->lesson : $this->findLesson((int) $arguments['lesson']);
+
         $materialType = filled($data['material_type'] ?? null) ? (string) $data['material_type'] : null;
         $materialId = $materialType && filled($data['material_id'] ?? null) ? (int) $data['material_id'] : null;
         $isTest = $materialType === 'test';
 
         $retryStepId = $isTest && filled($data['retry_step_id'] ?? null) ? (int) $data['retry_step_id'] : null;
-        $exceptId = isset($arguments['step']) ? (int) $arguments['step'] : null;
 
         if ($retryStepId !== null && ! in_array($retryStepId, StepResource::retryStepIdsForLesson($lesson->getKey(), $exceptId), true)) {
             throw ValidationException::withMessages([
@@ -394,14 +403,12 @@ class CourseCurriculum extends Component implements HasActions, HasForms
             $payload['player_slide_id'] = filled($data['player_slide_id']) ? $data['player_slide_id'] : null;
         }
 
-        if (isset($arguments['step'])) {
-            $step = $this->findStep((int) $arguments['step']);
+        if ($step !== null) {
             abort_unless(StepResource::can('update', $step), 403);
             $step->update($payload);
         } else {
             abort_unless(StepResource::can('create'), 403);
             $step = new Step($payload);
-            $this->assignTenant($step, $lesson);
             $step->save();
         }
 
@@ -482,31 +489,6 @@ class CourseCurriculum extends Component implements HasActions, HasForms
         }
 
         return $ordered;
-    }
-
-    protected function assignTenant(Model $model, ?Model $parent = null): void
-    {
-        if (! config('filament-lms.tenancy.enabled')) {
-            return;
-        }
-
-        $column = TenantHelper::getTenantColumnName();
-
-        if (! empty($model->{$column})) {
-            return;
-        }
-
-        $tenant = Filament::getTenant();
-
-        if ($tenant !== null) {
-            $model->{$column} = $tenant->getKey();
-
-            return;
-        }
-
-        if ($parent !== null && ! empty($parent->{$column})) {
-            $model->{$column} = $parent->{$column};
-        }
     }
 
     protected function uniqueLessonSlug(int $courseId, string $slug, ?int $ignoreId = null): string

@@ -320,7 +320,11 @@ final class StepResource extends Resource
     {
         return [
             Hidden::make('id')->dehydrated(false),
-            Hidden::make('lesson_id')->required(),
+            // Not dehydrated: saveStep() derives the lesson from the existing
+            // step (edit) or from the mounted action's 'lesson' argument
+            // (create), never from this submitted value. That keeps a step
+            // from being moved to another lesson by editing a hidden field.
+            Hidden::make('lesson_id')->dehydrated(false),
             Hidden::make('slug_is_locked')->dehydrated(false),
             TextInput::make('name')
                 ->label(__('filament-lms::course-editor.fields.name.label'))

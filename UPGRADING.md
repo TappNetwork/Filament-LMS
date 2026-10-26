@@ -22,6 +22,10 @@ Editor copy is in `resources/lang/en/course-editor.php` (`__('filament-lms::cour
 
 Apps that extend `CourseResource`, `EditCourse`, or `CreateCourse` keep their own page. Switch modes in config; do not remove the relation managers or resources.
 
+### Reporting page filters
+
+The Reporting page's table filters moved to `FiltersLayout::AboveContentCollapsible` (previously the default dropdown layout). This applies to every install regardless of `course_editor.mode` — it is not part of the `legacy`/`builder` switch above. If you extend `Tapp\FilamentLms\Pages\Reporting`, override `table()` to pass your own `layout:` to `filters()` if you need the previous behavior.
+
 ## Certificate PDF driver (Cloudflare)
 
 **Backwards compatible for Forge / existing hosts:** no env changes required. When `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER` is unset, the package keeps using **browsershot** unless Cloudflare credentials are present.

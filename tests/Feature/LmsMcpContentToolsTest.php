@@ -726,6 +726,7 @@ test('create_test_step validates questions before writing anything', function (a
     'comma in multi option' => [['type' => 'select_multiple', 'text' => 'Q', 'options' => ['Paris, France', 'Rome'], 'correct_answers' => ['Rome']], 'cannot contain commas'],
     'options on text' => [['type' => 'text', 'text' => 'Q', 'options' => ['A', 'B'], 'correct_answer' => 'A'], 'does not take options'],
     'html in label' => [['type' => 'text', 'text' => '<script>alert(1)</script>', 'correct_answer' => 'x'], 'Question text cannot contain "<".'],
+    'html in option' => [['type' => 'radio', 'text' => 'Q', 'options' => ['<img src=x onerror=alert(1)>', 'Safe'], 'correct_answer' => 'Safe'], 'Answer options cannot contain "<".'],
     'unsupported type' => [['type' => 'file_upload', 'text' => 'Q', 'correct_answer' => 'x'], 'questions.1.type'],
 ]);
 

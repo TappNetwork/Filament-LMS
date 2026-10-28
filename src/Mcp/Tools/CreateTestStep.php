@@ -36,7 +36,7 @@ class CreateTestStep extends LmsTool
             'questions' => $schema->array()->description('Questions in display order.')->items($schema->object([
                 'type' => $schema->string()->enum(array_keys(self::QUESTION_TYPES))->description('radio, select, or select_multiple need options. checkbox and toggle are true/false. text is graded by exact, case-sensitive match.')->required(),
                 'text' => $schema->string()->description('Question text. Plain text; "<" is not allowed.')->required(),
-                'options' => $schema->array()->items($schema->string())->description('Answer options for radio, select, and select_multiple. select_multiple options cannot contain commas.'),
+                'options' => $schema->array()->items($schema->string())->description('Answer options for radio, select, and select_multiple. Plain text; "<" is not allowed. select_multiple options cannot contain commas.'),
                 'correct_answer' => $schema->string()->description('Correct option for radio/select, "true" or "false" for checkbox/toggle, exact text for text.'),
                 'correct_answers' => $schema->array()->items($schema->string())->description('Every correct option for select_multiple.'),
             ]))->required(),
@@ -62,12 +62,13 @@ class CreateTestStep extends LmsTool
             'questions.*.type' => ['required', 'string', Rule::in(array_keys(self::QUESTION_TYPES))],
             'questions.*.text' => ['required', 'string', 'max:2000', 'not_regex:/</'],
             'questions.*.options' => ['sometimes', 'nullable', 'array', 'max:50'],
-            'questions.*.options.*' => ['required', 'string', 'max:255'],
+            'questions.*.options.*' => ['required', 'string', 'max:255', 'not_regex:/</'],
             'questions.*.correct_answer' => ['sometimes', 'nullable'],
             'questions.*.correct_answers' => ['sometimes', 'nullable', 'array'],
             'questions.*.correct_answers.*' => ['required', 'string'],
         ], [
             'questions.*.text.not_regex' => 'Question text cannot contain "<". Labels render as HTML.',
+            'questions.*.options.*.not_regex' => 'Answer options cannot contain "<".',
         ]);
 
         $questions = $this->normalizeQuestions(array_values($validated['questions']));

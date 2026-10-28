@@ -414,6 +414,41 @@ test('mcp writes reject an auditor that does not implement the contract', functi
     ])->assertHasErrors(['filament-lms.mcp.auditor must be a class that implements']);
 });
 
+test('create_text_step appends after the highest order when a middle step was deleted', function () {
+    // Host apps can turn off eloquent-sortable's creating hook. Order still has to stay unique.
+    config(['eloquent-sortable.sort_when_creating' => false]);
+    $this->actingAs(contentToolsUser());
+    $lesson = contentToolsLesson();
+
+    foreach (['One', 'Two', 'Three'] as $name) {
+        LmsServer::tool(CreateTextStep::class, [
+            'lesson_id' => $lesson->id,
+            'name' => $name,
+            'text' => $name,
+            'slug' => 'step-'.strtolower($name),
+        ])->assertOk();
+    }
+
+    $middle = Step::query()->where('name', 'Two')->firstOrFail();
+
+    expect($lesson->steps()->orderBy('order')->pluck('order')->all())->toBe([1, 2, 3]);
+
+    LmsServer::tool(DeleteStep::class, ['id' => $middle->id])->assertOk();
+
+    LmsServer::tool(CreateTextStep::class, [
+        'lesson_id' => $lesson->id,
+        'name' => 'Four',
+        'text' => 'Four',
+        'slug' => 'step-four',
+    ])->assertOk();
+
+    expect($lesson->steps()->orderBy('order')->pluck('name', 'order')->all())->toBe([
+        1 => 'One',
+        3 => 'Three',
+        4 => 'Four',
+    ]);
+});
+
 test('create_text_step requires text and a unique slug', function () {
     $this->actingAs(contentToolsUser());
     $lesson = contentToolsLesson();

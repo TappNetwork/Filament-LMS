@@ -350,7 +350,7 @@ abstract class LmsTool extends Tool
     {
         return Step::create([
             'lesson_id' => $lesson->id,
-            'order' => $order ?? ($lesson->steps()->count() + 1),
+            'order' => $order ?? $this->nextStepOrder($lesson),
             'name' => trim((string) $input['name']),
             'slug' => $slug,
             'text' => $input['text'] ?? null,
@@ -442,6 +442,11 @@ abstract class LmsTool extends Tool
                 'slug' => 'A step with this slug already exists.',
             ]);
         }
+    }
+
+    protected function nextStepOrder(Lesson $lesson): int
+    {
+        return (int) $lesson->steps()->max('order') + 1;
     }
 
     protected function nextLessonOrder(Course $course): int

@@ -811,6 +811,79 @@ test('get_test reads a quiz back with its answer key', function () {
     LmsServer::tool(GetTest::class, ['id' => 9999])->assertHasErrors();
 });
 
+test('get_test reads a quiz whose form or rubric is missing', function () {
+    $this->actingAs(contentToolsUser());
+
+    $removedForm = FilamentForm::create([
+        'name' => 'Removed form',
+        'locked' => true,
+    ]);
+    $removedRubric = FilamentFormUser::create([
+        'filament_form_id' => $removedForm->id,
+        'user_id' => null,
+        'entry' => [],
+    ]);
+    $orphaned = Test::create([
+        'name' => 'Orphaned quiz',
+        'filament_form_id' => $removedForm->id,
+        'filament_form_user_id' => $removedRubric->id,
+    ]);
+    $removedForm->delete();
+    $removedRubric->delete();
+
+    LmsServer::tool(GetTest::class, ['id' => $orphaned->id])
+        ->assertOk()
+        ->assertStructuredContent(function ($json): void {
+            $json->where('name', 'Orphaned quiz')
+                ->where('locked', false)
+                ->where('has_rubric', false)
+                ->where('questions', [])
+                ->etc();
+        });
+
+    $form = FilamentForm::create([
+        'name' => 'Practice form',
+        'locked' => true,
+    ]);
+    $field = FilamentFormField::create([
+        'filament_form_id' => $form->id,
+        'label' => 'What is 2 + 2?',
+        'type' => 'RADIO',
+        'required' => true,
+        'order' => 1,
+        'options' => ['3', '4'],
+    ]);
+    $pending = Test::create([
+        'name' => 'Practice quiz',
+        'filament_form_id' => $form->id,
+    ]);
+    $step = Step::factory()->create([
+        'lesson_id' => contentToolsLesson()->id,
+        'name' => 'Practice',
+        'slug' => 'practice',
+        'material_type' => 'test',
+        'material_id' => $pending->id,
+    ]);
+
+    LmsServer::tool(GetTest::class, ['id' => $pending->id])
+        ->assertOk()
+        ->assertStructuredContent(function ($json) use ($form, $field, $step): void {
+            $json->where('name', 'Practice quiz')
+                ->where('filament_form_id', $form->id)
+                ->where('locked', true)
+                ->where('has_rubric', false)
+                ->where('step_ids', [$step->id])
+                ->where('questions', [[
+                    'field_id' => $field->id,
+                    'type' => 'radio',
+                    'text' => 'What is 2 + 2?',
+                    'options' => ['3', '4'],
+                    'correct_answer' => null,
+                ]])
+                ->etc();
+        });
+});
+
 test('get_test hides a quiz that belongs to another tenant', function () {
     $schema = Schema::connection((string) config('database.default'));
 

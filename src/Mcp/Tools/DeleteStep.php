@@ -9,14 +9,16 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
+use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 use Tapp\FilamentLms\Mcp\LmsTool;
 use Tapp\FilamentLms\Models\Step;
 
+#[IsDestructive]
 class DeleteStep extends LmsTool
 {
     protected string $name = 'delete_step';
 
-    protected string $description = 'Delete a step and its video material when present.';
+    protected string $description = 'Delete a step and its material when no other step uses it. Tests with learner submissions are kept.';
 
     public function schema(JsonSchema $schema): array
     {
@@ -41,6 +43,8 @@ class DeleteStep extends LmsTool
             $this->deleteStepMaterial($step);
             $step->delete();
         });
+
+        $this->auditWrite($request, ['step_id' => $validated['id']]);
 
         return Response::structured([
             'deleted' => true,

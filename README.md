@@ -85,7 +85,7 @@ class AdminPanelProvider extends PanelProvider
 
 ## MCP Server
 
-The package can expose **write tools** for AI clients (Cursor, Claude Code, Claude Desktop) so a skill can create Course → Lesson → Step data. Draft titles, descriptions, and structure, then call these tools. Videos are hosted YouTube or Vimeo URLs — the package does not upload video files. Optional transcripts go on the step `text` field. New courses default to `is_private = true` (there is no draft flag).
+The package can expose **write tools** for AI clients (Cursor, Claude Code, Claude Desktop) so a skill can build a full course: Course → Lesson → Step, with video, text, link, PDF, image, and quiz steps. Draft titles, descriptions, and structure, then call these tools. Videos are hosted YouTube or Vimeo URLs — the package does not upload video files. Optional transcripts go on the step `text` field. New courses default to `is_private = true` (there is no draft flag).
 
 The package requires `laravel/mcp` and `laravel/sanctum`. It registers a **local stdio** server when `filament-lms.mcp.enabled` is `true` (the default):
 
@@ -115,7 +115,7 @@ Example Cursor MCP config:
 
 ### Web (remote Claude) + Sanctum
 
-The package registers `POST /mcp/lms` with `auth:sanctum`, `throttle:mcp`, and `isLmsAdmin()`. Host leftover: `HasApiTokens` on the user model and the Sanctum `personal_access_tokens` table.
+The package registers `POST /mcp/lms` with the middleware configured in `filament-lms.mcp.auth_middleware` (default `auth:sanctum`, `throttle:mcp`, and `EnsureLmsMcpAdmin`). Host leftover: `HasApiTokens` on the user model and the Sanctum `personal_access_tokens` table.
 
 ```bash
 php artisan vendor:publish --tag=sanctum-migrations
@@ -124,6 +124,8 @@ php artisan lms:mcp-token admin@example.com --server-key=your-app
 ```
 
 Issue that token only for an LMS admin (`isLmsAdmin()`). The command prints Claude Desktop JSON once. Send the token as `Authorization: Bearer …`.
+
+`lms:mcp-token` stores the `*` wildcard ability, so those tokens can call every tool. A token issued with an explicit ability list keeps that list and will not include tools added later: `create_text_step`, `create_link_step`, `create_document_step`, `create_image_step`, `create_test_step`, and `get_test`. Reissue the token, or mint one with the `*` wildcard ability.
 
 Claude Desktop: Settings → Developer → Edit Config, merge the printed `mcpServers` entry, restart, then ask to list courses (`list_courses`).
 
@@ -135,7 +137,19 @@ claude mcp add --transport http --scope user filament-lms \
   --header "Authorization: Bearer {TOKEN}"
 ```
 
-Cursor and Claude Desktop work with that header. Claude.ai custom connectors often prefer OAuth — if a token URL is rejected, that is a follow-up (Passport on the host, or Switchboard).
+Cursor and Claude Desktop work with that header. Claude.ai custom connectors need OAuth. The package does not ship Passport, but the web route middleware is configurable so a host can add it:
+
+```php
+// config/filament-lms.php
+'mcp' => [
+    // Default: ['auth:sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class]
+    'auth_middleware' => ['auth:api,sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class],
+],
+```
+
+With Passport installed on the host (`Mcp::oauthRoutes()` in `routes/ai.php`, the `api` guard using the `passport` driver), `auth:api,sanctum` accepts OAuth tokens first and falls back to Sanctum tokens. OAuth tokens carry the single `mcp:use` scope, so they can call every tool; per-tool abilities apply to Sanctum tokens only. `isLmsAdmin()` is enforced either way.
+
+Passport and Sanctum both provide a `HasApiTokens` trait, so a user model that uses both may conflict. Alias one of the traits, or configure OAuth on a separate guard.
 
 Turn off auto-registration with:
 
@@ -182,24 +196,49 @@ The package registers its own servers after every provider boots. It skips the `
 
 Web requests that have `$request->user()` must be able to access the LMS Filament panel. Local stdio has no HTTP user — same trust model as tinker.
 
-### v1 tools
+### Tools
 
 Convenience:
 
-- `create_video_course` — `name`, `description`, optional `slug` / `external_id` / `award` / flags, and nested `lessons[]` each with `steps[]` (`name`, `video_url`, optional `text` / `is_optional`)
+- `create_video_course` — `name`, `description`, optional `slug` / `external_id` / `certificate_template_id` / flags, and nested `lessons[]` each with `steps[]` (`name`, `video_url`, optional `text` / `is_optional`)
 
 Granular:
 
 - `list_courses` / `get_course`
 - `update_course` / `delete_course`
 - `create_lesson` / `update_lesson` / `delete_lesson`
-- `create_video_step` / `update_step` / `delete_step`
+- `create_video_step` — YouTube or Vimeo URL
+- `create_text_step` — markdown `text` only, no material
+- `create_link_step` — `url` (http or https, public host), optional `link_name` / `text`. The preview screenshot is generated on the queue.
+- `create_document_step` — `file_url` to a PDF
+- `create_image_step` — `file_url` to a JPEG, PNG, GIF, or WebP image
+- `create_test_step` — a graded quiz; see below
+- `get_test` — a quiz's questions and answer key
+- `update_step` — step fields, the video, or the link (`link_url` / `link_name`). Giving a text step a `link_url` turns it into a link step.
+- `delete_step`
 
-Course uniqueness matches the Filament form (`name`, `slug`, `external_id` unique; `external_id` regex `^[a-z][a-z0-9_]*$`). Award defaults to `default`. Completion mode defaults to `native`. Tools return created IDs and admin/learner URLs when those routes can be resolved.
+Course uniqueness matches the Filament form (`name`, `slug`, `external_id` unique; `external_id` regex `^[a-z][a-z0-9_]*$`). The certificate template defaults to the LMS default template when one exists. Completion mode defaults to `native`. Tools return created IDs and admin/learner URLs when those routes can be resolved.
+
+**Remote files.** `create_document_step` and `create_image_step` download the file on the server. The URL must be `https` and resolve to a public IP (the connection is pinned to the checked IP, preferring IPv4, on port 443). Redirects are not followed. The response `Content-Type` and the sniffed file contents must both be an allowed type, and the file must fit `filament-lms.mcp.remote_media_max_kb` (default `20480`). SVG is not accepted. Link URLs must also point to a public host on port 443, or port 80 for `http`. The public-host check (`LmsTool::assertPublicLinkUrl`) runs only when the link step is created, and again if `update_step` changes the URL. Screenshot generation later may follow redirects, so treat the check as best-effort protection.
+
+**Quizzes.** `create_test_step` creates the form and its fields, locks the form, and creates the rubric, the test, and the step in one transaction. Each question has a `type`, `text`, `options`, and a correct answer:
+
+| `type` | Answer |
+| --- | --- |
+| `radio`, `select` | `correct_answer`, one of `options` |
+| `select_multiple` | `correct_answers[]`, a subset of `options` (order does not matter; options cannot contain commas) |
+| `checkbox`, `toggle` | `correct_answer` `true` or `false`, no options |
+| `text` | `correct_answer`. Grading compares the learner's answer without trimming or case normalization, so prefer a choice type. |
+
+Question text cannot contain HTML. With `require_perfect_score`, learners must score 100% before they can continue. Quiz edits go through the Filament admin (`update_test` is deferred, since learner entries are graded against the locked form). Checkbox List questions are not supported because their grading depends on answer order.
+
+**Deletes.** `delete_course`, `delete_lesson`, and `delete_step` are annotated `destructiveHint: true`, so clients that honor MCP annotations ask before calling them. They do not take a `confirm` argument, to stay compatible with existing clients. Deleting a step removes its video and soft-deletes its link, document, or image, unless another step still uses the material. A quiz is kept when learners have submitted entries.
+
+**Audit.** Write tools call `filament-lms.mcp.auditor` after a successful write. Leave it `null` to skip auditing. Set it to `Tapp\FilamentLms\Mcp\LogMcpAuditor` to log `LMS MCP write.` at `info` with the tool name, the user ID, and the IDs the tool touched. A host class must implement `Tapp\FilamentLms\Mcp\McpAuditor` and is resolved from the container, so it can take dependencies.
 
 ### Deferred
 
-Credits, evaluations, tests/forms, documents, SCORM, course images, user assignment, Switchboard, and a package REST API are out of scope for v1.
+Quiz editing (`update_test`), credits, evaluations, standalone forms, SCORM, course images, user assignment, Switchboard, and a package REST API are out of scope.
 
 ### Tailwind CSS Setup
 

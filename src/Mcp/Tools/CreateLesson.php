@@ -64,6 +64,8 @@ class CreateLesson extends LmsTool
 
         $lesson->save();
 
+        $this->auditWrite($request, ['lesson_id' => $lesson->id]);
+
         return Response::structured($this->serializeLesson($lesson->refresh()));
     }
 }

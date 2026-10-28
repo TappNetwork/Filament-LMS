@@ -5,19 +5,33 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Mcp;
 
 use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Sanctum\Contracts\HasAbilities;
+use Spatie\MediaLibrary\MediaCollections\Filesystem as MediaFilesystem;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Tapp\FilamentFormBuilder\Enums\FilamentFieldTypeEnum;
+use Tapp\FilamentFormBuilder\Models\FilamentForm;
+use Tapp\FilamentFormBuilder\Models\FilamentFormField;
+use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Enums\CompletionMode;
 use Tapp\FilamentLms\Helpers\TenantHelper;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentLms\Models\Document;
+use Tapp\FilamentLms\Models\Image;
 use Tapp\FilamentLms\Models\Lesson;
+use Tapp\FilamentLms\Models\Link;
 use Tapp\FilamentLms\Models\Step;
+use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
@@ -28,6 +42,22 @@ use Throwable;
 
 abstract class LmsTool extends Tool
 {
+    protected const OAUTH_SCOPE = 'mcp:use';
+
+    /**
+     * MCP question types for create_test_step. Only types Test::gradeEntry can grade reliably.
+     *
+     * @var array<string, FilamentFieldTypeEnum>
+     */
+    protected const QUESTION_TYPES = [
+        'radio' => FilamentFieldTypeEnum::RADIO,
+        'select' => FilamentFieldTypeEnum::SELECT,
+        'select_multiple' => FilamentFieldTypeEnum::SELECT_MULTIPLE,
+        'checkbox' => FilamentFieldTypeEnum::CHECKBOX,
+        'toggle' => FilamentFieldTypeEnum::TOGGLE,
+        'text' => FilamentFieldTypeEnum::TEXT,
+    ];
+
     protected function authorizeWrite(Request $request): ?Response
     {
         if ($denied = $this->ensureTenantContext()) {
@@ -53,11 +83,52 @@ abstract class LmsTool extends Tool
             && method_exists($user, 'tokenCan')
             && $user->currentAccessToken() !== null
             && ! $user->tokenCan($this->name())
+            && ! $this->oauthTokenCanUseMcp($user)
         ) {
             return Response::error('Token lacks ability '.$this->name().'.');
         }
 
         return null;
+    }
+
+    /**
+     * Passport tokens issued through Mcp::oauthRoutes() only carry the mcp:use scope, not per-tool abilities.
+     */
+    protected function oauthTokenCanUseMcp(object $user): bool
+    {
+        if ($user->currentAccessToken() instanceof HasAbilities) {
+            return false;
+        }
+
+        return $user->tokenCan(self::OAUTH_SCOPE);
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    protected function auditWrite(Request $request, array $context = []): void
+    {
+        $auditor = config('filament-lms.mcp.auditor');
+
+        if ($auditor === null || $auditor === '') {
+            return;
+        }
+
+        if (! is_string($auditor)) {
+            throw new InvalidArgumentException('filament-lms.mcp.auditor must be a class that implements '.McpAuditor::class.'.');
+        }
+
+        $instance = app($auditor);
+
+        if (! $instance instanceof McpAuditor) {
+            throw new InvalidArgumentException('filament-lms.mcp.auditor must be a class that implements '.McpAuditor::class.'.');
+        }
+
+        $instance->record([
+            'tool' => $this->name(),
+            'user_id' => $request->user()?->getAuthIdentifier(),
+            ...$context,
+        ]);
     }
 
     protected function ensureTenantContext(): ?Response
@@ -238,31 +309,118 @@ abstract class LmsTool extends Tool
      */
     protected function createVideoStep(Lesson $lesson, array $input, ?int $order = null): Step
     {
-        $lesson->loadMissing('course');
+        $slug = $this->newStepSlug($lesson, $input);
         $name = trim((string) $input['name']);
-        $slug = filled($input['slug'] ?? null)
-            ? (string) $input['slug']
-            : $lesson->course->slug.'-'.$lesson->slug.'-'.Str::slug($name);
-        $videoName = filled($input['video_name'] ?? null) ? (string) $input['video_name'] : $name;
         $url = $this->resolveVideoUrl((string) $input['video_url']);
 
-        $this->assertUniqueStepSlug($slug);
-
         $video = Video::create([
-            'name' => $videoName,
+            'name' => filled($input['video_name'] ?? null) ? (string) $input['video_name'] : $name,
             'url' => $url,
         ]);
 
+        return $this->createStep($lesson, $input, $slug, $video, $order);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     *
+     * @throws ValidationException
+     */
+    protected function newStepSlug(Lesson $lesson, array $input): string
+    {
+        $lesson->loadMissing('course');
+
+        $slug = filled($input['slug'] ?? null)
+            ? (string) $input['slug']
+            : $lesson->course->slug.'-'.$lesson->slug.'-'.Str::slug(trim((string) $input['name']));
+
+        $this->assertUniqueStepSlug($slug);
+
+        return $slug;
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function createStep(Lesson $lesson, array $input, string $slug, ?Model $material, ?int $order = null, array $attributes = []): Step
+    {
         return Step::create([
             'lesson_id' => $lesson->id,
             'order' => $order ?? ($lesson->steps()->count() + 1),
-            'name' => $name,
+            'name' => trim((string) $input['name']),
             'slug' => $slug,
             'text' => $input['text'] ?? null,
             'is_optional' => (bool) ($input['is_optional'] ?? false),
-            'material_id' => $video->id,
-            'material_type' => 'video',
+            'material_id' => $material?->getKey(),
+            'material_type' => $material?->getMorphClass(),
+            ...$attributes,
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @param  class-string<Document|Image>  $modelClass
+     * @param  array<string, string>  $allowedMimeTypes
+     *
+     * @throws ValidationException
+     */
+    protected function createMediaStep(Lesson $lesson, array $input, string $modelClass, string $collection, array $allowedMimeTypes, string $materialName): Step
+    {
+        $slug = $this->newStepSlug($lesson, $input);
+        $file = app(RemoteMediaFetcher::class)->download((string) $input['file_url'], $allowedMimeTypes, 'file_url');
+        $storedMedia = null;
+
+        try {
+            return DB::transaction(function () use ($lesson, $input, $slug, $file, $modelClass, $collection, $materialName, &$storedMedia): Step {
+                $material = $modelClass::create(['name' => $materialName]);
+
+                $storedMedia = $material->addMedia($file['path'])
+                    ->usingName($materialName)
+                    ->usingFileName((Str::slug($materialName) ?: 'file').'.'.$file['extension'])
+                    ->toMediaCollection($collection);
+
+                return $this->createStep($lesson, $input, $slug, $material);
+            });
+        } catch (Throwable $exception) {
+            if ($storedMedia instanceof Media) {
+                app(MediaFilesystem::class)->removeAllFiles($storedMedia);
+            }
+
+            throw $exception;
+        } finally {
+            if (is_file($file['path'])) {
+                @unlink($file['path']);
+            }
+        }
+    }
+
+    /**
+     * Link previews are screenshotted server-side, so private and reserved hosts are rejected.
+     *
+     * @throws ValidationException
+     */
+    protected function assertPublicLinkUrl(string $url, string $attribute): string
+    {
+        $url = trim($url);
+
+        app(RemoteMediaFetcher::class)->assertPublicUrl($url, ['http', 'https'], $attribute);
+
+        return $url;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function stepRules(): array
+    {
+        return [
+            'lesson_id' => ['required', 'integer', 'exists:lms_lessons,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['nullable', 'string', 'max:255'],
+            'text' => ['nullable', 'string'],
+            'is_optional' => ['sometimes', 'boolean'],
+        ];
     }
 
     /**
@@ -299,11 +457,68 @@ abstract class LmsTool extends Tool
         $query->increment('order');
     }
 
+    /**
+     * Deletes the material only when no other step uses it. Links, documents, and images are soft deleted like in the admin.
+     * Tests are kept once a learner has submitted an entry, so grades stay reportable.
+     */
     protected function deleteStepMaterial(Step $step): void
     {
-        if ($step->material_type === 'video' && $step->material_id) {
-            Video::query()->whereKey($step->material_id)->delete();
+        if ($step->material_type === null || $step->material_id === null) {
+            return;
         }
+
+        $sharedWithOtherSteps = Step::query()
+            ->where('material_type', $step->material_type)
+            ->where('material_id', $step->material_id)
+            ->whereKeyNot($step->id)
+            ->exists();
+
+        if ($sharedWithOtherSteps) {
+            return;
+        }
+
+        match ($step->material_type) {
+            'video' => Video::query()->whereKey($step->material_id)->delete(),
+            'link' => Link::query()->whereKey($step->material_id)->first()?->delete(),
+            'document' => Document::query()->whereKey($step->material_id)->first()?->delete(),
+            'image' => Image::query()->whereKey($step->material_id)->first()?->delete(),
+            'test' => $this->deleteUnusedTest($step->material_id),
+            default => null,
+        };
+    }
+
+    protected function deleteUnusedTest(int $testId): void
+    {
+        $test = Test::query()->find($testId);
+
+        if (! $test instanceof Test) {
+            return;
+        }
+
+        $formId = $test->filament_form_id;
+        $hasLearnerEntries = FilamentFormUser::query()
+            ->where('filament_form_id', $formId)
+            ->when($test->filament_form_user_id !== null, fn ($query) => $query->whereKeyNot($test->filament_form_user_id))
+            ->exists();
+
+        if ($hasLearnerEntries) {
+            return;
+        }
+
+        $formSharedWithOtherTests = Test::query()
+            ->where('filament_form_id', $formId)
+            ->whereKeyNot($test->id)
+            ->exists();
+
+        $test->delete();
+
+        if ($formSharedWithOtherTests) {
+            return;
+        }
+
+        FilamentFormUser::query()->where('filament_form_id', $formId)->delete();
+        FilamentFormField::query()->where('filament_form_id', $formId)->delete();
+        FilamentForm::query()->whereKey($formId)->delete();
     }
 
     /**
@@ -358,7 +573,8 @@ abstract class LmsTool extends Tool
     {
         $step->loadMissing('material');
 
-        $video = $step->material instanceof Video ? $step->material : null;
+        $material = $step->material;
+        $video = $material instanceof Video ? $material : null;
 
         return [
             'id' => $step->id,
@@ -376,8 +592,82 @@ abstract class LmsTool extends Tool
                 'url' => $video->url,
                 'provider' => $video->provider,
             ],
+            'link' => $material instanceof Link ? [
+                'id' => $material->id,
+                'name' => $material->name,
+                'url' => $material->url,
+            ] : null,
+            'document' => $material instanceof Document ? [
+                'id' => $material->id,
+                'name' => $material->name,
+                'url' => $material->getMediaUrl('default'),
+            ] : null,
+            'image' => $material instanceof Image ? [
+                'id' => $material->id,
+                'name' => $material->name,
+                'url' => $material->getMediaUrl('image'),
+            ] : null,
+            'test' => $material instanceof Test ? [
+                'id' => $material->id,
+                'name' => $material->name,
+                'filament_form_id' => $material->filament_form_id,
+                'has_rubric' => $material->filament_form_user_id !== null,
+                'require_perfect_score' => (bool) $step->require_perfect_score,
+            ] : null,
             'urls' => $this->stepUrls($step),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function serializeTest(Test $test): array
+    {
+        $form = FilamentForm::query()->with('filamentFormFields')->find($test->filament_form_id);
+        $rubric = FilamentFormUser::query()->find($test->filament_form_user_id);
+
+        $answers = collect($rubric->entry ?? [])->keyBy('field_id');
+        $typeNames = array_flip(array_map(fn (FilamentFieldTypeEnum $type): string => $type->name, self::QUESTION_TYPES));
+
+        return [
+            'id' => $test->id,
+            'name' => $test->name,
+            'filament_form_id' => $test->filament_form_id,
+            'locked' => (bool) $form?->getAttribute('locked'),
+            'has_rubric' => $rubric !== null,
+            'step_ids' => Step::query()
+                ->where('material_type', 'test')
+                ->where('material_id', $test->id)
+                ->pluck('id')
+                ->all(),
+            'questions' => ($form->filamentFormFields ?? collect())
+                ->map(function (FilamentFormField $field) use ($answers, $typeNames): array {
+                    $answer = $answers->get($field->id)['answer'] ?? null;
+
+                    return [
+                        'field_id' => $field->id,
+                        'type' => $typeNames[$field->type->name] ?? strtolower($field->type->name),
+                        'text' => $field->label,
+                        'options' => $field->options === null ? null : array_values($field->options),
+                        'correct_answer' => $this->rubricAnswerToInput($field->type, $answer),
+                    ];
+                })
+                ->values()
+                ->all(),
+        ];
+    }
+
+    protected function rubricAnswerToInput(FilamentFieldTypeEnum $type, mixed $answer): mixed
+    {
+        if (! is_string($answer)) {
+            return $answer;
+        }
+
+        return match ($type) {
+            FilamentFieldTypeEnum::SELECT_MULTIPLE => array_map('trim', explode(',', $answer)),
+            FilamentFieldTypeEnum::CHECKBOX, FilamentFieldTypeEnum::TOGGLE => $answer === 'true',
+            default => $answer,
+        };
     }
 
     /**

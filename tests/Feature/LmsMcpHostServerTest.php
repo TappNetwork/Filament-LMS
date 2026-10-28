@@ -53,15 +53,24 @@ function listMcpToolNamesOverHttp(): array
 
     Sanctum::actingAs($admin);
 
-    $response = test()->postJson('/mcp/lms', [
-        'jsonrpc' => '2.0',
-        'id' => 1,
-        'method' => 'tools/list',
-    ], ['Accept' => 'application/json, text/event-stream']);
+    $names = [];
+    $cursor = null;
 
-    $response->assertOk();
+    do {
+        $response = test()->postJson('/mcp/lms', [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'tools/list',
+            'params' => $cursor === null ? (object) [] : ['cursor' => $cursor],
+        ], ['Accept' => 'application/json, text/event-stream']);
 
-    return array_column($response->json('result.tools'), 'name');
+        $response->assertOk();
+
+        $names = [...$names, ...array_column($response->json('result.tools'), 'name')];
+        $cursor = $response->json('result.nextCursor');
+    } while ($cursor !== null);
+
+    return $names;
 }
 
 test('LmsServer::TOOLS is the tool list the package server serves', function () {
@@ -95,6 +104,26 @@ test('the package steps aside for a host server on the same handle and path', fu
     expect(Mcp::getLocalServer('filament-lms'))->toBe($hostLocal)
         ->and(Mcp::getWebServer('mcp/lms'))->toBe($hostRoute)
         ->and(listMcpToolNamesOverHttp())->toContain('host_ping', 'list_courses', 'delete_step');
+});
+
+test('the package web route uses the default sanctum auth middleware', function () {
+    resetMcpRegistrarAndRoutes();
+
+    runPackageMcpRegistration();
+
+    expect(Mcp::getWebServer('mcp/lms')->middleware())
+        ->toContain('auth:sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class);
+});
+
+test('mcp.auth_middleware lets the host swap the web route auth without a fork', function () {
+    resetMcpRegistrarAndRoutes();
+    config(['filament-lms.mcp.auth_middleware' => ['auth:api,sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class]]);
+
+    runPackageMcpRegistration();
+
+    expect(Mcp::getWebServer('mcp/lms')->middleware())
+        ->toContain('auth:api,sanctum', EnsureLmsMcpAdmin::class)
+        ->not->toContain('auth:sanctum');
 });
 
 test('mcp.enabled and mcp.web set to false skip package registration', function () {

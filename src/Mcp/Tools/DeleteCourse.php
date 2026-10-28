@@ -9,14 +9,16 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
+use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 use Tapp\FilamentLms\Mcp\LmsTool;
 use Tapp\FilamentLms\Models\Course;
 
+#[IsDestructive]
 class DeleteCourse extends LmsTool
 {
     protected string $name = 'delete_course';
 
-    protected string $description = 'Delete a course and its lessons, steps, and video materials.';
+    protected string $description = 'Delete a course and its lessons, steps, and materials that no other step uses.';
 
     public function schema(JsonSchema $schema): array
     {
@@ -49,6 +51,8 @@ class DeleteCourse extends LmsTool
 
             $course->delete();
         });
+
+        $this->auditWrite($request, ['course_id' => $validated['id']]);
 
         return Response::structured([
             'deleted' => true,

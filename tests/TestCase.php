@@ -247,6 +247,7 @@ abstract class TestCase extends Orchestra
             $table->string('url');
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Create lms_tests table
@@ -263,9 +264,10 @@ abstract class TestCase extends Orchestra
         $app['db']->connection()->getSchemaBuilder()->create('lms_images', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('file_path');
+            $table->string('file_path')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Create media table for Spatie Media Library

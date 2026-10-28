@@ -14,7 +14,7 @@ beforeEach(function () {
 test('sanctumAbilities returns every mcp tool name and title', function () {
     $abilities = LmsServer::sanctumAbilities();
 
-    expect($abilities)->toHaveCount(11)
+    expect($abilities)->toHaveCount(17)
         ->and($abilities)->toHaveKey('list_courses')
         ->and($abilities)->toHaveKey('delete_course')
         ->and($abilities['list_courses'])->toBe('List Courses');

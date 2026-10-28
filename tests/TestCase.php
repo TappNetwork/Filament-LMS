@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Tests;
 
+use Filament\Actions\ActionsServiceProvider;
 use Filament\Facades\Filament;
 use Filament\FilamentServiceProvider;
 use Filament\Support\SupportServiceProvider;
@@ -334,6 +335,7 @@ abstract class TestCase extends Orchestra
             FilamentServiceProvider::class,
             ExcelServiceProvider::class,
             SupportServiceProvider::class,
+            ActionsServiceProvider::class,
             MediaLibraryServiceProvider::class,
             FilamentLmsServiceProvider::class,
             LmsPanelProvider::class,

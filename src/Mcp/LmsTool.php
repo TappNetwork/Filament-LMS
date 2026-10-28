@@ -634,7 +634,7 @@ abstract class LmsTool extends Tool
         $form = FilamentForm::query()->with('filamentFormFields')->find($test->filament_form_id);
         $rubric = FilamentFormUser::query()->find($test->filament_form_user_id);
 
-        $answers = collect($rubric?->entry ?? [])->keyBy('field_id');
+        $answers = collect($rubric->entry ?? [])->keyBy('field_id');
         $typeNames = array_flip(array_map(fn (FilamentFieldTypeEnum $type): string => $type->name, self::QUESTION_TYPES));
 
         return [
@@ -648,7 +648,7 @@ abstract class LmsTool extends Tool
                 ->where('material_id', $test->id)
                 ->pluck('id')
                 ->all(),
-            'questions' => ($form?->filamentFormFields ?? collect())
+            'questions' => ($form->filamentFormFields ?? collect())
                 ->map(function (FilamentFormField $field) use ($answers, $typeNames): array {
                     $entry = $answers->get($field->id);
                     $answer = is_array($entry) ? ($entry['answer'] ?? null) : null;

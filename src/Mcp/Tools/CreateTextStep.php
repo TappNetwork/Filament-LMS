@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Mcp\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Validation\ValidationException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
@@ -39,7 +40,13 @@ class CreateTextStep extends LmsTool
             'text' => ['required', 'string'],
         ]);
 
-        $lesson = Lesson::query()->findOrFail($validated['lesson_id']);
+        $lesson = Lesson::query()->find($validated['lesson_id']);
+
+        if (! $lesson instanceof Lesson) {
+            throw ValidationException::withMessages([
+                'lesson_id' => 'The selected lesson id is invalid.',
+            ]);
+        }
         $step = $this->createStep($lesson, $validated, $this->newStepSlug($lesson, $validated), null);
 
         $this->auditWrite($request, ['step_id' => $step->id]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Mcp\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Validation\ValidationException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
@@ -34,7 +35,13 @@ class GetTest extends LmsTool
             'id' => ['required', 'integer'],
         ]);
 
-        $test = Test::query()->findOrFail($validated['id']);
+        $test = Test::query()->find($validated['id']);
+
+        if (! $test instanceof Test) {
+            throw ValidationException::withMessages([
+                'id' => 'The selected id is invalid.',
+            ]);
+        }
 
         return Response::structured($this->serializeTest($test));
     }

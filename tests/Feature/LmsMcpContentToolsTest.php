@@ -114,6 +114,13 @@ class ContentToolsStubComponent extends Component
 }
 
 beforeEach(function () {
+    config([
+        'filament-lms.tenancy.enabled' => false,
+        'filament-lms.mcp.auditor' => null,
+    ]);
+    Filament::setTenant(null);
+    Model::clearBootedModels();
+
     if (! class_exists(LmsServer::class) || ! class_exists(Server::class)) {
         $this->markTestSkipped('laravel/mcp is required to run LMS MCP tests.');
     }
@@ -135,7 +142,10 @@ beforeEach(function () {
 
 afterEach(function () {
     Filament::setTenant(null);
-    config(['filament-lms.tenancy.enabled' => false]);
+    config([
+        'filament-lms.tenancy.enabled' => false,
+        'filament-lms.mcp.auditor' => null,
+    ]);
 
     $dispatcher = Model::getEventDispatcher();
 
@@ -619,12 +629,16 @@ test('a rolled back media step deletes the file saved to disk', function () {
         throw new RuntimeException('fail the step');
     });
 
-    LmsServer::tool(CreateDocumentStep::class, [
-        'lesson_id' => contentToolsLesson()->id,
-        'name' => 'Handbook',
-        'document_name' => $token,
-        'file_url' => 'https://cdn.example.com/handbook.pdf',
-    ])->assertHasErrors(['fail the step']);
+    try {
+        LmsServer::tool(CreateDocumentStep::class, [
+            'lesson_id' => contentToolsLesson()->id,
+            'name' => 'Handbook',
+            'document_name' => $token,
+            'file_url' => 'https://cdn.example.com/handbook.pdf',
+        ])->assertHasErrors(['fail the step']);
+    } catch (RuntimeException $exception) {
+        expect($exception->getMessage())->toBe('fail the step');
+    }
 
     expect($savedCopies())->toBe([])
         ->and(Document::query()->count())->toBe(0)

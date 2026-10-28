@@ -12,7 +12,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
 use Illuminate\Validation\ValidationException;
-use InvalidArgumentException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -115,13 +114,17 @@ abstract class LmsTool extends Tool
         }
 
         if (! is_string($auditor)) {
-            throw new InvalidArgumentException('filament-lms.mcp.auditor must be a class that implements '.McpAuditor::class.'.');
+            throw ValidationException::withMessages([
+                'auditor' => 'filament-lms.mcp.auditor must be a class that implements '.McpAuditor::class.'.',
+            ]);
         }
 
         $instance = app($auditor);
 
         if (! $instance instanceof McpAuditor) {
-            throw new InvalidArgumentException('filament-lms.mcp.auditor must be a class that implements '.McpAuditor::class.'.');
+            throw ValidationException::withMessages([
+                'auditor' => 'filament-lms.mcp.auditor must be a class that implements '.McpAuditor::class.'.',
+            ]);
         }
 
         $instance->record([

@@ -48,6 +48,8 @@ class UpdateCourse extends LmsTool
         $course = Course::query()->findOrFail($validated['id']);
         $course->update($this->courseAttributesFromInput($validated));
 
+        $this->auditWrite($request, ['course_id' => $course->id]);
+
         return Response::structured($this->serializeCourse($course->refresh()));
     }
 }

@@ -49,6 +49,8 @@ class CreateVideoStep extends LmsTool
         $lesson = Lesson::query()->findOrFail($validated['lesson_id']);
         $step = $this->createVideoStep($lesson, $validated);
 
+        $this->auditWrite($request, ['step_id' => $step->id]);
+
         return Response::structured($this->serializeStep($step));
     }
 }

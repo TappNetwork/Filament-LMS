@@ -11,6 +11,8 @@ use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 
 /**
+ * @property int $id
+ * @property string $name
  * @property int|null $filament_form_id
  * @property int|null $filament_form_user_id
  */

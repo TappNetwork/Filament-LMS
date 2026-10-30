@@ -78,11 +78,16 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->plugins([
-                \Tapp\FilamentLms\Lms::make(),
+                \Tapp\FilamentLms\Lms::make()
+                    ->courseSort('name'),
+                    // ->courseSort('created_at', 'desc') // newest first
+                    // ->courseSort(fn ($query, string $direction) => $query->orderBy('name', $direction)),
             ])
     }
 }
 ```
+
+`courseSort()` sets the learner course catalog and the admin course list. The default is alphabetical by course name. The learner panel does not register this plugin; call `courseSort()` on the admin `Lms::make()` instance and the catalog uses that choice.
 
 ## MCP Server
 

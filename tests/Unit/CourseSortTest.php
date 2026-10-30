@@ -52,6 +52,18 @@ test('course catalog keeps newest first until a sort is configured', function ()
         ->and($table->hasDefaultKeySort())->toBeTrue();
 });
 
+test('courseSort defaults the direction to ascending', function () {
+    seedCourseSortCatalog();
+
+    Lms::make()->courseSort('name');
+
+    expect(Lms::courseSortConfiguration())->toBe(['name', 'asc'])
+        ->and(Lms::applyCourseSort(Course::query())->pluck('name')->all())
+        ->toBe(['Alpha', 'Mango', 'Zebra'])
+        ->and((new Dashboard)->courses()->pluck('name')->all())
+        ->toBe(['Alpha', 'Mango', 'Zebra']);
+});
+
 test('courseSort name orders the catalog and the admin course table', function (string $direction, array $names) {
     seedCourseSortCatalog();
 

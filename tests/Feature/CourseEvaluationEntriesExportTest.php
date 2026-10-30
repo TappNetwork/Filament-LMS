@@ -157,7 +157,7 @@ test('keeps an evaluation on the primary course sheet when the report is filtere
     expect($sheets[0]->array()[0][3])->toBe('DECAN Training');
 });
 
-test('exports every form entry by course while evaluations stay limited to evaluation submissions', function (): void {
+test('exports course form entries without evaluation submissions', function (): void {
     $user = evaluationReportUser('Michelle', 'Weeks', 'michelle@example.com');
     $form = FilamentForm::query()->create(['name' => 'Course Forms']);
 
@@ -245,9 +245,10 @@ test('exports every form entry by course while evaluations stay limited to evalu
 
     expect(array_map(fn (CourseEvaluationEntriesSheet $sheet): string => $sheet->title(), $formSheets))
         ->toBe(['Nutrition', 'Safe Arms for Babies']);
-    expect($formSheets[1]->array())->toHaveCount(2);
+    expect($formSheets[0]->array())->toHaveCount(1);
+    expect($formSheets[0]->array()[0][5])->toBe('No');
+    expect($formSheets[1]->array())->toHaveCount(1);
     expect($formSheets[1]->array()[0][5])->toBe('Yes');
-    expect($formSheets[1]->array()[1][5])->toBe('Agree');
 });
 
 test('returns an empty evaluations sheet when the filtered report has no rows', function (): void {

@@ -52,13 +52,11 @@ final class CourseEvaluationEntriesExport implements Export, WithMultipleSheets
             return [$this->emptySheet($singleName)];
         }
 
-        $evaluationCourseIds = $this->evaluationsOnly
-            ? Course::query()
-                ->whereNotNull('evaluation_course_id')
-                ->pluck('evaluation_course_id')
-                ->map(fn (mixed $courseId): int => (int) $courseId)
-                ->all()
-            : [];
+        $evaluationCourseIds = Course::query()
+            ->whereNotNull('evaluation_course_id')
+            ->pluck('evaluation_course_id')
+            ->map(fn (mixed $courseId): int => (int) $courseId)
+            ->all();
 
         $stepUsers = StepUser::query()
             ->whereNotNull('filament_form_user_id')
@@ -90,7 +88,7 @@ final class CourseEvaluationEntriesExport implements Export, WithMultipleSheets
             $isEvaluation = $primaryCourseId !== null
                 || ($lessonCourseId !== null && in_array((int) $lessonCourseId, $evaluationCourseIds, true));
 
-            if ($this->evaluationsOnly && ! $isEvaluation) {
+            if ($isEvaluation !== $this->evaluationsOnly) {
                 continue;
             }
 

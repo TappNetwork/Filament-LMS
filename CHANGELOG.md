@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v5.2.1 - 2026-10-30
+
+### What's Changed
+
+* Update README version table and install constraint for 5.x / 4.x branches by @scottgrayson in https://github.com/TappNetwork/Filament-LMS/pull/144
+* Add evaluation and all courses responses export by @andreia in https://github.com/TappNetwork/Filament-LMS/pull/143
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.2.0...v5.2.1
+
 ## v5.2.0 - 2026-10-23
 
 ### What's Changed

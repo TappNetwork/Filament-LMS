@@ -83,6 +83,23 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
+### Course sort order
+
+`courseSort()` on the admin `Lms::make()` instance sets the learner course catalog and the admin course list. The learner panel does not register this plugin; the catalog still uses the choice made on the admin instance.
+
+4.x installs that never call `courseSort()` keep the catalog newest first (`created_at` descending) and leave the admin course table on Filament's own sort.
+
+```php
+\Tapp\FilamentLms\Lms::make()
+    ->courseSort('name'), // alphabetical
+    // ->courseSort('name', 'desc'),
+    // ->courseSort('created_at', 'asc'), // oldest first
+    // ->courseSort('created_at', 'desc'), // newest first (the 4.x catalog default)
+    // ->courseSort(fn ($query, string $direction) => $query->orderBy('name', $direction)),
+```
+
+Pass a column name or a closure that receives the query and direction. An empty column name is rejected. A direction other than `desc` is treated as ascending.
+
 ### Tailwind CSS Setup
 
 This package uses Tailwind CSS classes in its Blade views. The configuration differs between Tailwind v3 and v4:

@@ -45,6 +45,9 @@ class VideoStep extends Component
     public function markExternalOpened(): void
     {
         $this->videoCompleted = true;
+
+        // Opening the link is the only signal an external video gives, so persist it.
+        $this->step->complete(evaluationPrimaryCourseId: $this->evaluationPrimaryCourseId);
     }
 
     public function render()

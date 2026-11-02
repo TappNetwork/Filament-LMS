@@ -113,9 +113,11 @@ final class CourseCompleted extends Page
             return redirect()->to(Dashboard::getUrl());
         }
 
-        // Only redirect when the user has not completed all steps. Allow viewing this page when all steps
-        // are done even if required_test_percentage is not met (we show retake/certificate state below).
-        if (! $this->course->allStepsCompletedByUser($userId)) {
+        // Only redirect when the user has neither completed the course nor finished all steps. Allow viewing
+        // this page when all steps are done even if required_test_percentage is not met (we show
+        // retake/certificate state below), and keep it open for learners who completed the course before
+        // more steps were added.
+        if (! $this->course->completionPageAvailableForUser($userId)) {
             $currentStepUrl = $this->course->linkToCurrentStep();
             if (empty($currentStepUrl)) {
                 return redirect()->to(Dashboard::getUrl());

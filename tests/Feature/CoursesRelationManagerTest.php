@@ -286,3 +286,72 @@ test('course users manager does not treat completion-only pivot rows as detachab
 
     expect((new ReflectionMethod($manager, 'hasManualAssignment'))->invoke($manager, $explicitUser))->toBeTrue();
 });
+
+test('courses relation manager detach keeps completed courses and drops the rest', function (): void {
+    $user = TestUser::query()->create([
+        'name' => 'Detach User',
+        'email' => 'detach-courses@example.com',
+        'password' => bcrypt('password'),
+    ]);
+    $completed = Course::factory()->create();
+    $inProgress = Course::factory()->create();
+    $user->courses()->attach($completed->id, ['is_explicitly_assigned' => true, 'completed_at' => '2026-03-07 12:38:29']);
+    $user->courses()->attach($inProgress->id, ['is_explicitly_assigned' => true]);
+
+    $manager = new CoursesRelationManager;
+    $manager->ownerRecord = $user;
+    (new ReflectionMethod($manager, 'unassignCourses'))->invoke($manager, [$completed, $inProgress]);
+
+    $row = DB::table('lms_course_user')->where('course_id', $completed->id)->where('user_id', $user->id)->first();
+
+    expect($row)->not->toBeNull()
+        ->and($row->completed_at)->not->toBeNull()
+        ->and((int) $row->is_explicitly_assigned)->toBe(0)
+        ->and(DB::table('lms_course_user')->where('course_id', $inProgress->id)->exists())->toBeFalse();
+});
+
+test('a completed course detached from a user can be attached again from either side', function (): void {
+    $user = TestUser::query()->create([
+        'name' => 'Returning Learner',
+        'email' => 'returning@example.com',
+        'password' => bcrypt('password'),
+    ]);
+    $course = Course::factory()->create(['is_private' => true]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $step = Step::factory()->create(['lesson_id' => $lesson->id]);
+
+    $course->users()->attach($user->id, ['is_explicitly_assigned' => true]);
+    StepUser::query()->create(['user_id' => $user->id, 'step_id' => $step->id, 'completed_at' => now()]);
+    $course->maybeSetCompletedAtForUser($user->id);
+    $completedAt = $course->completedByUserAt($user->id);
+    $course->unassignUsers([$user->id]);
+
+    $userSide = new CoursesRelationManager;
+    $userSide->ownerRecord = $user;
+    $courseSide = new CourseUsersRelationManager;
+    $courseSide->ownerRecord = $course;
+
+    $attachableCourseIds = (new ReflectionMethod($userSide, 'excludeAssignedCourses'))
+        ->invoke($userSide, Course::query())->pluck('id')->all();
+    $attachableUserIds = (new ReflectionMethod($courseSide, 'excludeAssignedUsers'))
+        ->invoke($courseSide, TestUser::query())->pluck('id')->all();
+
+    expect($attachableCourseIds)->toContain($course->id)
+        ->and($attachableUserIds)->toContain($user->id);
+
+    (new ReflectionMethod($userSide, 'assignCourses'))->invoke($userSide, [$course->id]);
+
+    $row = DB::table('lms_course_user')->where('course_id', $course->id)->where('user_id', $user->id)->get();
+    expect($row)->toHaveCount(1)
+        ->and((int) $row->first()->is_explicitly_assigned)->toBe(1)
+        ->and($course->completedByUserAt($user->id))->toBe($completedAt)
+        ->and($course->canBeAccessedBy($user))->toBeTrue()
+        ->and((new ReflectionMethod($courseSide, 'excludeAssignedUsers'))
+            ->invoke($courseSide, TestUser::query())->pluck('id')->all())->not->toContain($user->id);
+
+    $course->unassignUsers([$user->id]);
+    (new ReflectionMethod($courseSide, 'assignUsers'))->invoke($courseSide, [$user->id]);
+
+    expect($course->canBeAccessedBy($user))->toBeTrue()
+        ->and($course->completedByUserAt($user->id))->toBe($completedAt);
+});

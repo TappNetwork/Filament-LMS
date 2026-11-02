@@ -16,6 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Tapp\FilamentLms\Models\Course;
 
 class CourseUsersRelationManager extends RelationManager
 {
@@ -73,34 +74,43 @@ class CourseUsersRelationManager extends RelationManager
                 AttachAction::make()
                     ->preloadRecordSelect()
                     ->recordSelectSearchColumns($this->getUserSearchColumns())
-                    ->recordSelectOptionsQuery(function (Builder $query) {
-                        $ownerRecord = $this->getOwnerRecord();
-                        if (method_exists($ownerRecord, 'users')) {
-                            // @phpstan-ignore-next-line - users() method is provided by Course model relationship
-                            $existingUserIds = $ownerRecord->users()->pluck('user_id');
-
-                            return $query->whereNotIn('users.id', $existingUserIds);
-                        }
-
-                        return $query;
-                    })
+                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $this->excludeAssignedUsers($query))
                     ->schema(fn (AttachAction $action): array => [
                         $action->getRecordSelect(),
                         Forms\Components\Hidden::make('is_explicitly_assigned')
                             ->default(true),
-                    ]),
+                    ])
+                    ->using(fn (array $data) => $this->assignUsers((array) $data['recordId'])),
             ])
             ->recordActions([
                 ActionGroup::make([
                     DetachAction::make()
-                        ->visible(fn (Model $record): bool => $this->hasManualAssignment($record)),
+                        ->visible(fn (Model $record): bool => $this->hasManualAssignment($record))
+                        ->using(fn (Model $record) => $this->unassignUsers([$record->getKey()])),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DetachBulkAction::make(),
+                    DetachBulkAction::make()
+                        ->using(fn (iterable $records) => $this->unassignUsers(
+                            collect($records)->map(fn ($record) => $record instanceof Model ? $record->getKey() : $record)->values()->all(),
+                        )),
                 ]),
             ]);
+    }
+
+    /**
+     * Detach keeps completion history: completed rows stay as non-explicit assignments.
+     *
+     * @param  array<int, int|string>  $userIds
+     */
+    protected function unassignUsers(array $userIds): void
+    {
+        $course = $this->getOwnerRecord();
+
+        if ($course instanceof Course) {
+            $course->unassignUsers($userIds);
+        }
     }
 
     protected function hasManualAssignment(Model $record): bool
@@ -147,5 +157,31 @@ class CourseUsersRelationManager extends RelationManager
 
         // Fallback to email only
         return ['email'];
+    }
+
+    /**
+     * Attach options hide explicit assignments only. Completed rows kept by unassignUsers() stay attachable.
+     */
+    protected function excludeAssignedUsers(Builder $query): Builder
+    {
+        $ownerRecord = $this->getOwnerRecord();
+        if (! method_exists($ownerRecord, 'users')) {
+            return $query;
+        }
+
+        // @phpstan-ignore-next-line - users() method is provided by Course model relationship
+        $assignedIds = $ownerRecord->users()->wherePivot('is_explicitly_assigned', true)->pluck('user_id');
+
+        return $query->whereNotIn('users.id', $assignedIds);
+    }
+
+    /**
+     * @param  array<int, int|string>  $userIds
+     */
+    protected function assignUsers(array $userIds): void
+    {
+        /** @var Course $course */
+        $course = $this->getOwnerRecord();
+        $course->assignUsers($userIds);
     }
 }

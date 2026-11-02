@@ -404,7 +404,7 @@ class Step extends Page
             return Dashboard::getUrl();
         }
 
-        if ($this->course->allStepsCompletedByUser($user->id)) {
+        if ($this->course->completionPageAvailableForUser($user->id)) {
             return CourseCompleted::getUrl([$this->course->slug]);
         }
 

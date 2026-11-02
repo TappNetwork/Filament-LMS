@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Tapp\FilamentLms\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tapp\FilamentLms\Models\Course;
 
 class BackfillCourseCompletedAt extends Command
 {
     protected $signature = 'filament-lms:backfill-course-completed-at
                             {--dry-run : Log and report only, do not update}
-                            {--log-each : Log each course/user decision to console}';
+                            {--log-each : Log each course/user decision to console}
+                            {--course=* : Only backfill these course ids}
+                            {--steps-existing-at-completion : Also count users who completed every step that existed when they finished, even if steps were added later. Never overwrites an existing completed_at.}';
 
     protected $description = 'Backfill lms_course_user: add/update rows with completed_at from step data for users who completed all steps';
 
@@ -25,7 +29,13 @@ class BackfillCourseCompletedAt extends Command
             $this->info('DRY RUN - no changes will be written.');
         }
 
-        $courseIds = DB::table('lms_courses')->pluck('id');
+        $stepsExistingAtCompletion = (bool) $this->option('steps-existing-at-completion');
+        $onlyCourseIds = array_filter((array) $this->option('course'), fn ($id) => $id !== null && $id !== '');
+        $hasExplicitColumn = Schema::hasColumn('lms_course_user', 'is_explicitly_assigned');
+
+        $courseIds = DB::table('lms_courses')
+            ->when($onlyCourseIds !== [], fn ($query) => $query->whereIn('id', $onlyCourseIds))
+            ->pluck('id');
         $totalInsertedOrUpdated = 0;
         $totalSkippedTestPct = 0;
         $totalSkippedNoMaxDate = 0;
@@ -46,12 +56,14 @@ class BackfillCourseCompletedAt extends Command
 
             $totalSteps = $stepIds->count();
 
-            $userIdsWhoCompletedAllSteps = DB::table('lms_step_user')
-                ->whereIn('step_id', $stepIds)
-                ->whereNotNull('completed_at')
-                ->groupBy('user_id')
-                ->havingRaw('COUNT(DISTINCT step_id) = ?', [$totalSteps])
-                ->pluck('user_id');
+            $userIdsWhoCompletedAllSteps = $stepsExistingAtCompletion
+                ? $this->userIdsWhoCompletedStepsExistingAtCompletion((int) $courseId, $stepIds)
+                : DB::table('lms_step_user')
+                    ->whereIn('step_id', $stepIds)
+                    ->whereNotNull('completed_at')
+                    ->groupBy('user_id')
+                    ->havingRaw('COUNT(DISTINCT step_id) = ?', [$totalSteps])
+                    ->pluck('user_id');
 
             if ($userIdsWhoCompletedAllSteps->isEmpty()) {
                 if ($logEach) {
@@ -107,20 +119,27 @@ class BackfillCourseCompletedAt extends Command
                         ->where('user_id', $userId)
                         ->exists();
 
-                    if ($exists) {
+                    if ($exists && $stepsExistingAtCompletion) {
+                        // Only fill missing completion; never move an existing completed_at.
+                        DB::table('lms_course_user')
+                            ->where('course_id', $courseId)
+                            ->where('user_id', $userId)
+                            ->whereNull('completed_at')
+                            ->update(['completed_at' => $maxCompletedAt, 'updated_at' => now()]);
+                    } elseif ($exists) {
                         DB::table('lms_course_user')
                             ->where('course_id', $courseId)
                             ->where('user_id', $userId)
                             ->update(['completed_at' => $maxCompletedAt, 'updated_at' => now()]);
                     } else {
                         $now = now();
-                        DB::table('lms_course_user')->insert([
+                        DB::table('lms_course_user')->insert(array_merge([
                             'course_id' => $courseId,
                             'user_id' => $userId,
                             'completed_at' => $maxCompletedAt,
                             'created_at' => $now,
                             'updated_at' => $now,
-                        ]);
+                        ], $hasExplicitColumn && $stepsExistingAtCompletion ? ['is_explicitly_assigned' => false] : []));
                     }
                 }
 
@@ -139,5 +158,48 @@ class BackfillCourseCompletedAt extends Command
         $this->info('Backfill summary: '.json_encode($summary, JSON_PRETTY_PRINT));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Users who completed every step of the course that existed at the moment of their last step
+     * completion, and who have no completed_at on the pivot yet.
+     *
+     * @param  Collection<int, mixed>  $stepIds
+     * @return Collection<int, mixed>
+     */
+    private function userIdsWhoCompletedStepsExistingAtCompletion(int $courseId, Collection $stepIds): Collection
+    {
+        $stepCreatedAt = DB::table('lms_steps')->whereIn('id', $stepIds)->pluck('created_at', 'id');
+
+        $alreadyCompleted = DB::table('lms_course_user')
+            ->where('course_id', $courseId)
+            ->whereNotNull('completed_at')
+            ->pluck('user_id')
+            ->map(fn ($id) => (string) $id)
+            ->all();
+
+        return DB::table('lms_step_user')
+            ->whereIn('step_id', $stepIds)
+            ->whereNotNull('completed_at')
+            ->get(['user_id', 'step_id', 'completed_at'])
+            ->groupBy('user_id')
+            ->filter(function (Collection $rows, $userId) use ($stepCreatedAt, $alreadyCompleted): bool {
+                if (in_array((string) $userId, $alreadyCompleted, true)) {
+                    return false;
+                }
+
+                $finishedAt = $rows->max('completed_at');
+                $required = $stepCreatedAt->filter(fn ($createdAt) => $createdAt !== null && $createdAt <= $finishedAt)->keys();
+
+                if ($required->isEmpty()) {
+                    return false;
+                }
+
+                $done = $rows->pluck('step_id')->map(fn ($id) => (int) $id)->unique();
+
+                return $required->map(fn ($id) => (int) $id)->diff($done)->isEmpty();
+            })
+            ->keys()
+            ->values();
     }
 }

@@ -16,6 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Tapp\FilamentLms\Models\Course;
 
 class CourseUsersRelationManager extends RelationManager
 {
@@ -93,14 +94,32 @@ class CourseUsersRelationManager extends RelationManager
             ->recordActions([
                 ActionGroup::make([
                     DetachAction::make()
-                        ->visible(fn (Model $record): bool => $this->hasManualAssignment($record)),
+                        ->visible(fn (Model $record): bool => $this->hasManualAssignment($record))
+                        ->using(fn (Model $record) => $this->unassignUsers([$record->getKey()])),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DetachBulkAction::make(),
+                    DetachBulkAction::make()
+                        ->using(fn (iterable $records) => $this->unassignUsers(
+                            collect($records)->map(fn ($record) => $record instanceof Model ? $record->getKey() : $record)->values()->all(),
+                        )),
                 ]),
             ]);
+    }
+
+    /**
+     * Detach keeps completion history: completed rows stay as non-explicit assignments.
+     *
+     * @param  array<int, int|string>  $userIds
+     */
+    protected function unassignUsers(array $userIds): void
+    {
+        $course = $this->getOwnerRecord();
+
+        if ($course instanceof Course) {
+            $course->unassignUsers($userIds);
+        }
     }
 
     protected function hasManualAssignment(Model $record): bool

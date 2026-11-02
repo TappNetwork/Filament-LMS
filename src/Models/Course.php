@@ -19,6 +19,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
@@ -579,6 +580,44 @@ final class Course extends Model implements HasMedia
     public function courseCreditCategories(): HasMany
     {
         return $this->hasMany(CourseCreditCategory::class);
+    }
+
+    /**
+     * Whether the user may see this course's completion page: they finished every current step,
+     * or they already earned completion. Completion is sticky, so steps added after a learner
+     * completed the course do not take their completion page or certificate away.
+     */
+    public function completionPageAvailableForUser(int|string $userId, ?int $evaluationPrimaryCourseId = null): bool
+    {
+        return $this->completedByUserAt($userId) !== null
+            || $this->allStepsCompletedByUser($userId, $evaluationPrimaryCourseId);
+    }
+
+    /**
+     * Remove users' assignment to this course without destroying completion history.
+     * Rows without completed_at are deleted; completed rows are kept with
+     * is_explicitly_assigned = false so they no longer grant access to a private course.
+     *
+     * @param  array<int, int|string>|int|string  $userIds
+     */
+    public function unassignUsers(array|int|string $userIds): void
+    {
+        $userIds = array_values((array) $userIds);
+
+        if ($userIds === []) {
+            return;
+        }
+
+        $relation = $this->users();
+        $rows = fn () => DB::table($relation->getTable())
+            ->where($relation->getForeignPivotKeyName(), $this->getKey())
+            ->whereIn($relation->getRelatedPivotKeyName(), $userIds);
+
+        $rows()->whereNull('completed_at')->delete();
+
+        $rows()
+            ->whereNotNull('completed_at')
+            ->update(['is_explicitly_assigned' => false, 'updated_at' => now()]);
     }
 
     /**

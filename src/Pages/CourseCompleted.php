@@ -9,6 +9,7 @@ use Exception;
 use Filament\Facades\Filament;
 use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
+use Filament\Notifications\Notification;
 use Filament\Pages\Enums\SubNavigationPosition;
 use Filament\Pages\Page;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -119,6 +120,14 @@ final class CourseCompleted extends Page
             if (empty($currentStepUrl)) {
                 return redirect()->to(Dashboard::getUrl());
             }
+
+            $incompleteStep = $this->course->currentStep($user);
+
+            Notification::make()
+                ->warning()
+                ->title('Finish every step to unlock your certificate')
+                ->body($incompleteStep ? "\"{$incompleteStep->name}\" isn't complete yet." : null)
+                ->send();
 
             return redirect()->to($currentStepUrl);
         }

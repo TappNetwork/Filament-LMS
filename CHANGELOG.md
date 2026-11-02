@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v5.2.5 - 2026-11-02
+
+### What's Changed
+
+* Adding steps to a course no longer takes completion away. A learner with `completed_at` set keeps the completion page and certificate, and can still open and complete the new steps. In https://github.com/TappNetwork/Filament-LMS/pull/150
+* New `Course::unassignUsers()` and `Course::assignUsers()`. Unassigning deletes rows that have no `completed_at` and keeps completed rows as non-explicit, so private-course access goes away but the completion stays. Assigning again marks the row explicit and keeps `completed_at`. The course Users and user Assigned Courses relation managers use them for Attach, Detach and Bulk Detach, and a kept completed row can be attached again. Host apps should call these instead of `users()->attach()` / `detach()`.
+* `filament-lms:backfill-course-completed-at` gains `--course=*` and `--steps-existing-at-completion`. The second restores `completed_at` for learners who completed every step that existed when they finished, at that finish time, without overwriting an existing `completed_at`. Run it with `--dry-run --log-each` first.
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.2.4...v5.2.5
+
 ## v5.2.3 - 2026-10-30
 
 ### What's Changed

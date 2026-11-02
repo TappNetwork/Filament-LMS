@@ -87,22 +87,13 @@ class CoursesRelationManager extends RelationManager
                     ->label('Attach')
                     ->preloadRecordSelect()
                     ->recordSelectSearchColumns($this->getCourseSearchColumns())
-                    ->recordSelectOptionsQuery(function (Builder $query) {
-                        $ownerRecord = $this->getOwnerRecord();
-                        if (method_exists($ownerRecord, 'courses')) {
-                            // @phpstan-ignore-next-line - courses() method is provided by FilamentLmsUser trait
-                            $existingCourseIds = $ownerRecord->courses()->pluck('course_id');
-
-                            return $query->whereNotIn('lms_courses.id', $existingCourseIds);
-                        }
-
-                        return $query;
-                    })
+                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $this->excludeAssignedCourses($query))
                     ->schema(fn (AttachAction $action): array => [
                         $action->getRecordSelect(),
                         Hidden::make('is_explicitly_assigned')
                             ->default(true),
-                    ]),
+                    ])
+                    ->using(fn (array $data) => $this->assignCourses((array) $data['recordId'])),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -219,5 +210,32 @@ class CoursesRelationManager extends RelationManager
         }
 
         return $columns;
+    }
+
+    /**
+     * Attach options hide explicit assignments only. Completed rows kept by unassignUsers() stay attachable.
+     */
+    protected function excludeAssignedCourses(Builder $query): Builder
+    {
+        $ownerRecord = $this->getOwnerRecord();
+        if (! method_exists($ownerRecord, 'courses')) {
+            return $query;
+        }
+
+        // @phpstan-ignore-next-line - courses() method is provided by FilamentLmsUser trait
+        $assignedIds = $ownerRecord->courses()->wherePivot('is_explicitly_assigned', true)->pluck('course_id');
+
+        return $query->whereNotIn('lms_courses.id', $assignedIds);
+    }
+
+    /**
+     * @param  array<int, int|string>  $courseIds
+     */
+    protected function assignCourses(array $courseIds): void
+    {
+        $userId = $this->getOwnerRecord()->getKey();
+
+        Course::query()->whereKey($courseIds)->get()
+            ->each(fn (Course $course) => $course->assignUsers([$userId]));
     }
 }

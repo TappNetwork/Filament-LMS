@@ -74,22 +74,13 @@ class CourseUsersRelationManager extends RelationManager
                 AttachAction::make()
                     ->preloadRecordSelect()
                     ->recordSelectSearchColumns($this->getUserSearchColumns())
-                    ->recordSelectOptionsQuery(function (Builder $query) {
-                        $ownerRecord = $this->getOwnerRecord();
-                        if (method_exists($ownerRecord, 'users')) {
-                            // @phpstan-ignore-next-line - users() method is provided by Course model relationship
-                            $existingUserIds = $ownerRecord->users()->pluck('user_id');
-
-                            return $query->whereNotIn('users.id', $existingUserIds);
-                        }
-
-                        return $query;
-                    })
+                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $this->excludeAssignedUsers($query))
                     ->schema(fn (AttachAction $action): array => [
                         $action->getRecordSelect(),
                         Forms\Components\Hidden::make('is_explicitly_assigned')
                             ->default(true),
-                    ]),
+                    ])
+                    ->using(fn (array $data) => $this->assignUsers((array) $data['recordId'])),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -166,5 +157,31 @@ class CourseUsersRelationManager extends RelationManager
 
         // Fallback to email only
         return ['email'];
+    }
+
+    /**
+     * Attach options hide explicit assignments only. Completed rows kept by unassignUsers() stay attachable.
+     */
+    protected function excludeAssignedUsers(Builder $query): Builder
+    {
+        $ownerRecord = $this->getOwnerRecord();
+        if (! method_exists($ownerRecord, 'users')) {
+            return $query;
+        }
+
+        // @phpstan-ignore-next-line - users() method is provided by Course model relationship
+        $assignedIds = $ownerRecord->users()->wherePivot('is_explicitly_assigned', true)->pluck('user_id');
+
+        return $query->whereNotIn('users.id', $assignedIds);
+    }
+
+    /**
+     * @param  array<int, int|string>  $userIds
+     */
+    protected function assignUsers(array $userIds): void
+    {
+        /** @var Course $course */
+        $course = $this->getOwnerRecord();
+        $course->assignUsers($userIds);
     }
 }

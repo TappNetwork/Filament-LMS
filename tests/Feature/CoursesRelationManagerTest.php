@@ -286,3 +286,26 @@ test('course users manager does not treat completion-only pivot rows as detachab
 
     expect((new ReflectionMethod($manager, 'hasManualAssignment'))->invoke($manager, $explicitUser))->toBeTrue();
 });
+
+test('courses relation manager detach keeps completed courses and drops the rest', function (): void {
+    $user = TestUser::query()->create([
+        'name' => 'Detach User',
+        'email' => 'detach-courses@example.com',
+        'password' => bcrypt('password'),
+    ]);
+    $completed = Course::factory()->create();
+    $inProgress = Course::factory()->create();
+    $user->courses()->attach($completed->id, ['is_explicitly_assigned' => true, 'completed_at' => '2026-03-07 12:38:29']);
+    $user->courses()->attach($inProgress->id, ['is_explicitly_assigned' => true]);
+
+    $manager = new CoursesRelationManager;
+    $manager->ownerRecord = $user;
+    (new ReflectionMethod($manager, 'unassignCourses'))->invoke($manager, [$completed, $inProgress]);
+
+    $row = DB::table('lms_course_user')->where('course_id', $completed->id)->where('user_id', $user->id)->first();
+
+    expect($row)->not->toBeNull()
+        ->and($row->completed_at)->not->toBeNull()
+        ->and((int) $row->is_explicitly_assigned)->toBe(0)
+        ->and(DB::table('lms_course_user')->where('course_id', $inProgress->id)->exists())->toBeFalse();
+});

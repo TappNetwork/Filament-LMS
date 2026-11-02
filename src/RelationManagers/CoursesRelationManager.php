@@ -107,14 +107,32 @@ class CoursesRelationManager extends RelationManager
             ->recordActions([
                 ActionGroup::make([
                     DetachAction::make()
-                        ->visible(fn (Model $record): bool => $this->hasManualAssignment($record)),
+                        ->visible(fn (Model $record): bool => $this->hasManualAssignment($record))
+                        ->using(fn (Model $record) => $this->unassignCourses([$record])),
                 ]),
             ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DetachBulkAction::make(),
+                    DetachBulkAction::make()
+                        ->using(fn (iterable $records) => $this->unassignCourses($records)),
                 ]),
             ]);
+    }
+
+    /**
+     * Detach keeps completion history: completed rows stay as non-explicit assignments.
+     *
+     * @param  iterable<int, Model>  $courses
+     */
+    protected function unassignCourses(iterable $courses): void
+    {
+        $userId = $this->getOwnerRecord()->getKey();
+
+        foreach ($courses as $course) {
+            if ($course instanceof Course) {
+                $course->unassignUsers([$userId]);
+            }
+        }
     }
 
     protected function resolveAssignedCoursesQuery(): Builder

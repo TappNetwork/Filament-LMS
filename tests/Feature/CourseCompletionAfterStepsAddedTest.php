@@ -147,3 +147,49 @@ test('backfill with steps-existing-at-completion never moves an existing complet
 
     expect(Carbon::parse(pivotRow($course, $user)->completed_at)->toDateTimeString())->toBe('2026-01-01 00:00:00');
 });
+
+test('backfill restores a learner who finished and then completed a step added later', function () {
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+
+    Carbon::setTestNow('2026-03-01 10:00:00');
+    $original = documentStep($lesson, 1);
+    $learner = learner('returned@example.com');
+
+    Carbon::setTestNow('2026-03-07 12:38:29');
+    $original->complete($learner);
+    DB::table('lms_course_user')->where('course_id', $course->id)->delete();
+
+    Carbon::setTestNow('2026-09-25 00:24:00');
+    $added = documentStep($lesson, 2);
+    documentStep($lesson, 3);
+
+    Carbon::setTestNow('2026-10-01 09:00:00');
+    $added->complete($learner);
+    Carbon::setTestNow();
+
+    $this->artisan('filament-lms:backfill-course-completed-at', [
+        '--course' => [$course->id],
+        '--steps-existing-at-completion' => true,
+    ])->assertSuccessful();
+
+    expect(Carbon::parse(pivotRow($course, $learner)?->completed_at)->toDateTimeString())->toBe('2026-03-07 12:38:29');
+});
+
+test('assigning users again restores access and keeps completion', function () {
+    $course = Course::factory()->create(['is_private' => true]);
+    $lesson = Lesson::factory()->create(['course_id' => $course->id]);
+    $step = documentStep($lesson, 1);
+    $user = learner('reassigned@example.com');
+
+    $course->users()->attach($user->id, ['is_explicitly_assigned' => true]);
+    $step->complete($user);
+    $completedAt = $course->completedByUserAt($user->id);
+    $course->unassignUsers([$user->id]);
+
+    $course->assignUsers([$user->id]);
+
+    expect((int) pivotRow($course, $user)->is_explicitly_assigned)->toBe(1)
+        ->and($course->completedByUserAt($user->id))->toBe($completedAt)
+        ->and($course->canBeAccessedBy($user))->toBeTrue();
+});

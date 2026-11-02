@@ -56,8 +56,12 @@ class BackfillCourseCompletedAt extends Command
 
             $totalSteps = $stepIds->count();
 
+            $finishedAtByUser = $stepsExistingAtCompletion
+                ? $this->finishedAtForUsersWhoCompletedStepsExistingAtCompletion((int) $courseId, $stepIds)
+                : collect();
+
             $userIdsWhoCompletedAllSteps = $stepsExistingAtCompletion
-                ? $this->userIdsWhoCompletedStepsExistingAtCompletion((int) $courseId, $stepIds)
+                ? $finishedAtByUser->keys()
                 : DB::table('lms_step_user')
                     ->whereIn('step_id', $stepIds)
                     ->whereNotNull('completed_at')
@@ -98,7 +102,7 @@ class BackfillCourseCompletedAt extends Command
                     }
                 }
 
-                $maxCompletedAt = DB::table('lms_step_user')
+                $maxCompletedAt = $finishedAtByUser->get($userId) ?? DB::table('lms_step_user')
                     ->whereIn('step_id', $stepIds)
                     ->where('user_id', $userId)
                     ->whereNotNull('completed_at')
@@ -161,15 +165,20 @@ class BackfillCourseCompletedAt extends Command
     }
 
     /**
-     * Users who completed every step of the course that existed at the moment of their last step
-     * completion, and who have no completed_at on the pivot yet.
+     * For users with no completed_at on the pivot yet: the earliest step completion at which they
+     * had completed every step of the course that existed at that moment. Steps created later,
+     * and completions of them, do not affect the result.
      *
      * @param  Collection<int, mixed>  $stepIds
-     * @return Collection<int, mixed>
+     * @return Collection<int|string, non-falsy-string>
      */
-    private function userIdsWhoCompletedStepsExistingAtCompletion(int $courseId, Collection $stepIds): Collection
+    private function finishedAtForUsersWhoCompletedStepsExistingAtCompletion(int $courseId, Collection $stepIds): Collection
     {
-        $stepCreatedAt = DB::table('lms_steps')->whereIn('id', $stepIds)->pluck('created_at', 'id');
+        $stepCreatedAt = DB::table('lms_steps')
+            ->whereIn('id', $stepIds)
+            ->whereNotNull('created_at')
+            ->pluck('created_at', 'id')
+            ->mapWithKeys(fn ($createdAt, $id) => [(int) $id => (string) $createdAt]);
 
         $alreadyCompleted = DB::table('lms_course_user')
             ->where('course_id', $courseId)
@@ -183,23 +192,22 @@ class BackfillCourseCompletedAt extends Command
             ->whereNotNull('completed_at')
             ->get(['user_id', 'step_id', 'completed_at'])
             ->groupBy('user_id')
-            ->filter(function (Collection $rows, $userId) use ($stepCreatedAt, $alreadyCompleted): bool {
-                if (in_array((string) $userId, $alreadyCompleted, true)) {
-                    return false;
+            ->reject(fn (Collection $rows, $userId): bool => in_array((string) $userId, $alreadyCompleted, true))
+            ->map(function (Collection $rows) use ($stepCreatedAt): ?string {
+                $done = [];
+
+                foreach ($rows->sortBy('completed_at') as $row) {
+                    $done[(int) $row->step_id] = true;
+                    $at = (string) $row->completed_at;
+                    $required = $stepCreatedAt->filter(fn (string $createdAt) => $createdAt <= $at)->keys();
+
+                    if ($required->isNotEmpty() && $required->every(fn (int $id) => isset($done[$id]))) {
+                        return $at;
+                    }
                 }
 
-                $finishedAt = $rows->max('completed_at');
-                $required = $stepCreatedAt->filter(fn ($createdAt) => $createdAt !== null && $createdAt <= $finishedAt)->keys();
-
-                if ($required->isEmpty()) {
-                    return false;
-                }
-
-                $done = $rows->pluck('step_id')->map(fn ($id) => (int) $id)->unique();
-
-                return $required->map(fn ($id) => (int) $id)->diff($done)->isEmpty();
+                return null;
             })
-            ->keys()
-            ->values();
+            ->filter();
     }
 }

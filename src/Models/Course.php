@@ -594,6 +594,19 @@ final class Course extends Model implements HasMedia
     }
 
     /**
+     * Explicitly assign users to this course. Existing rows, including completed rows kept by
+     * unassignUsers(), are marked explicit again and keep their completed_at.
+     *
+     * @param  array<int, int|string>|int|string  $userIds
+     */
+    public function assignUsers(array|int|string $userIds): void
+    {
+        $this->users()->syncWithoutDetaching(
+            collect((array) $userIds)->mapWithKeys(fn ($userId) => [$userId => ['is_explicitly_assigned' => true]])->all()
+        );
+    }
+
+    /**
      * Remove users' assignment to this course without destroying completion history.
      * Rows without completed_at are deleted; completed rows are kept with
      * is_explicitly_assigned = false so they no longer grant access to a private course.

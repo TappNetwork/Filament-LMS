@@ -14,6 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
+use LogicException;
 use Tapp\FilamentLms\Concerns\CourseLayout;
 use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Enums\CompletionMode;
@@ -24,6 +25,7 @@ use Tapp\FilamentLms\Models\Step as StepModel;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Services\ScormProgressService;
 use Tapp\FilamentLms\Support\CourseStepNavigation;
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
 
 class Step extends Page
 {
@@ -82,14 +84,19 @@ class Step extends Page
 
         // @phpstan-ignore-next-line
         $user = Auth::user();
-        if (! $user instanceof FilamentLmsUserInterface) {
-            Log::warning('Step page: User does not implement FilamentLmsUserInterface', [
-                'user_id' => $user?->id,
-                'step_id' => $this->step->id,
-                'step_slug' => $stepSlug,
-            ]);
+        if ($user === null) {
+            abort(403);
+        }
 
-            return redirect()->to($this->course->linkToCurrentStep());
+        if (! $user instanceof FilamentLmsUserInterface) {
+            // Fail loudly: redirecting here would send the user back to this same
+            // step (linkToCurrentStep()) and cause an infinite redirect loop.
+            throw new LogicException(sprintf(
+                'The authenticated user model [%s] must implement [%s] (and use the [%s] trait) to access Filament LMS steps.',
+                $user::class,
+                FilamentLmsUserInterface::class,
+                FilamentLmsUser::class,
+            ));
         }
 
         $evaluationService = app(CourseEvaluationService::class);

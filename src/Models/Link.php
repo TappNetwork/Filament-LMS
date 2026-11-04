@@ -13,6 +13,11 @@ use Tapp\FilamentLms\Jobs\GenerateLinkScreenshot;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $url
+ */
 class Link extends Model implements HasMedia
 {
     use BelongsToTenant;

@@ -13,6 +13,8 @@ use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
 
 /**
+ * @property int $id
+ * @property string $name
  * @property string|null $package_disk
  * @property string|null $package_path
  * @property string|null $package_launch_path

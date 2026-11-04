@@ -184,7 +184,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
 
             if (config('filament-lms.mcp.web', true) && Mcp::getWebServer(self::MCP_WEB_PATH) === null) {
                 Mcp::web(self::MCP_WEB_PATH, LmsServer::class)
-                    ->middleware(['auth:sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class]);
+                    ->middleware(config('filament-lms.mcp.auth_middleware', ['auth:sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class]));
             }
         });
     }

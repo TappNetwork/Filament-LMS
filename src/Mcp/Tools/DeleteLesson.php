@@ -9,14 +9,16 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
+use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 use Tapp\FilamentLms\Mcp\LmsTool;
 use Tapp\FilamentLms\Models\Lesson;
 
+#[IsDestructive]
 class DeleteLesson extends LmsTool
 {
     protected string $name = 'delete_lesson';
 
-    protected string $description = 'Delete a lesson and its steps and video materials.';
+    protected string $description = 'Delete a lesson and its steps and materials that no other step uses.';
 
     public function schema(JsonSchema $schema): array
     {
@@ -40,10 +42,13 @@ class DeleteLesson extends LmsTool
         DB::transaction(function () use ($lesson): void {
             foreach ($lesson->steps as $step) {
                 $this->deleteStepMaterial($step);
+                $step->delete();
             }
 
             $lesson->delete();
         });
+
+        $this->auditWrite($request, ['lesson_id' => $validated['id']]);
 
         return Response::structured([
             'deleted' => true,

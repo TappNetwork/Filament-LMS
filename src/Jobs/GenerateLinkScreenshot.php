@@ -20,7 +20,9 @@ class GenerateLinkScreenshot implements ShouldQueue
 
     public function __construct(
         protected Link $link
-    ) {}
+    ) {
+        $this->afterCommit();
+    }
 
     public function handle(): void
     {

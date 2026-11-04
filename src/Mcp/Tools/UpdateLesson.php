@@ -66,6 +66,8 @@ class UpdateLesson extends LmsTool
             return $lesson->refresh();
         });
 
+        $this->auditWrite($request, ['lesson_id' => $lesson->id]);
+
         return Response::structured($this->serializeLesson($lesson));
     }
 }

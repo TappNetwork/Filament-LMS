@@ -35,10 +35,11 @@ final class CloudflareCertificatePdfDriver implements CertificatePdfDriver
                 ->timeout((int) config('filament-lms.certificates.pdf.cloudflare.timeout', 60))
                 ->post($endpoint, [
                     'html' => $html,
-                    // Match filament-certificate-builder / Browsershot: Letter + zero margins
+                    // Match filament-certificate-builder / Browsershot: US Letter + zero margins
                     // so a full-bleed 11in×8.5in canvas stays on one page.
+                    // Cloudflare's pdfOptions.format enum is case-sensitive lowercase.
                     'pdfOptions' => [
-                        'format' => 'Letter',
+                        'format' => 'letter',
                         'landscape' => (bool) config('filament-lms.certificates.pdf.landscape', true),
                         'printBackground' => (bool) config('filament-lms.certificates.pdf.print_background', true),
                         'margin' => [

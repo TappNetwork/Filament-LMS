@@ -183,7 +183,7 @@ final class LmsPrimaryNavigation
             ->badge($item->getBadge(), $item->getBadgeColor())
             ->visible($item->isVisible())
             ->url($item->getUrl(), $item->shouldOpenUrlInNewTab())
-            ->isActiveWhen(fn (): bool => false);
+            ->activeWhen(fn (): bool => false);
 
         $childItems = Collection::wrap($item->getChildItems());
 
@@ -216,7 +216,7 @@ final class LmsPrimaryNavigation
                     ->icon($item->getIcon() ?? 'heroicon-o-academic-cap')
                     ->sort($item->getSort())
                     ->visible($item->isVisible())
-                    ->isActiveWhen(fn (): bool => Filament::getCurrentOrDefaultPanel()->getId() === 'lms')
+                    ->activeWhen(fn (): bool => Filament::getCurrentOrDefaultPanel()->getId() === 'lms')
                     ->url(fn (): string => Dashboard::getUrl());
             })
             ->all();
@@ -240,7 +240,7 @@ final class LmsPrimaryNavigation
     {
         return NavigationItem::make('Courses')
             ->icon('heroicon-o-academic-cap')
-            ->isActiveWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
+            ->activeWhen(fn (): bool => request()->routeIs(Dashboard::getRouteName()))
             ->url(fn (): string => Dashboard::getUrl());
     }
 

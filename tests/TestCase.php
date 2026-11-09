@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Tests;
 
+use Filament\Actions\ActionsServiceProvider;
 use Filament\Facades\Filament;
 use Filament\FilamentServiceProvider;
 use Filament\Support\SupportServiceProvider;
@@ -247,6 +248,7 @@ abstract class TestCase extends Orchestra
             $table->string('url');
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Create lms_tests table
@@ -263,9 +265,10 @@ abstract class TestCase extends Orchestra
         $app['db']->connection()->getSchemaBuilder()->create('lms_images', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('file_path');
+            $table->string('file_path')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Create media table for Spatie Media Library
@@ -332,6 +335,7 @@ abstract class TestCase extends Orchestra
             FilamentServiceProvider::class,
             ExcelServiceProvider::class,
             SupportServiceProvider::class,
+            ActionsServiceProvider::class,
             MediaLibraryServiceProvider::class,
             FilamentLmsServiceProvider::class,
             LmsPanelProvider::class,

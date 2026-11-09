@@ -77,6 +77,8 @@ class CreateVideoCourse extends LmsTool
             return $course->refresh();
         });
 
+        $this->auditWrite($request, ['course_id' => $course->id]);
+
         return Response::structured($this->serializeCourse($course));
     }
 }

@@ -10,6 +10,10 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
 
+/**
+ * @property int $id
+ * @property string $name
+ */
 class Image extends Model implements HasMedia
 {
     use BelongsToTenant;

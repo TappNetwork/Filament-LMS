@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Tapp\FilamentCertificateBuilder\Filament\Resources\CertificateTemplates\CertificateTemplateResource;
+use Tapp\FilamentLms\Http\Middleware\EnsureLmsMcpAdmin;
 
 return [
     'theme' => 'default',
@@ -350,11 +351,24 @@ return [
     | Both stay out of the way when the host app registers its own server on the
     | same handle or path, for example in routes/ai.php.
     | contribute_abilities merges MCP tool names into filament-sanctum.abilities.list.
+    | auth_middleware is the middleware on POST /mcp/lms. Use
+    | ['auth:api,sanctum', ...] to accept Passport OAuth tokens next to Sanctum.
+    | remote_media_max_kb caps documents and images downloaded by MCP tools.
+    | auditor is a class implementing Tapp\FilamentLms\Mcp\McpAuditor, resolved
+    | from the container after each successful write. Null skips auditing.
+    | Tapp\FilamentLms\Mcp\LogMcpAuditor logs "LMS MCP write." at info level.
     |
     */
     'mcp' => [
         'enabled' => true,
         'web' => true,
         'contribute_abilities' => true,
+        'auditor' => null,
+        'auth_middleware' => [
+            'auth:sanctum',
+            'throttle:mcp',
+            EnsureLmsMcpAdmin::class,
+        ],
+        'remote_media_max_kb' => 20480,
     ],
 ];

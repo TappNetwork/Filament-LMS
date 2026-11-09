@@ -7,13 +7,19 @@ namespace Tapp\FilamentLms\Mcp;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Tool;
 use Tapp\FilamentLms\Mcp\Concerns\HasSanctumAbilities;
+use Tapp\FilamentLms\Mcp\Tools\CreateDocumentStep;
+use Tapp\FilamentLms\Mcp\Tools\CreateImageStep;
 use Tapp\FilamentLms\Mcp\Tools\CreateLesson;
+use Tapp\FilamentLms\Mcp\Tools\CreateLinkStep;
+use Tapp\FilamentLms\Mcp\Tools\CreateTestStep;
+use Tapp\FilamentLms\Mcp\Tools\CreateTextStep;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoCourse;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoStep;
 use Tapp\FilamentLms\Mcp\Tools\DeleteCourse;
 use Tapp\FilamentLms\Mcp\Tools\DeleteLesson;
 use Tapp\FilamentLms\Mcp\Tools\DeleteStep;
 use Tapp\FilamentLms\Mcp\Tools\GetCourse;
+use Tapp\FilamentLms\Mcp\Tools\GetTest;
 use Tapp\FilamentLms\Mcp\Tools\ListCourses;
 use Tapp\FilamentLms\Mcp\Tools\UpdateCourse;
 use Tapp\FilamentLms\Mcp\Tools\UpdateLesson;
@@ -25,7 +31,9 @@ class LmsServer extends Server
 
     protected string $name = 'Filament LMS';
 
-    protected string $version = '1.0.0';
+    protected string $version = '1.1.0';
+
+    public int $defaultPaginationLength = 50;
 
     protected string $instructions = <<<'MARKDOWN'
         Write LMS admin data: Course → Lesson → Step.
@@ -35,8 +43,12 @@ class LmsServer extends Server
         New courses default to `is_private = true`. There is no draft flag.
 
         Prefer `create_video_course` for a full nested create. Use the granular course, lesson, and step tools for edits afterward.
+        Step types: `create_video_step`, `create_text_step` (Markdown only), `create_link_step`, `create_document_step` (PDF), `create_image_step`, and `create_test_step` (graded quiz).
+        Documents and images are downloaded by the server from a public https URL. Files cannot be uploaded through MCP.
+        `create_test_step` needs a correct answer for every question. Read a quiz back with `get_test`. Quiz edits go through the Filament admin.
+        Delete tools remove data. Confirm with the user before calling them.
 
-        Deferred in this version: credits, evaluations, tests/forms, documents, SCORM, course images, and user assignment.
+        Deferred in this version: quiz editing, credits, evaluations, standalone forms, SCORM, course images, and user assignment.
     MARKDOWN;
 
     /**
@@ -54,6 +66,12 @@ class LmsServer extends Server
         UpdateLesson::class,
         DeleteLesson::class,
         CreateVideoStep::class,
+        CreateTextStep::class,
+        CreateLinkStep::class,
+        CreateDocumentStep::class,
+        CreateImageStep::class,
+        CreateTestStep::class,
+        GetTest::class,
         UpdateStep::class,
         DeleteStep::class,
     ];

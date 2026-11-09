@@ -82,6 +82,12 @@ body.lms-embedded-player .fi-main {
     flex-direction: column;
     gap: 0.625rem;
     width: 100%;
+    /*
+     * Filament pulls a stacked radio list up by 1rem (margin-top: -1rem) to offset the
+     * padding-top it gives each option. The cards set their own padding, so without this
+     * reset the first card covers the bottom half of the question text.
+     */
+    margin-top: 0;
 }
 
 .lms-test-form-wrapper .lms-knowledge-check-radio-field .fi-fo-radio-label {

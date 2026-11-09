@@ -142,7 +142,7 @@ class Reporting extends Page implements HasTable
                 ]))
             ->filters([
                 Filter::make('date_range')
-                    ->schema([
+                    ->form([
                         DatePicker::make('completed_from')
                             ->label('Completed From'),
                         DatePicker::make('completed_until')

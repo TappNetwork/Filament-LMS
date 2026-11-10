@@ -149,7 +149,7 @@ class CourseUserGroupsRelationManager extends RelationManager
                 ->label($source->label)
                 ->constraints($this->freshConstraints($source))
                 ->constraintPickerColumns(2)
-                ->schema(fn (QueryBuilder $filter): array => [
+                ->form(fn (QueryBuilder $filter): array => [
                     Fieldset::make($source->label)
                         ->columns(1)
                         ->schema([

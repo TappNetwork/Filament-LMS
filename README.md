@@ -89,6 +89,23 @@ class AdminPanelProvider extends PanelProvider
 
 `courseSort()` sets the learner course catalog and the admin course list. The default is alphabetical by course name. The learner panel does not register this plugin; call `courseSort()` on the admin `Lms::make()` instance and the catalog uses that choice.
 
+### Provide the app's login
+
+The LMS panel (`/lms`) has no login page. Your app keeps its one login page, and guests on any LMS page are sent there.
+
+1. Make sure the app has exactly one login page. That can be a frontend panel login, an admin panel login, or a custom `login` route.
+2. Point Laravel's guest redirect at it in `bootstrap/app.php`:
+
+```php
+->withMiddleware(function (Middleware $middleware): void {
+    $middleware->redirectGuestsTo(fn (): string => route('filament.app.auth.login'));
+})
+```
+
+Without `redirectGuestsTo()`, Laravel redirects guests to the route named `login`, so that route must exist.
+
+The redirect stores the LMS page in `url.intended`. Filament's login and any SSO callback that ends with `redirect()->intended(...)` send the learner back to that page.
+
 ### Prepare your User model
 
 Your User model **must** use the `FilamentLmsUser` trait **and** implement the `FilamentLmsUserInterface` contract. The LMS step pages refuse to render for a user model that does not implement the interface (a `LogicException` is thrown explaining what is missing).

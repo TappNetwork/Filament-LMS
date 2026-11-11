@@ -948,6 +948,27 @@ Rebuild all active group memberships (useful after imports or if the queue fell 
 php artisan filament-lms:reconcile-user-group-memberships
 ```
 
+## Course Assignment Notifications
+
+The package does not send assignment emails. It dispatches `Tapp\FilamentLms\Events\CourseAssigned` (public `$user`, public `$course`) when a user is newly assigned to a course. Listen for it in your app and send your own notification.
+
+The event fires once per user per course, when the user first gains the assignment, from any of these paths:
+
+- `Course::assignUsers()` (including **Admin → Users → Assign Courses** bulk action and the course **Assigned Users** tab)
+- A user group attached to a course that already has published members
+- A group membership rebuild that adds users (including a user who starts matching a group later)
+
+It does not fire when a user is already assigned explicitly or through another group on the same course, when a group is saved without new members, or when a completion row is stored without an assignment. Public courses fire it too.
+
+```php
+use Illuminate\Support\Facades\Event;
+use Tapp\FilamentLms\Events\CourseAssigned;
+
+Event::listen(CourseAssigned::class, SendCourseAssignedNotification::class);
+```
+
+If your listener sends a queued notification, a queue worker must be running for it to be delivered.
+
 ## Overriding Course Visibility
 
 If you need custom logic to determine whether a course is visible to a user, you can override the `isCourseVisibleForUser` method provided by the `FilamentLmsUser` trait in your User model. This method is used to filter which courses are shown to the user when course visibility restrictions are enabled.

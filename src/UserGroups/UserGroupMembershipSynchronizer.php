@@ -9,12 +9,14 @@ use Illuminate\Support\Facades\DB;
 use Tapp\FilamentLms\Jobs\RebuildUserGroupMemberships;
 use Tapp\FilamentLms\Models\UserGroup;
 use Tapp\FilamentLms\Models\UserGroupMembership;
+use Tapp\FilamentLms\Services\CourseAssignmentNotifier;
 use Throwable;
 
 final class UserGroupMembershipSynchronizer
 {
     public function __construct(
         private readonly UserGroupRuleMatcher $matcher,
+        private readonly CourseAssignmentNotifier $assignments,
     ) {}
 
     public function queueRebuild(UserGroup $group): void
@@ -40,6 +42,8 @@ final class UserGroupMembershipSynchronizer
             'sync_error' => null,
         ])->save();
 
+        $pendingAssignments = [];
+
         try {
             $desiredRevision = $group->published_revision + 1;
             $matchedAt = now();
@@ -47,6 +51,10 @@ final class UserGroupMembershipSynchronizer
                 ->matchingUsersQuery($group->rules ?? [])
                 ->pluck($this->userKeyName())
                 ->all();
+            $pendingAssignments = $this->assignments->assignmentsForNewMembers(
+                $group,
+                $this->addedUserIds($group, $userIds),
+            );
 
             DB::transaction(function () use ($group, $desiredRevision, $userIds, $matchedAt): void {
                 $now = now();
@@ -100,6 +108,8 @@ final class UserGroupMembershipSynchronizer
 
             throw $exception;
         }
+
+        $this->assignments->dispatchAssignments($pendingAssignments);
     }
 
     public function refreshUser(int|string $userId): void
@@ -137,6 +147,8 @@ final class UserGroupMembershipSynchronizer
                 ->exists();
 
             if ($matches && ! $exists) {
+                $pendingAssignments = $this->assignments->assignmentsForNewMembers($group, [$userId]);
+
                 DB::table('lms_user_group_memberships')->upsert([
                     [
                         'user_group_id' => $group->id,
@@ -147,6 +159,8 @@ final class UserGroupMembershipSynchronizer
                         'updated_at' => now(),
                     ],
                 ], ['user_group_id', 'user_id', 'revision'], ['matched_at', 'updated_at']);
+
+                $this->assignments->dispatchAssignments($pendingAssignments);
             }
 
             if (! $matches && $exists) {
@@ -172,6 +186,29 @@ final class UserGroupMembershipSynchronizer
             });
 
         return $count;
+    }
+
+    /**
+     * @param  array<int, int|string>  $matchedUserIds
+     * @return list<int|string>
+     */
+    private function addedUserIds(UserGroup $group, array $matchedUserIds): array
+    {
+        $matchedUserIds = $this->assignments->normalizeIds($matchedUserIds);
+
+        if ($group->published_revision < 1) {
+            return $matchedUserIds;
+        }
+
+        $previousUserIds = $this->assignments->normalizeIds(
+            UserGroupMembership::query()
+                ->where('user_group_id', $group->getKey())
+                ->where('revision', $group->published_revision)
+                ->pluck('user_id')
+                ->all()
+        );
+
+        return array_values(array_diff($matchedUserIds, $previousUserIds));
     }
 
     private function userKeyName(): string

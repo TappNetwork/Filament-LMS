@@ -5,8 +5,6 @@ namespace Tapp\FilamentLms\Actions;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
-use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Models\Course;
 
 class AssignCoursesBulkAction extends BulkAction
@@ -31,19 +29,37 @@ class AssignCoursesBulkAction extends BulkAction
                     ->preload()
                     ->required(),
             ])
-            ->action(function (Collection $records, array $data) {
-                foreach ($records as $record) {
-                    /** @var Model&FilamentLmsUserInterface $record */
-                    if (method_exists($record, 'courses')) {
-                        // @phpstan-ignore-next-line - courses() method is provided by FilamentLmsUser trait
-                        $pivotData = [];
-                        foreach ($data['courses'] as $courseId) {
-                            $pivotData[$courseId] = ['is_explicitly_assigned' => true];
-                        }
-                        $record->courses()->syncWithoutDetaching($pivotData);
-                    }
-                }
+            ->action(function (Collection $records, array $data): void {
+                $this->assignCourses($records, $data['courses']);
             })
             ->deselectRecordsAfterCompletion();
+    }
+
+    /**
+     * One assignUsers() call per course. That helper already chunks lookup and
+     * CourseAssigned dispatch, so the selected ids must be passed together.
+     *
+     * @param  array<int, int|string>  $courseIds
+     */
+    protected function assignCourses(Collection $records, array $courseIds): void
+    {
+        $userIds = [];
+
+        foreach ($records as $record) {
+            if (! method_exists($record, 'courses')) {
+                continue;
+            }
+
+            $userIds[] = $record->getKey();
+        }
+
+        if ($userIds === []) {
+            return;
+        }
+
+        Course::query()
+            ->whereIn('id', $courseIds)
+            ->get()
+            ->each(fn (Course $course) => $course->assignUsers($userIds));
     }
 }

@@ -31,6 +31,7 @@ use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
+use Tapp\FilamentLms\Services\CourseAssignmentNotifier;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Support\CertificateBuilder;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
@@ -596,14 +597,26 @@ final class Course extends Model implements HasMedia
     /**
      * Explicitly assign users to this course. Existing rows, including completed rows kept by
      * unassignUsers(), are marked explicit again and keep their completed_at.
+     * Dispatches CourseAssigned for users who were not already assigned to this course.
      *
      * @param  array<int, int|string>|int|string  $userIds
      */
     public function assignUsers(array|int|string $userIds): void
     {
+        $userIds = array_values((array) $userIds);
+
+        if ($userIds === []) {
+            return;
+        }
+
+        $notifier = app(CourseAssignmentNotifier::class);
+        $newlyAssignedIds = $notifier->newlyAssignedIds($this, $userIds);
+
         $this->users()->syncWithoutDetaching(
-            collect((array) $userIds)->mapWithKeys(fn ($userId) => [$userId => ['is_explicitly_assigned' => true]])->all()
+            collect($userIds)->mapWithKeys(fn (int|string $userId): array => [$userId => ['is_explicitly_assigned' => true]])->all()
         );
+
+        $notifier->dispatch($this, $newlyAssignedIds);
     }
 
     /**

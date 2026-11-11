@@ -5,8 +5,6 @@ namespace Tapp\FilamentLms\Actions;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
-use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Models\Course;
 
 class AssignCoursesBulkAction extends BulkAction
@@ -31,16 +29,18 @@ class AssignCoursesBulkAction extends BulkAction
                     ->preload()
                     ->required(),
             ])
-            ->action(function (Collection $records, array $data) {
+            ->action(function (Collection $records, array $data): void {
+                $courses = Course::query()
+                    ->whereIn('id', $data['courses'])
+                    ->get();
+
                 foreach ($records as $record) {
-                    /** @var Model&FilamentLmsUserInterface $record */
-                    if (method_exists($record, 'courses')) {
-                        // @phpstan-ignore-next-line - courses() method is provided by FilamentLmsUser trait
-                        $pivotData = [];
-                        foreach ($data['courses'] as $courseId) {
-                            $pivotData[$courseId] = ['is_explicitly_assigned' => true];
-                        }
-                        $record->courses()->syncWithoutDetaching($pivotData);
+                    if (! method_exists($record, 'courses')) {
+                        continue;
+                    }
+
+                    foreach ($courses as $course) {
+                        $course->assignUsers([$record->getKey()]);
                     }
                 }
             })

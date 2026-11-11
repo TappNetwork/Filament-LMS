@@ -38,6 +38,8 @@ use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Livewire\ViewGradedEntry;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
 use Tapp\FilamentLms\Mcp\LmsServer;
+use Tapp\FilamentLms\Models\CourseUserGroup;
+use Tapp\FilamentLms\Observers\CourseUserGroupObserver;
 use Tapp\FilamentLms\Observers\UserGroupMembershipUserObserver;
 use Tapp\FilamentLms\Pages\CreateTestEntry;
 use Tapp\FilamentLms\UserGroups\UserGroupCriteriaRegistry;
@@ -159,6 +161,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
 
         $this->configureLivewireTemporaryUploadLimits();
         $this->registerUserGroupMembershipObserver();
+        $this->registerCourseUserGroupObserver();
         $this->registerMcpServer();
         $this->contributeSanctumAbilities();
         $this->configureSanctumAuthorization();
@@ -235,6 +238,11 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Gate::define('lms-mcp-token', function (mixed $user): bool {
             return method_exists($user, 'isLmsAdmin') && $user->isLmsAdmin();
         });
+    }
+
+    protected function registerCourseUserGroupObserver(): void
+    {
+        CourseUserGroup::observe(CourseUserGroupObserver::class);
     }
 
     protected function registerUserGroupMembershipObserver(): void

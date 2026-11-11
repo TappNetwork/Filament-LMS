@@ -30,20 +30,36 @@ class AssignCoursesBulkAction extends BulkAction
                     ->required(),
             ])
             ->action(function (Collection $records, array $data): void {
-                $courses = Course::query()
-                    ->whereIn('id', $data['courses'])
-                    ->get();
-
-                foreach ($records as $record) {
-                    if (! method_exists($record, 'courses')) {
-                        continue;
-                    }
-
-                    foreach ($courses as $course) {
-                        $course->assignUsers([$record->getKey()]);
-                    }
-                }
+                $this->assignCourses($records, $data['courses']);
             })
             ->deselectRecordsAfterCompletion();
+    }
+
+    /**
+     * One assignUsers() call per course. That helper already chunks lookup and
+     * CourseAssigned dispatch, so the selected ids must be passed together.
+     *
+     * @param  array<int, int|string>  $courseIds
+     */
+    protected function assignCourses(Collection $records, array $courseIds): void
+    {
+        $userIds = [];
+
+        foreach ($records as $record) {
+            if (! method_exists($record, 'courses')) {
+                continue;
+            }
+
+            $userIds[] = $record->getKey();
+        }
+
+        if ($userIds === []) {
+            return;
+        }
+
+        Course::query()
+            ->whereIn('id', $courseIds)
+            ->get()
+            ->each(fn (Course $course) => $course->assignUsers($userIds));
     }
 }

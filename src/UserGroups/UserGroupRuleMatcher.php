@@ -173,7 +173,7 @@ final class UserGroupRuleMatcher
                 $constraint->settings($settings)->inverse($isInverse);
                 $operator->constraint($constraint)->settings($settings)->inverse($isInverse);
 
-                $summaries[] = $source->label.': '.$operator->getSummary($isInverse);
+                $summaries[] = $source->label.': '.$operator->getSummary();
 
                 $constraint->settings(null)->inverse(null);
                 $operator->constraint(null)->settings(null)->inverse(null);

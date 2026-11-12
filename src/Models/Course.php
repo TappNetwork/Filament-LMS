@@ -19,6 +19,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Tapp\FilamentFormBuilder\Models\FilamentFormUser;
@@ -30,6 +31,7 @@ use Tapp\FilamentLms\Models\Traits\BelongsToTenant;
 use Tapp\FilamentLms\Pages\CourseCompleted;
 use Tapp\FilamentLms\Pages\Dashboard;
 use Tapp\FilamentLms\Pages\Step as StepPage;
+use Tapp\FilamentLms\Services\CourseAssignmentNotifier;
 use Tapp\FilamentLms\Services\CourseEvaluationService;
 use Tapp\FilamentLms\Support\CertificateBuilder;
 use Tapp\FilamentLms\Traits\HasMediaUrl;
@@ -586,6 +588,69 @@ final class Course extends Model implements HasMedia
     public function courseCreditCategories(): HasMany
     {
         return $this->hasMany(CourseCreditCategory::class);
+    }
+
+    /**
+     * Whether the user may see this course's completion page: they finished every current step,
+     * or they already earned completion. Completion is sticky, so steps added after a learner
+     * completed the course do not take their completion page or certificate away.
+     */
+    public function completionPageAvailableForUser(int|string $userId, ?int $evaluationPrimaryCourseId = null): bool
+    {
+        return $this->completedByUserAt($userId) !== null
+            || $this->allStepsCompletedByUser($userId, $evaluationPrimaryCourseId);
+    }
+
+    /**
+     * Explicitly assign users to this course. Existing rows, including completed rows kept by
+     * unassignUsers(), are marked explicit again and keep their completed_at.
+     * Dispatches CourseAssigned for users who were not already assigned to this course.
+     *
+     * @param  array<int, int|string>|int|string  $userIds
+     */
+    public function assignUsers(array|int|string $userIds): void
+    {
+        $userIds = array_values((array) $userIds);
+
+        if ($userIds === []) {
+            return;
+        }
+
+        $notifier = app(CourseAssignmentNotifier::class);
+        $newlyAssignedIds = $notifier->newlyAssignedIds($this, $userIds);
+
+        $this->users()->syncWithoutDetaching(
+            collect($userIds)->mapWithKeys(fn (int|string $userId): array => [$userId => ['is_explicitly_assigned' => true]])->all()
+        );
+
+        $notifier->dispatch($this, $newlyAssignedIds);
+    }
+
+    /**
+     * Remove users' assignment to this course without destroying completion history.
+     * Rows without completed_at are deleted; completed rows are kept with
+     * is_explicitly_assigned = false so they no longer grant access to a private course.
+     *
+     * @param  array<int, int|string>|int|string  $userIds
+     */
+    public function unassignUsers(array|int|string $userIds): void
+    {
+        $userIds = array_values((array) $userIds);
+
+        if ($userIds === []) {
+            return;
+        }
+
+        $relation = $this->users();
+        $rows = fn () => DB::table($relation->getTable())
+            ->where($relation->getForeignPivotKeyName(), $this->getKey())
+            ->whereIn($relation->getRelatedPivotKeyName(), $userIds);
+
+        $rows()->whereNull('completed_at')->delete();
+
+        $rows()
+            ->whereNotNull('completed_at')
+            ->update(['is_explicitly_assigned' => false, 'updated_at' => now()]);
     }
 
     /**

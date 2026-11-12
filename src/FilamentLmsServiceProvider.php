@@ -38,12 +38,18 @@ use Tapp\FilamentLms\Livewire\VideoStep;
 use Tapp\FilamentLms\Livewire\ViewGradedEntry;
 use Tapp\FilamentLms\Livewire\VimeoVideo;
 use Tapp\FilamentLms\Mcp\LmsServer;
+use Tapp\FilamentLms\Models\CourseUserGroup;
+use Tapp\FilamentLms\Observers\CourseUserGroupObserver;
 use Tapp\FilamentLms\Observers\UserGroupMembershipUserObserver;
 use Tapp\FilamentLms\Pages\CreateTestEntry;
 use Tapp\FilamentLms\UserGroups\UserGroupCriteriaRegistry;
 
 class FilamentLmsServiceProvider extends PackageServiceProvider
 {
+    private const MCP_LOCAL_HANDLE = 'filament-lms';
+
+    private const MCP_WEB_PATH = 'mcp/lms';
+
     public function configurePackage(Package $package): void
     {
         $package
@@ -156,6 +162,7 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
 
         $this->configureLivewireTemporaryUploadLimits();
         $this->registerUserGroupMembershipObserver();
+        $this->registerCourseUserGroupObserver();
         $this->registerMcpServer();
         $this->contributeSanctumAbilities();
         $this->configureSanctumAuthorization();
@@ -167,20 +174,23 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
             return;
         }
 
-        if (config('filament-lms.mcp.enabled', true)) {
-            Mcp::local('filament-lms', LmsServer::class);
+        if (RateLimiter::limiter('mcp') === null) {
+            RateLimiter::for('mcp', function (Request $request) {
+                return Limit::perMinute(60)->by((string) ($request->user()?->getAuthIdentifier() ?: $request->ip()));
+            });
         }
 
-        if (! config('filament-lms.mcp.web', true)) {
-            return;
-        }
+        // Wait until every provider has booted so routes/ai.php has run and a host server can claim the handle or path first.
+        $this->app->booted(function (): void {
+            if (config('filament-lms.mcp.enabled', true) && Mcp::getLocalServer(self::MCP_LOCAL_HANDLE) === null) {
+                Mcp::local(self::MCP_LOCAL_HANDLE, LmsServer::class);
+            }
 
-        RateLimiter::for('mcp', function (Request $request) {
-            return Limit::perMinute(60)->by((string) ($request->user()?->getAuthIdentifier() ?: $request->ip()));
+            if (config('filament-lms.mcp.web', true) && Mcp::getWebServer(self::MCP_WEB_PATH) === null) {
+                Mcp::web(self::MCP_WEB_PATH, LmsServer::class)
+                    ->middleware(['auth:sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class]);
+            }
         });
-
-        Mcp::web('/mcp/lms', LmsServer::class)
-            ->middleware(['auth:sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class]);
     }
 
     protected function contributeSanctumAbilities(): void
@@ -229,6 +239,11 @@ class FilamentLmsServiceProvider extends PackageServiceProvider
         Gate::define('lms-mcp-token', function (mixed $user): bool {
             return method_exists($user, 'isLmsAdmin') && $user->isLmsAdmin();
         });
+    }
+
+    protected function registerCourseUserGroupObserver(): void
+    {
+        CourseUserGroup::observe(CourseUserGroupObserver::class);
     }
 
     protected function registerUserGroupMembershipObserver(): void

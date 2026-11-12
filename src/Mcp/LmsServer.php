@@ -6,7 +6,7 @@ namespace Tapp\FilamentLms\Mcp;
 
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Tool;
-use ReflectionClass;
+use Tapp\FilamentLms\Mcp\Concerns\HasSanctumAbilities;
 use Tapp\FilamentLms\Mcp\Tools\CreateLesson;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoCourse;
 use Tapp\FilamentLms\Mcp\Tools\CreateVideoStep;
@@ -21,6 +21,8 @@ use Tapp\FilamentLms\Mcp\Tools\UpdateStep;
 
 class LmsServer extends Server
 {
+    use HasSanctumAbilities;
+
     protected string $name = 'Filament LMS';
 
     protected string $version = '1.0.0';
@@ -38,9 +40,11 @@ class LmsServer extends Server
     MARKDOWN;
 
     /**
-     * @var array<int, class-string<Tool>>
+     * Host apps spread this into their own server's $tools.
+     *
+     * @var list<class-string<Tool>>
      */
-    protected array $tools = [
+    public const TOOLS = [
         CreateVideoCourse::class,
         ListCourses::class,
         GetCourse::class,
@@ -55,22 +59,7 @@ class LmsServer extends Server
     ];
 
     /**
-     * Sanctum ability keys mapped to Filament checkbox labels.
-     *
-     * @return array<string, string>
+     * @var array<int, class-string<Tool>>
      */
-    public static function sanctumAbilities(): array
-    {
-        /** @var list<class-string<Tool>> $toolClasses */
-        $toolClasses = (new ReflectionClass(static::class))->getDefaultProperties()['tools'] ?? [];
-
-        $abilities = [];
-
-        foreach ($toolClasses as $toolClass) {
-            $tool = new $toolClass;
-            $abilities[$tool->name()] = $tool->title();
-        }
-
-        return $abilities;
-    }
+    protected array $tools = self::TOOLS;
 }

@@ -4,10 +4,11 @@ An opinionated LMS plugin for Filament containing a user facing LMS panel and Re
 
 ## Version Compatibility
  
-Filament | Filament LMS       | Documentation
-:--------|:-------------------|:--------------
-5.x      | 4.x / 5.x          | Current (`tapp/filament-certificate-builder` required)
-3.x      | 1.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/1.x)
+Filament  | Filament LMS       | Documentation
+:---------|:-------------------|:--------------
+5.x       | 5.x                | Current, `5.x` branch (`tapp/filament-certificate-builder` required)
+4.x / 5.x | 4.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/4.x)
+3.x       | 1.x                | [Check the docs](https://github.com/TappNetwork/Filament-LMS/tree/1.x)
 
 ## Installation
 
@@ -48,7 +49,7 @@ or
 ```
 
 ```bash
-composer require tapp/filament-lms:"^4.0"
+composer require tapp/filament-lms:"^5.0"
 ```
 
 ### Publish
@@ -85,9 +86,48 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->plugins([
-                \Tapp\FilamentLms\Lms::make(),
+                \Tapp\FilamentLms\Lms::make()
+                    ->courseSort('name'),
+                    // ->courseSort('created_at', 'desc') // newest first
+                    // ->courseSort(fn ($query, string $direction) => $query->orderBy('name', $direction)),
             ])
     }
+}
+```
+
+`courseSort()` sets the learner course catalog and the admin course list. The default is alphabetical by course name. The learner panel does not register this plugin; call `courseSort()` on the admin `Lms::make()` instance and the catalog uses that choice.
+
+### Provide the app's login
+
+The LMS panel (`/lms`) has no login page. Your app keeps its one login page, and guests on any LMS page are sent there.
+
+1. Make sure the app has exactly one login page. That can be a frontend panel login, an admin panel login, or a custom `login` route.
+2. Point Laravel's guest redirect at it in `bootstrap/app.php`:
+
+```php
+->withMiddleware(function (Middleware $middleware): void {
+    $middleware->redirectGuestsTo(fn (): string => route('filament.app.auth.login'));
+})
+```
+
+Without `redirectGuestsTo()`, Laravel redirects guests to the route named `login`, so that route must exist.
+
+The redirect stores the LMS page in `url.intended`. Filament's login and any SSO callback that ends with `redirect()->intended(...)` send the learner back to that page.
+
+### Prepare your User model
+
+Your User model **must** use the `FilamentLmsUser` trait **and** implement the `FilamentLmsUserInterface` contract. The LMS step pages refuse to render for a user model that does not implement the interface (a `LogicException` is thrown explaining what is missing).
+
+```php
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
+
+class User extends Authenticatable implements FilamentLmsUserInterface
+{
+    use FilamentLmsUser;
+
+    // ...
 }
 ```
 
@@ -154,6 +194,39 @@ Turn off auto-registration with:
     'web' => false, // skip POST /mcp/lms
 ],
 ```
+
+### Register the tools on your own server
+
+An app that already runs its own MCP server can serve the LMS tools from it. Spread `LmsServer::TOOLS` into your server and add your own tools. Use `HasSanctumAbilities` to get the Sanctum ability list for every tool on your server:
+
+```php
+use Laravel\Mcp\Server;
+use Tapp\FilamentLms\Mcp\Concerns\HasSanctumAbilities;
+use Tapp\FilamentLms\Mcp\LmsServer;
+
+class AppMcpServer extends Server
+{
+    use HasSanctumAbilities;
+
+    protected array $tools = [
+        ...LmsServer::TOOLS,
+        \App\Mcp\Tools\CreateWidget::class,
+    ];
+}
+```
+
+Register it in `routes/ai.php`. Keep the `filament-lms` handle and the `/mcp/lms` path if existing clients and tokens must keep working:
+
+```php
+use Laravel\Mcp\Facades\Mcp;
+use Tapp\FilamentLms\Http\Middleware\EnsureLmsMcpAdmin;
+
+Mcp::local('filament-lms', AppMcpServer::class);
+Mcp::web('/mcp/lms', AppMcpServer::class)
+    ->middleware(['auth:sanctum', 'throttle:mcp', EnsureLmsMcpAdmin::class]);
+```
+
+The package registers its own servers after every provider boots. It skips the `filament-lms` handle and the `/mcp/lms` path when your app already registered them, so your server wins without a config change. The package always defines the `mcp` rate limiter unless your app defines it first. To add your own tools to the Filament Sanctum ability checkboxes, merge `AppMcpServer::sanctumAbilities()` into `filament-sanctum.abilities.list`.
 
 Web requests that have `$request->user()` must be able to access the LMS Filament panel. Local stdio has no HTTP user — same trust model as tinker.
 
@@ -279,9 +352,13 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Support\Collection;
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
+use Tapp\FilamentLms\Traits\FilamentLmsUser;
 
-class User extends Authenticatable implements FilamentUser, HasTenants
+class User extends Authenticatable implements FilamentLmsUserInterface, FilamentUser, HasTenants
 {
+    use FilamentLmsUser;
+
     // Allow users to access the LMS panel
     public function canAccessPanel(Panel $panel): bool
     {
@@ -898,6 +975,27 @@ Rebuild all active group memberships (useful after imports or if the queue fell 
 php artisan filament-lms:reconcile-user-group-memberships
 ```
 
+## Course Assignment Notifications
+
+The package does not send assignment emails. It dispatches `Tapp\FilamentLms\Events\CourseAssigned` (public `$user`, public `$course`) when a user is newly assigned to a course. Listen for it in your app and send your own notification.
+
+The event fires once per user per course, when the user first gains the assignment, from any of these paths:
+
+- `Course::assignUsers()` (including **Admin → Users → Assign Courses** bulk action and the course **Assigned Users** tab)
+- A user group attached to a course that already has published members
+- A group membership rebuild that adds users (including a user who starts matching a group later)
+
+It does not fire when a user is already assigned explicitly or through another group on the same course, when a group is saved without new members, or when a completion row is stored without an assignment. Public courses fire it too.
+
+```php
+use Illuminate\Support\Facades\Event;
+use Tapp\FilamentLms\Events\CourseAssigned;
+
+Event::listen(CourseAssigned::class, SendCourseAssignedNotification::class);
+```
+
+If your listener sends a queued notification, a queue worker must be running for it to be delivered.
+
 ## Overriding Course Visibility
 
 If you need custom logic to determine whether a course is visible to a user, you can override the `isCourseVisibleForUser` method provided by the `FilamentLmsUser` trait in your User model. This method is used to filter which courses are shown to the user when course visibility restrictions are enabled.
@@ -905,9 +1003,10 @@ If you need custom logic to determine whether a course is visible to a user, you
 If you want to call the trait's original method within your override, you can alias it when importing the trait:
 
 ```php
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Traits\FilamentLmsUser;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentLmsUserInterface
 {
     use FilamentLmsUser {
         FilamentLmsUser::isCourseVisibleForUser as filamentLmsIsCourseVisibleForUser;
@@ -998,9 +1097,10 @@ By default, the `canAccessStep` method checks if the step is available based on 
 To implement custom step access logic, override the `canAccessStep` method in your User model:
 
 ```php
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Traits\FilamentLmsUser;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentLmsUserInterface
 {
     use FilamentLmsUser;
 
@@ -1044,9 +1144,10 @@ By default, the `canEditStep` method returns `false`, meaning no users have edit
 To implement custom step edit logic, override the `canEditStep` method in your User model:
 
 ```php
+use Tapp\FilamentLms\Contracts\FilamentLmsUserInterface;
 use Tapp\FilamentLms\Traits\FilamentLmsUser;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentLmsUserInterface
 {
     use FilamentLmsUser;
 

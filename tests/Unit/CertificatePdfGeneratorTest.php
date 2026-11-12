@@ -103,7 +103,7 @@ it('posts rendered html to cloudflare browser rendering and returns the pdf body
         return $request->url() === 'https://api.cloudflare.com/client/v4/accounts/acct-123/browser-rendering/pdf'
             && $request->hasHeader('Authorization', 'Bearer test-token')
             && ($data['html'] ?? null) === '<html><body>Certificate</body></html>'
-            && ($data['pdfOptions']['format'] ?? null) === 'Letter'
+            && ($data['pdfOptions']['format'] ?? null) === 'letter'
             && ($data['pdfOptions']['landscape'] ?? false) === true
             && ($data['pdfOptions']['printBackground'] ?? false) === true
             && ($data['pdfOptions']['margin']['top'] ?? null) === '0'

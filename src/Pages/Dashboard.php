@@ -8,6 +8,7 @@ use Filament\Schemas\Schema;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
+use Tapp\FilamentLms\Lms;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\CreditCategory;
 
@@ -44,19 +45,19 @@ class Dashboard extends \Filament\Pages\Dashboard
         $stepEager = $user ? ['steps.progress'] : [];
 
         if ($user) {
-            return Course::accessibleTo($user)
-                ->with(array_merge($creditEager, $stepEager, ['authEnrollment']))
-                ->withCount('lessons')
-                ->latest()
-                ->get();
+            return Lms::applyCourseSort(
+                Course::accessibleTo($user)
+                    ->with(array_merge($creditEager, $stepEager, ['authEnrollment']))
+                    ->withCount('lessons'),
+            )->get();
         }
 
-        return Course::where('is_private', false)
-            ->whereHas('steps')
-            ->with(array_merge($creditEager, $stepEager))
-            ->withCount('lessons')
-            ->latest()
-            ->get();
+        return Lms::applyCourseSort(
+            Course::where('is_private', false)
+                ->whereHas('steps')
+                ->with(array_merge($creditEager, $stepEager))
+                ->withCount('lessons'),
+        )->get();
     }
 
     public function filtersForm(Schema $schema): Schema

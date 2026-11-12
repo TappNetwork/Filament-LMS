@@ -41,7 +41,7 @@ final class CourseStepNavigation
                 ->items($lesson->steps->map(function (StepModel $step) use ($stepUrlParameters): NavigationItem {
                     return NavigationItem::make($step->name)
                         ->icon(fn (): string => $step->completed_at ? 'heroicon-o-check-circle' : '')
-                        ->isActiveWhen(fn (): bool => $step->isActive())
+                        ->activeWhen(fn (): bool => $step->isActive())
                         ->url(function () use ($step, $stepUrlParameters): string {
                             $user = auth()->user();
                             if (! $user instanceof FilamentLmsUserInterface) {
@@ -60,7 +60,7 @@ final class CourseStepNavigation
                 NavigationItem::make('Certificate')
                     ->icon('heroicon-o-trophy')
                     ->url(fn (): string => CourseCompleted::getUrl([$course->slug]))
-                    ->isActiveWhen(fn (): bool => request()->routeIs(CourseCompleted::getRouteName())),
+                    ->activeWhen(fn (): bool => request()->routeIs(CourseCompleted::getRouteName())),
             ]);
 
         return $navigationGroups;

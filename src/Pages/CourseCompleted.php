@@ -9,6 +9,7 @@ use Exception;
 use Filament\Facades\Filament;
 use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
+use Filament\Notifications\Notification;
 use Filament\Pages\Enums\SubNavigationPosition;
 use Filament\Pages\Page;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -112,13 +113,23 @@ final class CourseCompleted extends Page
             return redirect()->to(Dashboard::getUrl());
         }
 
-        // Only redirect when the user has not completed all steps. Allow viewing this page when all steps
-        // are done even if required_test_percentage is not met (we show retake/certificate state below).
-        if (! $this->course->allStepsCompletedByUser($userId)) {
+        // Only redirect when the user has neither completed the course nor finished all steps. Allow viewing
+        // this page when all steps are done even if required_test_percentage is not met (we show
+        // retake/certificate state below), and keep it open for learners who completed the course before
+        // more steps were added.
+        if (! $this->course->completionPageAvailableForUser($userId)) {
             $currentStepUrl = $this->course->linkToCurrentStep();
             if (empty($currentStepUrl)) {
                 return redirect()->to(Dashboard::getUrl());
             }
+
+            $incompleteStep = $this->course->currentStep($user);
+
+            Notification::make()
+                ->warning()
+                ->title('Finish every step to unlock your certificate')
+                ->body($incompleteStep ? "\"{$incompleteStep->name}\" isn't complete yet." : null)
+                ->send();
 
             return redirect()->to($currentStepUrl);
         }

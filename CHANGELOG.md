@@ -5,6 +5,75 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v5.2.9 - 2026-11-11
+
+### What's Changed
+
+* feat!: stop the LMS panel serving its own login page by @scottgrayson in https://github.com/TappNetwork/Filament-LMS/pull/154
+* Add course assigned event by @andreia in https://github.com/TappNetwork/Filament-LMS/pull/155
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.2.8...v5.2.9
+
+## v5.2.7 - 2026-11-07
+
+### What's Changed
+
+* Replace deprecated isActiveWhen() with activeWhen() by @swilla in https://github.com/TappNetwork/Filament-LMS/pull/152
+* fix: send lowercase letter to Cloudflare certificate PDF by @swilla in https://github.com/TappNetwork/Filament-LMS/pull/151
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.2.6...v5.2.7
+
+## v5.2.5 - 2026-11-02
+
+### What's Changed
+
+* Adding steps to a course no longer takes completion away. A learner with `completed_at` set keeps the completion page and certificate, and can still open and complete the new steps. In https://github.com/TappNetwork/Filament-LMS/pull/150
+* New `Course::unassignUsers()` and `Course::assignUsers()`. Unassigning deletes rows that have no `completed_at` and keeps completed rows as non-explicit, so private-course access goes away but the completion stays. Assigning again marks the row explicit and keeps `completed_at`. The course Users and user Assigned Courses relation managers use them for Attach, Detach and Bulk Detach, and a kept completed row can be attached again. Host apps should call these instead of `users()->attach()` / `detach()`.
+* `filament-lms:backfill-course-completed-at` gains `--course=*` and `--steps-existing-at-completion`. The second restores `completed_at` for learners who completed every step that existed when they finished, at that finish time, without overwriting an existing `completed_at`. Run it with `--dry-run --log-each` first.
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.2.4...v5.2.5
+
+## v5.2.3 - 2026-10-30
+
+### What's Changed
+
+* Remove evaluation responses from Course export in reporting by @andreia in https://github.com/TappNetwork/Filament-LMS/pull/148
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.2.2...v5.2.3
+
+## v5.2.2 - 2026-10-30
+
+### What's Changed
+
+* Add configurable course sorting by @andreia in https://github.com/TappNetwork/Filament-LMS/pull/146
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.2.1...v5.2.2
+
+## v5.2.1 - 2026-10-30
+
+### What's Changed
+
+* Update README version table and install constraint for 5.x / 4.x branches by @scottgrayson in https://github.com/TappNetwork/Filament-LMS/pull/144
+* Add evaluation and all courses responses export by @andreia in https://github.com/TappNetwork/Filament-LMS/pull/143
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.2.0...v5.2.1
+
+## v5.2.0 - 2026-10-23
+
+### What's Changed
+
+* feat(mcp): let host apps serve LMS tools from their own server by @scottgrayson in https://github.com/TappNetwork/Filament-LMS/pull/139
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.1.6...v5.2.0
+
+## v5.1.6 - 2026-10-20
+
+### Changes
+
+- Certificate PDF drivers use Letter with zero margins so certificates no longer spill onto a blank second page. (#138)
+
+Tagged from `4.x` at `e90bf4e`.
+
 ## v5.1.5 - 2026-10-06
 
 ### Changes

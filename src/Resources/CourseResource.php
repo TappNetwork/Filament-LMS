@@ -14,6 +14,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
+use Tapp\FilamentLms\Enums\CompletionMode;
+use Tapp\FilamentLms\Lms;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\CreditCategory;
 use Tapp\FilamentLms\RelationManagers\CourseUserGroupsRelationManager;
@@ -70,7 +72,7 @@ class CourseResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return Lms::configureCourseTableSort($table
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
@@ -135,7 +137,7 @@ class CourseResource extends Resource
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ]));
     }
 
     public static function getRelations(): array

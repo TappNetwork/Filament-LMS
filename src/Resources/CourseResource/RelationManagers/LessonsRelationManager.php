@@ -17,11 +17,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
+use Tapp\FilamentLms\Concerns\RemembersErrorBag;
 use Tapp\FilamentLms\Resources\LessonResource\Pages\CreateLesson;
 use Tapp\FilamentLms\Resources\LessonResource\Pages\EditLesson;
 
 class LessonsRelationManager extends RelationManager
 {
+    use RemembersErrorBag;
+
     protected static string $relationship = 'lessons';
 
     public function form(Schema $schema): Schema

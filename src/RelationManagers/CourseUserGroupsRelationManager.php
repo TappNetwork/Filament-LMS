@@ -23,6 +23,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
+use Tapp\FilamentLms\Concerns\RemembersErrorBag;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\UserGroup;
 use Tapp\FilamentLms\UserGroups\CriteriaSource;
@@ -32,6 +33,8 @@ use Tapp\FilamentLms\UserGroups\UserGroupRuleMatcher;
 
 class CourseUserGroupsRelationManager extends RelationManager
 {
+    use RemembersErrorBag;
+
     protected static string $relationship = 'userGroups';
 
     protected static ?string $title = 'Assigned User Groups';

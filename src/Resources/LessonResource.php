@@ -16,6 +16,7 @@ use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
+use Tapp\FilamentLms\Concerns\ShowsContentNavigation;
 use Tapp\FilamentLms\Models\Lesson;
 use Tapp\FilamentLms\Resources\LessonResource\Pages\CreateLesson;
 use Tapp\FilamentLms\Resources\LessonResource\Pages\EditLesson;
@@ -25,6 +26,7 @@ use Tapp\FilamentLms\Resources\LessonResource\RelationManagers\StepsRelationMana
 class LessonResource extends Resource
 {
     use HasLmsSlug;
+    use ShowsContentNavigation;
 
     protected static ?string $model = Lesson::class;
 

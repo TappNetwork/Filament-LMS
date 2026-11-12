@@ -14,6 +14,7 @@ use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
+use Tapp\FilamentLms\Concerns\ShowsContentNavigation;
 use Tapp\FilamentLms\Models\Video;
 use Tapp\FilamentLms\Resources\VideoResource\Pages\CreateVideo;
 use Tapp\FilamentLms\Resources\VideoResource\Pages\EditVideo;
@@ -23,6 +24,7 @@ use Tapp\FilamentLms\Services\VideoUrlService;
 class VideoResource extends Resource
 {
     use HasLmsSlug;
+    use ShowsContentNavigation;
 
     protected static ?string $model = Video::class;
 

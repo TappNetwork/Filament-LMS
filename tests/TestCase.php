@@ -4,9 +4,17 @@ declare(strict_types=1);
 
 namespace Tapp\FilamentLms\Tests;
 
+use BladeUI\Heroicons\BladeHeroiconsServiceProvider;
+use BladeUI\Icons\BladeIconsServiceProvider;
+use Filament\Actions\ActionsServiceProvider;
 use Filament\Facades\Filament;
 use Filament\FilamentServiceProvider;
+use Filament\Forms\FormsServiceProvider;
+use Filament\Notifications\NotificationsServiceProvider;
+use Filament\Schemas\SchemasServiceProvider;
 use Filament\Support\SupportServiceProvider;
+use Filament\Tables\TablesServiceProvider;
+use Filament\Widgets\WidgetsServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
@@ -329,9 +337,17 @@ abstract class TestCase extends Orchestra
     {
         $providers = [
             LivewireServiceProvider::class,
+            BladeIconsServiceProvider::class,
+            BladeHeroiconsServiceProvider::class,
+            SupportServiceProvider::class,
+            SchemasServiceProvider::class,
+            FormsServiceProvider::class,
+            ActionsServiceProvider::class,
+            TablesServiceProvider::class,
+            NotificationsServiceProvider::class,
+            WidgetsServiceProvider::class,
             FilamentServiceProvider::class,
             ExcelServiceProvider::class,
-            SupportServiceProvider::class,
             MediaLibraryServiceProvider::class,
             FilamentLmsServiceProvider::class,
             LmsPanelProvider::class,

@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
+use Tapp\FilamentLms\Concerns\ShowsContentNavigation;
 use Tapp\FilamentLms\Models\Document;
 use Tapp\FilamentLms\Resources\DocumentResource\Pages\CreateDocument;
 use Tapp\FilamentLms\Resources\DocumentResource\Pages\EditDocument;
@@ -27,6 +28,7 @@ use Tapp\FilamentLms\Resources\DocumentResource\Pages\ListDocuments;
 class DocumentResource extends Resource
 {
     use HasLmsSlug;
+    use ShowsContentNavigation;
 
     protected static ?string $model = Document::class;
 

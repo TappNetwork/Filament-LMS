@@ -16,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Tapp\FilamentLms\Concerns\HasLmsSlug;
+use Tapp\FilamentLms\Concerns\ShowsContentNavigation;
 use Tapp\FilamentLms\Models\Test;
 use Tapp\FilamentLms\Resources\TestResource\Pages\CreateTest;
 use Tapp\FilamentLms\Resources\TestResource\Pages\EditTest;
@@ -24,6 +25,7 @@ use Tapp\FilamentLms\Resources\TestResource\Pages\ListTests;
 class TestResource extends Resource
 {
     use HasLmsSlug;
+    use ShowsContentNavigation;
 
     protected static ?string $model = Test::class;
 

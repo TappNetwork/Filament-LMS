@@ -1,5 +1,31 @@
 # Upgrading
 
+## Integrated course editor
+
+No migrations and no column changes. Existing course, lesson, step, and material rows render in the new editor as they are, including steps with no material and gaps in `order`.
+
+The package default is the current layout:
+
+```php
+'course_editor' => [
+    'mode' => 'legacy', // 'builder' for the tabbed editor
+    'show_content_resources' => true,
+],
+```
+
+`config/filament-lms.php` is merged one level deep. A published config does not pick up this key from the package. Add `course_editor` to the published file, or leave it out to stay on `legacy`.
+
+- `legacy` is the 4.8 / current Edit Course page: the same form and the Lessons, Users, and User Groups relation managers.
+- `builder` replaces course page with Details, Curriculum, and Access tabs. Lessons and steps are edited from the course. Lesson, Step, and material resources stay in the LMS navigation group. Set `show_content_resources` to `false` to hide Lesson, Step, and material resources from that group. Courses stay listed, and the resources stay registered.
+
+Editor copy is in `resources/lang/en/course-editor.php` (`__('filament-lms::course-editor...')`). Override it by publishing `filament-lms-translations` to `lang/vendor/filament-lms/en/course-editor.php`.
+
+Apps that extend `CourseResource`, `EditCourse`, or `CreateCourse` keep their own page. Switch modes in config; do not remove the relation managers or resources.
+
+### Reporting page filters
+
+The Reporting page's table filters moved to `FiltersLayout::AboveContentCollapsible` (previously the default dropdown layout). This applies to every install regardless of `course_editor.mode` — it is not part of the `legacy`/`builder` switch above. If you extend `Tapp\FilamentLms\Pages\Reporting`, override `table()` to pass your own `layout:` to `filters()` if you need the previous behavior.
+
 ## 6.0: the LMS panel no longer has a login page
 
 This is a breaking change. The LMS panel no longer calls `->login()`, so `/lms/login` and the `filament.lms.auth.login` route are gone. An app should have one login page, and the LMS sends guests to it.
@@ -16,7 +42,6 @@ This is a breaking change. The LMS panel no longer calls `->login()`, so `/lms/l
 - `filament.lms.auth.logout` still exists, so the user menu can sign out.
 - After logout, Filament sends the user to `/lms`, and the guest redirect takes them to the app login.
 - The LMS page a guest asked for is stored in `url.intended`, so logging in returns them to it.
-
 
 ## Certificate PDF driver (Cloudflare)
 

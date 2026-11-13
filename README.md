@@ -50,7 +50,7 @@ or
 ```
 
 ```bash
-composer require tapp/filament-lms:"^5.0"
+composer require tapp/filament-lms:"^6.0"
 ```
 
 ### Publish

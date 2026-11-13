@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v6.0.0 - 2026-11-13
+
+### Breaking change
+
+The LMS panel no longer serves its own login page (#154). `/lms/login` and the `filament.lms.auth.login` route are gone, and guests on any LMS page are sent to the host app's login.
+
+#### Upgrade
+
+Sites that relied on the LMS login must use their own login page:
+
+1. Make sure the app has one login page (frontend panel, admin panel, or a custom `login` route).
+2. Point `redirectGuestsTo()` in `bootstrap/app.php` at it. Without it, Laravel uses the route named `login`.
+3. Replace any references to `filament.lms.auth.login` or `/lms/login`.
+
+Full steps are in [UPGRADING.md](https://github.com/TappNetwork/Filament-LMS/blob/6.x/UPGRADING.md). Everything else matches v5.3.0. Sites that need the LMS login can stay on `^5` (v5.3.1 restores it).
+
+**Full Changelog**: https://github.com/TappNetwork/Filament-LMS/compare/v5.3.0...v6.0.0
+
 ## v5.3.0 - 2026-11-12
 
 ### What's Changed

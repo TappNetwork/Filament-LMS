@@ -26,23 +26,6 @@ Apps that extend `CourseResource`, `EditCourse`, or `CreateCourse` keep their ow
 
 The Reporting page's table filters moved to `FiltersLayout::AboveContentCollapsible` (previously the default dropdown layout). This applies to every install regardless of `course_editor.mode` — it is not part of the `legacy`/`builder` switch above. If you extend `Tapp\FilamentLms\Pages\Reporting`, override `table()` to pass your own `layout:` to `filters()` if you need the previous behavior.
 
-## 6.0: the LMS panel no longer has a login page
-
-This is a breaking change. The LMS panel no longer calls `->login()`, so `/lms/login` and the `filament.lms.auth.login` route are gone. An app should have one login page, and the LMS sends guests to it.
-
-### Before you upgrade
-
-1. Pick the app's single login page (frontend panel, admin panel, or a custom `login` route).
-2. Set `redirectGuestsTo()` in `bootstrap/app.php` to that login (see "Provide the app's login" in the README). If you don't set it, Laravel uses the route named `login`.
-3. Search the app for `filament.lms.auth.login`, `/lms/login` and `routeIs('filament.lms.auth.*')` in routes, middleware, Blade views, notifications, SSO redirects and tests. Point them at the single login.
-4. If the app overrides `LmsPanelProvider` and calls `->login()` itself, remove that call.
-
-### What still works
-
-- `filament.lms.auth.logout` still exists, so the user menu can sign out.
-- After logout, Filament sends the user to `/lms`, and the guest redirect takes them to the app login.
-- The LMS page a guest asked for is stored in `url.intended`, so logging in returns them to it.
-
 ## Certificate PDF driver (Cloudflare)
 
 **Backwards compatible for Forge / existing hosts:** no env changes required. When `FILAMENT_LMS_CERTIFICATE_PDF_DRIVER` is unset, the package keeps using **browsershot** unless Cloudflare credentials are present.

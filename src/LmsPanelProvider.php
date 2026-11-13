@@ -89,7 +89,8 @@ class LmsPanelProvider extends PanelProvider
             ->path('lms')
             ->homeUrl(config('filament-lms.home_url'))
             ->font(config('filament-lms.font'))
-            ->darkMode(false);
+            ->darkMode(false)
+            ->login();
 
         if (config('filament-lms.sidebar_collapsible_on_desktop')) {
             $panel->sidebarCollapsibleOnDesktop();

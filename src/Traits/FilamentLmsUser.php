@@ -94,6 +94,10 @@ trait FilamentLmsUser
         }
 
         if ($course->isEmbeddedPlayer()) {
+            if ($step->material_type === 'test') {
+                return true;
+            }
+
             $launchStep = $course->launchStep();
 
             return $launchStep !== null && $launchStep->is($step);

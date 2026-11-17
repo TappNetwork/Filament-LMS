@@ -12,7 +12,7 @@ trait CourseLayout
 {
     public function registerCourseLayout(): void
     {
-        if (! $this->course->isEmbeddedPlayer()) {
+        if (! $this->usesEmbeddedPlayerChrome()) {
             $courseNameHook = CourseContext::fromConfig()->usesSubNavigation()
                 ? PanelsRenderHook::PAGE_SUB_NAVIGATION_SIDEBAR_BEFORE
                 : PanelsRenderHook::SIDEBAR_NAV_START;
@@ -28,7 +28,7 @@ trait CourseLayout
             fn (): View => view('filament-lms::components.topbar-course-progress', ['course' => $this->course]),
         );
 
-        if ($this->course->isEmbeddedPlayer() && $this instanceof StepPage) {
+        if ($this->usesEmbeddedPlayerChrome() && $this instanceof StepPage) {
             FilamentView::registerRenderHook(
                 PanelsRenderHook::BODY_START,
                 fn (): View => view('filament-lms::components.embedded-player-body-class'),
@@ -54,5 +54,10 @@ trait CourseLayout
                 );
             }
         }
+    }
+
+    public function usesEmbeddedPlayerChrome(): bool
+    {
+        return $this->course->isEmbeddedPlayer();
     }
 }

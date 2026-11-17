@@ -402,7 +402,7 @@ test('embedded player completion percentage is based on completed modules', func
     expect((float) $course->fresh()->getCompletionPercentageForUser($user->id))->toBe(100.0);
 });
 
-test('embedded player completion percentage ignores lessons with only test steps', function () {
+test('embedded player completion percentage includes test steps', function () {
     config(['filament-lms.user_model' => TestUser::class]);
 
     $user = TestUser::query()->create([
@@ -427,7 +427,7 @@ test('embedded player completion percentage ignores lessons with only test steps
         'material_id' => null,
     ]);
     $test = Test::query()->create(['name' => 'Quiz']);
-    Step::factory()->create([
+    $testStep = Step::factory()->create([
         'lesson_id' => $testOnlyLesson->id,
         'order' => 0,
         'material_type' => 'test',
@@ -442,8 +442,16 @@ test('embedded player completion percentage ignores lessons with only test steps
 
     $course = $course->fresh();
 
-    expect((float) $course->getCompletionPercentageForUser($user->id))->toBe(100.0)
+    expect((float) $course->getCompletionPercentageForUser($user->id))->toBe(50.0)
         ->and(app(ScormProgressService::class)->courseCompletedByUser($course, $user))->toBeTrue();
+
+    StepUser::query()->create([
+        'user_id' => $user->id,
+        'step_id' => $testStep->id,
+        'completed_at' => now(),
+    ]);
+
+    expect((float) $course->fresh()->getCompletionPercentageForUser($user->id))->toBe(100.0);
 });
 
 test('scorm commit rejects html5 progress flags for scorm 1.2 courses', function () {

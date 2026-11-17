@@ -73,7 +73,7 @@ class Step extends Page
         $this->lesson = $this->course->lessons->where('slug', $lessonSlug)->firstOrFail();
         $this->step = $this->lesson->steps->where('slug', $stepSlug)->firstOrFail();
 
-        if ($this->course->isEmbeddedPlayer()) {
+        if ($this->course->isEmbeddedPlayer() && $this->step->material_type !== 'test') {
             $launchStep = $this->course->launchStep();
             if ($launchStep !== null && ! $launchStep->is($this->step)) {
                 return redirect()->to(static::getUrlForStep($launchStep));
@@ -172,7 +172,7 @@ class Step extends Page
     {
         $actions = [];
 
-        if ($this->course->isEmbeddedPlayer()) {
+        if ($this->usesEmbeddedPlayerChrome()) {
             $user = Auth::user();
             $evaluationService = app(CourseEvaluationService::class);
             $pendingEvaluation = $user instanceof FilamentLmsUserInterface
@@ -353,6 +353,14 @@ class Step extends Page
 
         app(ScormProgressService::class)->completeAllEligibleSteps($this->course, $user);
 
+        $pendingTestStep = $this->course->pendingTestStepFor($user);
+
+        if ($pendingTestStep !== null) {
+            $this->redirect(static::getUrlForStep($pendingTestStep));
+
+            return;
+        }
+
         $evaluationService = app(CourseEvaluationService::class);
 
         if ($evaluationService->hasPendingEvaluationForUser($this->course, $user->id)) {
@@ -391,6 +399,12 @@ class Step extends Page
 
     protected function embeddedCourseExitUrl(Authenticatable&FilamentLmsUserInterface $user): string
     {
+        $pendingTestStep = $this->course->pendingTestStepFor($user);
+
+        if ($pendingTestStep !== null) {
+            return static::getUrlForStep($pendingTestStep);
+        }
+
         $evaluationService = app(CourseEvaluationService::class);
 
         if ($evaluationService->hasPendingEvaluationForUser($this->course, $user->id)) {
@@ -418,15 +432,21 @@ class Step extends Page
         return Dashboard::getUrl();
     }
 
-    public function shouldRegisterScormBridge(): bool
+    public function usesEmbeddedPlayerChrome(): bool
     {
         return $this->course->isEmbeddedPlayer()
+            && $this->step->material_type !== 'test';
+    }
+
+    public function shouldRegisterScormBridge(): bool
+    {
+        return $this->usesEmbeddedPlayerChrome()
             && $this->course->completionMode() === CompletionMode::Scorm12;
     }
 
     public function shouldRegisterHtml5Bridge(): bool
     {
-        return $this->course->isEmbeddedPlayer()
+        return $this->usesEmbeddedPlayerChrome()
             && $this->course->completionMode() === CompletionMode::Html5;
     }
 }

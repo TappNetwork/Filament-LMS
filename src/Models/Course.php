@@ -466,34 +466,66 @@ final class Course extends Model implements HasMedia
             ? $this->lessons
             : $this->lessons()->with('steps')->get();
 
-        // Only lessons with non-test steps are trackable; test-only lessons are never
-        // marked complete and must not inflate the denominator below 100%.
-        $lastTrackableSteps = $lessons
-            ->map(function (Lesson $lesson): ?Step {
-                $steps = $lesson->relationLoaded('steps')
-                    ? $lesson->steps
-                    : $lesson->steps()->get();
+        // Each lesson contributes its last non-test step (the SCORM module), and every
+        // test step is its own unit so progress stays below 100% until the test is passed.
+        $trackableStepIds = collect();
 
-                $eligibleSteps = $steps
-                    ->filter(fn (Step $step): bool => $step->material_type !== 'test')
-                    ->sortBy('order')
-                    ->values();
+        foreach ($lessons as $lesson) {
+            $steps = $lesson->relationLoaded('steps')
+                ? $lesson->steps
+                : $lesson->steps()->get();
 
-                return $eligibleSteps->isEmpty() ? null : $eligibleSteps->last();
-            })
-            ->filter();
+            $lastContentStep = $steps
+                ->filter(fn (Step $step): bool => $step->material_type !== 'test')
+                ->sortBy('order')
+                ->last();
 
-        if ($lastTrackableSteps->isEmpty()) {
+            if ($lastContentStep instanceof Step) {
+                $trackableStepIds->push($lastContentStep->id);
+            }
+
+            foreach ($steps as $step) {
+                if ($step->material_type === 'test') {
+                    $trackableStepIds->push($step->id);
+                }
+            }
+        }
+
+        $trackableStepIds = $trackableStepIds->unique()->values();
+
+        if ($trackableStepIds->isEmpty()) {
             return 0;
         }
 
-        $completedLessons = StepUser::query()
+        $completedCount = StepUser::query()
             ->where('user_id', $userId)
-            ->whereIn('step_id', $lastTrackableSteps->pluck('id'))
+            ->whereIn('step_id', $trackableStepIds)
             ->whereNotNull('completed_at')
             ->count();
 
-        return ($completedLessons / $lastTrackableSteps->count()) * 100;
+        return ($completedCount / $trackableStepIds->count()) * 100;
+    }
+
+    /**
+     * First test step, in course order, that the user has not passed.
+     */
+    public function pendingTestStepFor(Authenticatable $user): ?Step
+    {
+        $testSteps = $this->getOrderedTestSteps();
+
+        if ($testSteps->isEmpty()) {
+            return null;
+        }
+
+        $completedStepIds = StepUser::query()
+            ->where('user_id', $user->getAuthIdentifier())
+            ->whereIn('step_id', $testSteps->pluck('id'))
+            ->whereNotNull('completed_at')
+            ->pluck('step_id');
+
+        return $testSteps->first(
+            fn (Step $step): bool => ! $completedStepIds->contains($step->id),
+        );
     }
 
     public function certificateUrl(): string

@@ -13,7 +13,9 @@ use Laravel\Mcp\ResponseFactory;
 use Tapp\FilamentLms\Mcp\LmsTool;
 use Tapp\FilamentLms\Models\Course;
 use Tapp\FilamentLms\Models\Lesson;
+use Tapp\FilamentMcp\Attributes\AbilityGroup;
 
+#[AbilityGroup('LMS')]
 class CreateVideoCourse extends LmsTool
 {
     protected string $name = 'create_video_course';

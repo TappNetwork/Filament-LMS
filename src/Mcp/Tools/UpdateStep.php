@@ -13,7 +13,9 @@ use Laravel\Mcp\ResponseFactory;
 use Tapp\FilamentLms\Mcp\LmsTool;
 use Tapp\FilamentLms\Models\Step;
 use Tapp\FilamentLms\Models\Video;
+use Tapp\FilamentMcp\Attributes\AbilityGroup;
 
+#[AbilityGroup('LMS')]
 class UpdateStep extends LmsTool
 {
     protected string $name = 'update_step';

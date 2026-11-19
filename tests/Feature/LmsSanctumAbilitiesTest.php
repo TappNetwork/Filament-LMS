@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Tapp\FilamentLms\FilamentLmsServiceProvider;
 use Tapp\FilamentLms\Mcp\LmsServer;
+use Tapp\FilamentMcp\Discovery\ToolAbility;
 
 beforeEach(function () {
     if (! class_exists(LmsServer::class)) {
@@ -108,3 +109,13 @@ function contributeSanctumAbilities(): void
     $method = new ReflectionMethod($provider, 'contributeSanctumAbilities');
     $method->invoke($provider);
 }
+
+test('every mcp tool sits in the LMS ability group', function () {
+    if (! class_exists(ToolAbility::class)) {
+        $this->markTestSkipped('tapp/filament-mcp is required for ability groups.');
+    }
+
+    foreach (LmsServer::TOOLS as $tool) {
+        expect(ToolAbility::group(app($tool)))->toBe('LMS', $tool);
+    }
+});

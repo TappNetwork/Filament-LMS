@@ -10,7 +10,9 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Tapp\FilamentLms\Mcp\LmsTool;
 use Tapp\FilamentLms\Models\Course;
+use Tapp\FilamentMcp\Attributes\AbilityGroup;
 
+#[AbilityGroup('LMS')]
 class GetCourse extends LmsTool
 {
     protected string $name = 'get_course';

@@ -25,7 +25,8 @@
     },
     "suggest": {
         "tapp/filament-library": "Required for Library file / Library link step materials (set filament-lms.integrations.filament_library.enabled for the admin material picker).",
-        "spykapps/filament-uppy-upload": "Optional. Enables Uppy chunked (multipart) uploads for SCORM package import so large ZIPs stay under Cloudflare's ~100MB limit (set filament-lms.common_cartridge_import.multipart_upload.enabled)."
+        "spykapps/filament-uppy-upload": "Optional. Enables Uppy chunked (multipart) uploads for SCORM package import so large ZIPs stay under Cloudflare's ~100MB limit (set filament-lms.common_cartridge_import.multipart_upload.enabled).",
+        "tapp/filament-mcp": "Optional. Groups the LMS tools under \"LMS abilities\" on the filament-mcp token page."
     },
     "require-dev": {
         "filament/upgrade": "^4.0",
@@ -41,7 +42,8 @@
         "phpstan/extension-installer": "^1.3||^2.0",
         "phpstan/phpstan-deprecation-rules": "^1.1||^2.0",
         "phpstan/phpstan-phpunit": "^1.3||^2.0",
-        "spatie/laravel-ray": "^1.35"
+        "spatie/laravel-ray": "^1.35",
+        "tapp/filament-mcp": "^0.1.5"
     },
     "autoload": {
         "psr-4": {

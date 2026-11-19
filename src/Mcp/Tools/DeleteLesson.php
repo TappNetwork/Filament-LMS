@@ -11,7 +11,9 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Tapp\FilamentLms\Mcp\LmsTool;
 use Tapp\FilamentLms\Models\Lesson;
+use Tapp\FilamentMcp\Attributes\AbilityGroup;
 
+#[AbilityGroup('LMS')]
 class DeleteLesson extends LmsTool
 {
     protected string $name = 'delete_lesson';
